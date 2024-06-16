@@ -8,7 +8,7 @@ const signInWith = async (provider: Provider) => {
   await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${window.location.origin}/dashboard`
+      redirectTo: `https://critique-neon.vercel.app/dashboard`
     }
   })
 }
