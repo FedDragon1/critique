@@ -1,25 +1,24 @@
 <script setup lang="ts">
+import type { Provider } from "@supabase/auth-js";
+
 const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 
-
-const signInWithGoogle = async() => {
-  const ret = await supabase.auth.signInWithOAuth({
-    provider: "google"
+const signInWith = async (provider: Provider) => {
+  await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${window.location.origin}/dashboard`
+    }
   })
-  console.log(ret)
 }
-const signInWithGithub = async() => {
-  const ret = await supabase.auth.signInWithOAuth({
-    provider: "github"
-  })
-  console.log(ret)
-}
-
 </script>
 
 <template>
-<button type="button" @click="signInWithGoogle">Login with Google</button>
-<button type="button" @click="signInWithGithub">Login with Github</button>
+<button type="button" @click="signInWith('google')">Login with Google</button>
+<button type="button" @click="signInWith('github')">Login with Github</button>
+
+  {{user ?? "no user"}}
 </template>
 
 <style scoped>

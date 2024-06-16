@@ -4,6 +4,7 @@
 
 <template>
 homepage
+  <NuxtLink to="/login">Login</NuxtLink>
 </template>
 
 <style scoped>
