@@ -7,9 +7,9 @@ const user = useSupabaseUser();
 const signInWith = async (provider: Provider) => {
   await supabase.auth.signInWithOAuth({
     provider,
-    options: {
-      redirectTo: `${window.location.origin}/dashboard`
-    }
+    // options: {
+    //   redirectTo: `${window.location.origin}/dashboard`
+    // }
   })
 }
 </script>
