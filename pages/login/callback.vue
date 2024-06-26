@@ -1,16 +1,15 @@
 <script setup lang="ts">
-
 const user = useSupabaseUser();
+const router = useRouter();
 
-
-definePageMeta({
-  middleware: 'auth'
-})
-
+setTimeout(() => {
+  router.push('/dashboard');
+}, 1000)
 </script>
 
 <template>
-  Dashboard
+  You are signed in!
+  Redirecting...
 {{user}}
 </template>
 
