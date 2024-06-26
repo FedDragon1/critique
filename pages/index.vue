@@ -1,6 +1,9 @@
 <script setup lang="ts">
 let user = useSupabaseUser();
 
+definePageMeta({
+  middleware: 'login-redirect'
+})
 </script>
 
 <template>

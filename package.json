@@ -14,5 +14,10 @@
     "nuxt": "^3.12.1",
     "vue": "^3.4.27",
     "vue-router": "^4.3.3"
+  },
+  "devDependencies": {
+    "@element-plus/nuxt": "^1.0.9",
+    "@nuxtjs/color-mode": "^3.4.2",
+    "element-plus": "^2.7.6"
   }
 }
