@@ -9,6 +9,8 @@ definePageMeta({
 </script>
 
 <template>
+  <SeoHead title="Dashboard" />
+
   <div class="screen-wrapper">
     <el-container style="width: 100%; height: 100%">
       <el-header class=nav>

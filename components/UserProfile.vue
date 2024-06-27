@@ -19,12 +19,12 @@ defineProps<{
       </el-icon>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item>
+          <el-dropdown-item class="dropdown-action">
             <el-icon><el-icon-tools /></el-icon>
             Settings
           </el-dropdown-item>
           <el-dropdown-item>
-            <NuxtLink to="/logout">
+            <NuxtLink to="/logout" class="dropdown-action">
               <el-icon><el-icon-switch-button /></el-icon>
               Log out
             </NuxtLink>
@@ -60,5 +60,12 @@ span {
 
 .name {
   color: var(--el-text-color-primary);
+}
+
+.dropdown-action {
+  text-decoration: none !important;
+  color: var(--el-text-color);
+  display: flex;
+  align-items: center;
 }
 </style>

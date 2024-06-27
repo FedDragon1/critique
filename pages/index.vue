@@ -14,7 +14,7 @@ useSeoMeta({
   ogDescription: "The next generation rich text editor powered by AI. Scan, upload, and critically read with AI " +
       "summary, tone and sentiment analysis, argument and structure analysis, key question generation in an " +
       "interactive and productive manner.",
-  ogImage: ""
+  ogImage: `${window.origin}/android-chrome-512x512.png`
 })
 </script>
 

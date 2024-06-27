@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Provider } from "@supabase/auth-js";
+import SeoHead from "~/components/SeoHead.vue";
 
 const supabase = useSupabaseClient();
 let user = useSupabaseUser();
@@ -21,6 +22,7 @@ function update() {
 </script>
 
 <template>
+  <SeoHead title="Login"/>
 <button type="button" @click="signInWith('google')">Login with Google</button>
 <button type="button" @click="signInWith('github')">Login with Github</button>
 <button type="button" @click="update()">refresh</button>

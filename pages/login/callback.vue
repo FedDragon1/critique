@@ -8,9 +8,13 @@ setTimeout(() => {
 </script>
 
 <template>
-  You are signed in!
-  Redirecting...
-{{user}}
+  <SeoHead title="Logging in..." />
+  <CardFrame>
+    <template #title>
+      You are signed in!
+    </template>
+    Redirecting you to the dashboard...
+  </CardFrame>
 </template>
 
 <style scoped>
