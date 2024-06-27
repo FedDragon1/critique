@@ -4,6 +4,18 @@ let user = useSupabaseUser();
 definePageMeta({
   middleware: 'login-redirect'
 })
+
+useSeoMeta({
+  title: "Critique | The AI Critical Read Helper",
+  ogTitle: "The AI Critical Read Helper",
+  description: "Critique is the next generation rich text editor powered by AI. Scan, upload, and critically read " +
+      "with AI summary, tone and sentiment analysis, argument and structure analysis, key question generation in an " +
+      "interactive and productive manner.",
+  ogDescription: "The next generation rich text editor powered by AI. Scan, upload, and critically read with AI " +
+      "summary, tone and sentiment analysis, argument and structure analysis, key question generation in an " +
+      "interactive and productive manner.",
+  ogImage: ""
+})
 </script>
 
 <template>

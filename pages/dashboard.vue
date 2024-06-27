@@ -2,7 +2,6 @@
 
 const user = useSupabaseUser();
 
-
 definePageMeta({
   middleware: 'auth'
 })
@@ -12,7 +11,7 @@ definePageMeta({
 <template>
   <div class="screen-wrapper">
     <el-container style="width: 100%; height: 100%">
-      <el-header>
+      <el-header class=nav>
         <NavigationBar :name="user?.user_metadata?.name"
                        :email="user?.user_metadata?.email"
                        :avatar="user?.user_metadata?.avatar_url"/>
@@ -35,5 +34,10 @@ definePageMeta({
 
 .dashboard-aside {
   width: var(--aside-width);
+  border-right: 1px solid var(--el-border-color);
+}
+
+.nav {
+  border-bottom: 1px solid var(--el-border-color);
 }
 </style>

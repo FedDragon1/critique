@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BrandIconDark from "~/components/svg/BrandIconDark.vue";
+
 const searchText = ref<string>("");
 defineProps<{
   name: string,
@@ -11,9 +13,9 @@ defineProps<{
   <div class="nav-wrapper">
     <div class="left">
       <div class="logo-wrapper">
-        <img src="" alt="critique">
+        <NuxtLink to="/"><BrandIconDark height="40px" /></NuxtLink>
       </div>
-      <el-input v-model="searchText" autocomplete="off" clearable placeholder="Search critiques" style="width: 300px" />
+      <el-input v-model="searchText" autocomplete="off" clearable placeholder="Search critiques" style="width: 300px; height: 40px" />
     </div>
     <UserProfile :name="name" :email="email" :avatar="avatar"></UserProfile>
   </div>
@@ -29,9 +31,16 @@ defineProps<{
 
 .left {
   display: flex;
+  align-items: center;
 }
 
 .logo-wrapper {
-  width: var(--aside-width);
+  width: calc(var(--aside-width) - 20px);  /* padding 20px */
+  display: flex;
+  height: 40px;
+}
+
+img {
+  height: 100%;
 }
 </style>

@@ -13,7 +13,25 @@ defineProps<{
       <el-text class="name" size="default">{{ name }}</el-text>
       <el-text class="email" size="small">{{ email }}</el-text>
     </div>
-<!--    TODO: sandwich selection-->
+    <el-dropdown>
+      <el-icon class="el-icon--right">
+        <el-icon-expand/>
+      </el-icon>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item>
+            <el-icon><el-icon-tools /></el-icon>
+            Settings
+          </el-dropdown-item>
+          <el-dropdown-item>
+            <NuxtLink to="/logout">
+              <el-icon><el-icon-switch-button /></el-icon>
+              Log out
+            </NuxtLink>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
   </div>
 </template>
 
