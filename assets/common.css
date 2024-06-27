@@ -12,3 +12,9 @@ body {
     margin: 0;
     padding: 0;
 }
+
+hr {
+    border-color: var(--el-border-color);
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

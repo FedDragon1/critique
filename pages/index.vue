@@ -7,7 +7,7 @@ definePageMeta({
 
 useSeoMeta({
   title: "Critique | The AI Critical Read Helper",
-  ogTitle: "The AI Critical Read Helper",
+  ogTitle: "Critique | The AI Critical Read Helper",
   description: "Critique is the next generation rich text editor powered by AI. Scan, upload, and critically read " +
       "with AI summary, tone and sentiment analysis, argument and structure analysis, key question generation in an " +
       "interactive and productive manner.",

@@ -17,7 +17,11 @@
   },
   "devDependencies": {
     "@element-plus/nuxt": "^1.0.9",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@nuxtjs/color-mode": "^3.4.2",
+    "@vesp/nuxt-fontawesome": "^1.0.4",
     "element-plus": "^2.7.6"
   }
 }

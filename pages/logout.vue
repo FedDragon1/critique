@@ -23,7 +23,7 @@ async function signOut() {
     errorMessage.value = error.toString();
     await retry(5);
   } else {
-    stateMessage.value = "You are signed off!"
+    stateMessage.value = "You are signed out!"
     setTimeout(() => router.push("/"), 2000);
   }
 }
@@ -41,7 +41,7 @@ await signOut();
 </script>
 
 <template>
-  <SeoHead title="Logging out..." />
+  <SeoHead title="Signing out..." />
   <CardFrame>
     <template #title>
       {{ stateMessage }}
