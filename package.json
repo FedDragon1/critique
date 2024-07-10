@@ -11,7 +11,12 @@
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.2.2",
+    "@types/node": "^20.14.9",
+    "@vueuse/core": "^10.11.0",
+    "@vueuse/nuxt": "^10.11.0",
+    "drizzle-orm": "^0.29.5",
     "nuxt": "^3.12.1",
+    "postgres": "^3.4.4",
     "vue": "^3.4.27",
     "vue-router": "^4.3.3"
   },
@@ -22,6 +27,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@nuxtjs/color-mode": "^3.4.2",
     "@vesp/nuxt-fontawesome": "^1.0.4",
+    "drizzle-kit": "^0.22.8",
     "element-plus": "^2.7.6"
   }
 }
