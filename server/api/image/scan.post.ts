@@ -2,6 +2,7 @@
 
 import cv from "@techstark/opencv-js"
 import sharp from 'sharp'
+import {bufferToMat, detectEdges, image1d, withMatAsync} from "~/server/utils/cvutils";
 
 /*
 Request body:
@@ -11,14 +12,13 @@ multipart form
 Response body:
 {
     success: boolean,
-    data: {}
+    data: string (base64)
 }
 
 Process:
     1. Read the image
     2. Preprocess image
-    3. Paragraph bounding box detection (yolov8)
-    4. OCR of each bounding box
+    3. Return the base64 representation
  */
 
 export default defineEventHandler(async (event) => {
@@ -27,37 +27,19 @@ export default defineEventHandler(async (event) => {
     // ideally there should only be 1 image
     const file = request![0]
 
-    console.log("4")
-
     // preprocess
-    const { data, info} = await sharp(file["data"])
-        .ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-    const { width, height } = info
-
-    const image = cv.matFromImageData({ data, width, height })
+    const { image, width, height } = await bufferToMat(file["data"])
     const dst = new cv.Mat()
 
-    cv.cvtColor(image, image, cv.COLOR_BGR2GRAY)    // greyscale
-    cv.GaussianBlur(image, image, new cv.Size(5, 5), 0)
-    cv.Canny(image, dst, 75, 200)
+    return withMatAsync([image, dst], async () => {
+        const preprocessed = detectEdges(image, dst, width, height)
 
-
-    const output = sharp(Buffer.from(dst.data), {
-        raw: {
-            width,
-            height,
-            channels: 1
+        return {
+            success: true,
+            data: {
+                png:`${(await preprocessed.png().toBuffer()).toString("base64")}`,
+            }
         }
-    }).png();
-
-
-    const ret = {
-        success: true,
-        data: `${(await output.png().toBuffer()).toString("base64")}`
-    }
-
-    image.delete()
-    dst.delete()
-
-    return ret
+    })
 })
+
