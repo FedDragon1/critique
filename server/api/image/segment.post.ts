@@ -1,35 +1,33 @@
 // POST /api/image/segment
 
-import cv, {Mat} from '@techstark/opencv-js'
-import sharp from "sharp";
-import {approximateContour, bufferToMat, image1d, quadrilateralContour, withMatAsync} from "~/server/utils/cvutils";
-import {MatVector} from "@techstark/opencv-js/src/types/opencv/_hacks";
+import cv from '@techstark/opencv-js'
+import {approximateContour, bufferToMat, image1d, opencvReady, quadrilateralContour} from "~/server/utils/cvutils";
 
-/*
-Request body:
-{
-    image: string (base64)
-}
-
-Response body:
-{
-    success: boolean,
-    contour: unknown todo
-}
-
-Process:
-    1. Read the image
-    2. Find contour lines
-    3. Return biggest contour line with exactly 4 edges
+/**
+ * Request body:
+ * {
+ *     image: string (base64)
+ * }
+ *
+ * Response body:
+ * {
+ *     success: boolean,
+ *     contour: Contour
+ * }
+ *
+ * Process:
+ *     1. Read the image
+ *     2. Find contour lines
+ *     3. Return biggest contour line with exactly 4 edges
  */
-
 export default defineEventHandler(async (event) => {
     const request = await readBody(event);
 
     const imageBase64 = request.image;
     const imageBuffer = Buffer.from(imageBase64, "base64")
 
-    const { image, width, height } = await bufferToMat(imageBuffer)
+    await opencvReady()
+    const { image } = await bufferToMat(imageBuffer)
 
     const cnts = new cv.MatVector();
     const dst = new cv.Mat()

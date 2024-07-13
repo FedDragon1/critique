@@ -16,7 +16,6 @@
     "@vueuse/core": "^10.11.0",
     "@vueuse/nuxt": "^10.11.0",
     "drizzle-orm": "^0.29.5",
-    "jimp": "^0.22.12",
     "nuxt": "^3.12.1",
     "postgres": "^3.4.4",
     "sharp": "^0.33.4",
