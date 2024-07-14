@@ -15,7 +15,9 @@ import type {TransformRequest} from "~/types/requests";
  * Response body:
  * {
  *     success: boolean,
- *     data: string (base64)
+ *     data: {
+ *          png: string (base64)
+ *     }
  * }
  *
  * Process:

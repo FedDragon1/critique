@@ -2,6 +2,7 @@
 
 import cv from '@techstark/opencv-js'
 import {approximateContour, bufferToMat, image1d, opencvReady, quadrilateralContour} from "~/server/utils/cvutils";
+import {diag} from "@opentelemetry/api";
 
 /**
  * Request body:
@@ -12,7 +13,9 @@ import {approximateContour, bufferToMat, image1d, opencvReady, quadrilateralCont
  * Response body:
  * {
  *     success: boolean,
- *     contour: Contour
+ *     data: {
+ *          contour: Contour
+ *     }
  * }
  *
  * Process:
@@ -34,9 +37,12 @@ export default defineEventHandler(async (event) => {
     image1d(image)  // coerce from png to greyscale
 
     const contoursRaw: cv.Mat[] = []
+    // const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(9, 9))
+    // const dilated = new cv.Mat()
 
     const contours = withMat([image, cnts, dst], () => {
-        cv.findContours(image, cnts, dst, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
+
+        cv.findContours(image, cnts, dst, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         for (let i = 0; i < cnts.size(); i++) {
             contoursRaw.push(cnts.get(i))
         }

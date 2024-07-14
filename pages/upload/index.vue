@@ -34,7 +34,7 @@ const contour = async () => {
     body: {image: cannySource.value}
   })
   contours.value = resp.data.contours
-  console.log(contour)
+  console.log(contours.value)
   canvasController.drawContour(contours.value[0].points)
 }
 
@@ -86,5 +86,9 @@ const storeImage = (file: File) => {
 <style scoped>
 canvas {
   border: 1px solid whitesmoke;
+}
+
+img {
+  max-width: 30vw;
 }
 </style>

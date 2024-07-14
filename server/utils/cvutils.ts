@@ -74,6 +74,14 @@ export function image1d(image: cv.Mat) {
     cv.cvtColor(image, image, cv.COLOR_BGR2GRAY)
 }
 
+/**
+ * Converts an opencv Mat to sharp object
+ *
+ * @param mat
+ * @param width
+ * @param height
+ * @param channels
+ */
 export function matToSharp(mat: cv.Mat, width: number, height: number, channels: 1 | 2 | 3 | 4 = 1) {
     return sharp(Buffer.from(mat.data), {
         raw: {
@@ -92,9 +100,21 @@ export function matToSharp(mat: cv.Mat, width: number, height: number, channels:
  * @param dst
  */
 export function detectEdges(image: cv.Mat, dst: cv.Mat) {
-    cv.cvtColor(image, image, cv.COLOR_BGR2GRAY)    // greyscale
-    cv.GaussianBlur(image, image, new cv.Size(5, 5), 0)
-    cv.Canny(image, dst, 50, 100)
+    const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2, 2))
+
+    withMat([kernel], () => {
+        cv.cvtColor(image, dst, cv.COLOR_BGR2GRAY)    // greyscale
+        cv.GaussianBlur(dst, dst, new cv.Size(7, 7), 0)
+        cv.threshold(dst, dst, 150, 255, cv.THRESH_TOZERO)
+        cv.adaptiveThreshold(dst, dst, 255,
+            cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY,
+            19, 19
+        )
+        // cv.threshold(dst, dst, 138, 255, cv.THRESH_BINARY)
+        sharpen(dst, dst)
+        cv.Canny(dst, dst, 255, 255)
+        cv.dilate(dst, dst, kernel)
+    })
 }
 
 /**
@@ -273,6 +293,30 @@ export function aspectRatio(points: FourPoints, imageDimension: [number, number]
 }
 
 /**
+ * Predicate indicating whether there are parallel lines
+ * using the four points provided
+ *
+ * @param points
+ */
+export function parallelLines(points: FourPoints) {
+    const [topLeft, topRight, bottomRight, bottomLeft] = points;
+
+    const topSlope = (topRight.y - topLeft.y) / (topRight.x - topLeft.x)
+    const bottomSlope = (bottomRight.x - bottomLeft.x) / (bottomRight.y - bottomLeft.y)
+
+    // same slope (e = 0.01) -> parallel lines
+    if (Math.abs(topSlope - bottomSlope) < 0.01) {
+        return true;
+    }
+
+    // take the reciprocal as x might be the same, which results in NaN
+    const leftSlope = (topLeft.x - bottomLeft.x) / (topLeft.y - bottomLeft.y)
+    const rightSlope = (topRight.x - bottomRight.x) / (topRight.y - bottomRight.y)
+
+    return Math.abs(leftSlope - rightSlope) < 0.01;
+}
+
+/**
  * Perform four point transform on the source image with points provided.
  * Automatically deallocates matrix created on the fly, except `src` and `dst`
  *
@@ -291,8 +335,29 @@ export function fourPointTransform(src: cv.Mat, dst: cv.Mat, points: FourPoints,
     // height of new image is the maximum of left side or right side
     const newHeight = Math.max(distance(topLeft, bottomLeft), distance(topRight, bottomRight))
 
+    // depending on parallelity, choose different algorithm of getting aspect ratio
+    const parallel = parallelLines(rect)
+
     const arVisible = newWidth / newHeight
-    const arReal = aspectRatio(rect, imageDimension)
+    // set it NaN to prevent meaningless calculation. Sometimes it will still be NaN
+    // despite parallel is false
+    const arReal = parallel ? NaN : aspectRatio(rect, imageDimension)
+
+    // in this case 2 of the lines are parallel, true aspect ratio cannot be resolved
+    if (isNaN(arReal)) {
+        // the four points needs to be transformed reaching this state, find the perspective matrix
+        const rectDst = [0, 0, newWidth - 1, 0, newWidth - 1, newHeight - 1, 0, newHeight - 1]
+        const rectMat = cv.matFromArray(4,2, cv.CV_32F, rect.flatMap(p => [p.x, p.y]))
+        const rectDstMat = cv.matFromArray(4, 2, cv.CV_32F, rectDst)
+        // may cause memory leak if exception here, but should be fine for now
+        const M = cv.getPerspectiveTransform(rectMat, rectDstMat)
+
+        withMat([rectMat, rectDstMat, M], () => {
+            cv.warpPerspective(src, dst, M, new cv.Size(Math.round(newWidth), Math.round(newHeight)))
+        })
+        return [Math.round(newWidth), Math.round(newHeight)]
+    }
+
     let adjustedWidth, adjustedHeight
     if (arReal < arVisible) {
         adjustedWidth = newWidth
@@ -321,13 +386,6 @@ export function fourPointTransform(src: cv.Mat, dst: cv.Mat, points: FourPoints,
     const rectDstMat = cv.matFromArray(4, 2, cv.CV_32F, rectDstZigZag)
     const M = cv.getPerspectiveTransform(rectMat, rectDstMat)
 
-    // // the four points needs to be transformed reaching this state, find the perspective matrix
-    // const rectDst = [[0, 0], [newWidth - 1, 0], [newWidth - 1, newHeight - 1], [0, newHeight - 1]]
-    // const rectMat = fourPointsToMat(rect)
-    // const rectDstMat = cv.matFromArray(4, 2, cv.CV_32F, rectDst)
-    // // may cause memory leak if exception here, but should be fine for now
-    // const M = cv.getPerspectiveTransform(rectMat, rectDstMat)
-
     withMat([rectMat, rectDstMat, M], () => {
         cv.warpPerspective(src, dst, M, new cv.Size(adjustedWidth, adjustedHeight))
     })
@@ -351,7 +409,7 @@ export function adaptiveThresholding(image: cv.Mat, dst: cv.Mat) {
         sharpen(blurred, blurred)
 
         cv.adaptiveThreshold(blurred, dst, 255,
-            cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY,
+            cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,
             11, 15
         )
     })

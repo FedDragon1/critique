@@ -11,7 +11,9 @@ import {bufferToMat, detectEdges, matToSharp, opencvReady, withMatAsync} from "~
  * Response body:
  * {
  *     success: boolean,
- *     data: string (base64)
+ *     data: {
+ *          png: string (base64)
+ *     }
  * }
  *
  * Process:
