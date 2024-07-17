@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import type { FourPoints, Point } from "~/types/cvtypes";
-import { useCanvas } from "~/composibles/useCanvas";
-import { type Ref, useAttrs } from "vue";
+import {useCanvas} from "~/composibles/useCanvas";
+import {type Ref, useAttrs} from "vue";
+import type {FourPoints, Point} from "~/types/cvtypes";
 
-type A = {
+type Props = {
   image: string,
   pointSpacing: number,
+  suggestedContour?: FourPoints
   strokeStyle?: string,
   fillStyle?: string,
   lineWidth?: number,
   pointRadius?: number,
-  pointFill?: string
+  pointFill?: string,
+  canvasMaxHeight?: number,
+  canvasMaxWidth?: number,
 }
 
-const props = defineProps<A>()
+const props = defineProps<Props>()
 const attrs = useAttrs()
 
 const origin: Point = {
@@ -23,10 +26,31 @@ const origin: Point = {
 
 const canvas = ref<HTMLCanvasElement>()
 const model = defineModel<FourPoints>()
+const modelPainted = ref<FourPoints>()
 let canvasController = ref<ReturnType<typeof useCanvas>>();
+
+// called when image changes
+watch(() => props.image,
+  () => {
+    canvasController.value = undefined
+    modelPainted.value = undefined
+  }
+)
+
+watch(() => props.suggestedContour, () => {
+  if (!props.suggestedContour || !canvasController.value?.imageLoaded) {
+    return
+  }
+  // convert raw to image
+  modelPainted.value = props.suggestedContour.map(p => {
+    const [x, y] = canvasController.value!.rawToPainted(p.x, p.y)
+    return {x, y}
+  }) as FourPoints
+})
 
 // called when canvas is ready
 watchEffect(() => {
+  canvasController.value
   if (!canvas.value) {
     return;
   }
@@ -35,7 +59,9 @@ watchEffect(() => {
     fillStyle: props.fillStyle,
     lineWidth: props.lineWidth,
     pointRadius: props.pointRadius,
-    pointFill: props.pointFill
+    pointFill: props.pointFill,
+    width: props.canvasMaxWidth,
+    height: props.canvasMaxHeight
   })
 })
 
@@ -49,25 +75,35 @@ watchEffect(() => {
 
 // called when image is ready
 watchEffect(() => {
-  [canvasController.value, model.value]
+  [canvasController.value, modelPainted.value]
   if (!canvasController.value || !canvasController.value.imageLoaded) {
     return;
   }
 
-  if (!model.value) {
-    const w = canvasController.value.imageWidth!
-    const h = canvasController.value.imageHeight!
-    model.value = [
+  if (!modelPainted.value) {
+    const w = canvasController.value?.paintedImageWidth!
+    const h = canvasController.value?.paintedImageHeight!
+    modelPainted.value = [
       {x: 0, y: 0},
       {x: w, y: 0},
       {x: w, y: h},
       {x: 0, y: h}
     ]
-    return;
   }
 
-  console.log('draw')
-  canvasController.value?.drawImage(() => canvasController.value?.drawFourPoints(model.value!))
+  canvasController.value?.drawImage(() => canvasController.value?.drawFourPoints(modelPainted.value!))
+})
+
+
+watchEffect(() => {
+  if (modelPainted.value && canvasController.value?.imageLoaded) {
+    model.value = modelPainted.value.map(
+        point => {
+          const [x, y] = canvasController.value!.paintedToRaw(point.x, point.y)
+          return {x, y}
+        }
+    ) as FourPoints
+  }
 })
 
 // dragging logic (-1 means no point is dragged)
@@ -113,10 +149,10 @@ function gaussianElimination(row1: [number, number, number], row2: [number, numb
  * Sort the points into clockwise rotation.
  */
 function sortPoints() {
-  const currentPoint = model.value![draggingIndex.value],
-      oppositePoint = model.value![(draggingIndex.value + 2) % model.value!.length],
-      neighbor1 = model.value![(draggingIndex.value + 3) % model.value!.length],
-      neighbor2 = model.value![(draggingIndex.value + 1) % model.value!.length]
+  const currentPoint = modelPainted.value![draggingIndex.value],
+      oppositePoint = modelPainted.value![(draggingIndex.value + 2) % modelPainted.value!.length],
+      neighbor1 = modelPainted.value![(draggingIndex.value + 3) % modelPainted.value!.length],
+      neighbor2 = modelPainted.value![(draggingIndex.value + 1) % modelPainted.value!.length]
 
   const u = {x: neighbor2.y - neighbor1.y, y: neighbor1.x - neighbor2.x},
       uMag = distance(u, origin),
@@ -150,7 +186,7 @@ function sortPoints() {
  * if invalid
  */
 function getAreaToLive() {
-  if (!model.value) {
+  if (!modelPainted.value) {
     return;
   }
 
@@ -211,22 +247,6 @@ function getAreaToLive() {
 }
 
 /**
- * Coerce the point to fit canvas dimension
- *
- * @param p
- */
-function coerce(p: Point) {
-  if (!canvas.value) {
-    throw TypeError("canvas not defined")
-  }
-
-  return {
-    x: Math.max(Math.min(p.x, canvas.value!.width), 0),
-    y: Math.max(Math.min(p.y, canvas.value!.height), 0),
-  }
-}
-
-/**
  * Resize a vector to given magnitude
  *
  * @param v
@@ -245,10 +265,10 @@ function resizeVector(v: Point, amount: number) {
  * is laying on the border of area to live
  */
 function convexityPrimer() {
-  const currentPoint = model.value![draggingIndex.value],
-      neighbor1 = model.value![(draggingIndex.value + 1) % model.value!.length],
-      neighbor2 = model.value![(draggingIndex.value + 3) % model.value!.length],
-      oppositePoint = model.value![(draggingIndex.value + 2) % model.value!.length]
+  const currentPoint = modelPainted.value![draggingIndex.value],
+      neighbor1 = modelPainted.value![(draggingIndex.value + 1) % modelPainted.value!.length],
+      neighbor2 = modelPainted.value![(draggingIndex.value + 3) % modelPainted.value!.length],
+      oppositePoint = modelPainted.value![(draggingIndex.value + 2) % modelPainted.value!.length]
 
   const {x: p, y: q} = neighbor1,
       {x: r, y: s} = neighbor2,
@@ -298,12 +318,12 @@ function convexityPrimer() {
 }
 
 function dragStart(e: MouseEvent) {
-  if (!canvasController.value || !model.value) {
+  if (!canvasController.value || !modelPainted.value) {
     return;
   }
 
-  const [x, y] = canvasController.value!.clientToCanvas(e.clientX, e.clientY)
-  model.value!.forEach((point, i) => {
+  const [x, y] = canvasController.value!.canvasToImage(...canvasController.value!.clientToCanvas(e.clientX, e.clientY))
+  modelPainted.value!.forEach((point, i) => {
     const {x: px, y: py} = point
     const dist = Math.sqrt((px - x) ** 2 + (py - y) ** 2)
 
@@ -317,8 +337,8 @@ function dragStart(e: MouseEvent) {
     return
   }
   clamper.value = getAreaToLive()
-  const originalPoint = coerce(convexityPrimer())
-  model.value[draggingIndex.value] = clamper.value!(originalPoint, model.value[draggingIndex.value])
+  const originalPoint = canvasController.value!.coerce(convexityPrimer())
+  modelPainted.value[draggingIndex.value] = canvasController.value!.coerce(clamper.value!(originalPoint, modelPainted.value[draggingIndex.value]))
 }
 
 function dragEnd() {
@@ -327,15 +347,15 @@ function dragEnd() {
 }
 
 function onDrag(e: MouseEvent) {
-  if (!canvasController.value || !model.value || draggingIndex.value === -1) {
+  if (!canvasController.value || !modelPainted.value || draggingIndex.value === -1) {
     return
   }
 
   const [x, y] = canvasController.value!.clientToCanvas(e.clientX, e.clientY)
   const newPoint = {x, y}
-  const originalPoint = model.value[draggingIndex.value]
+  const originalPoint = modelPainted.value[draggingIndex.value]
 
-  model.value[draggingIndex.value] = clamper.value!(originalPoint, newPoint)
+  modelPainted.value[draggingIndex.value] = canvasController.value!.coerce(clamper.value!(originalPoint, newPoint))
 }
 
 </script>
@@ -351,7 +371,5 @@ function onDrag(e: MouseEvent) {
 </template>
 
 <style scoped>
-canvas {
-  border: 1px solid white
-}
+
 </style>

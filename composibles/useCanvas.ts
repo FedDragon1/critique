@@ -1,11 +1,13 @@
 import type { Ref } from "vue";
-import type { CanvasOptions, FourPoints } from "~/types/cvtypes";
+import type {CanvasOptions, FourPoints, Point} from "~/types/cvtypes";
 
 
 class CanvasProxy {
     // canvas
     canvas
     ctx
+    width
+    height
 
     // styles
     strokeStyle
@@ -28,12 +30,15 @@ class CanvasProxy {
 
         // styles
         const { strokeStyle, fillStyle,
-            lineWidth, pointRadius, pointFill } = options ?? {}
+            lineWidth, pointRadius, pointFill,
+            width, height} = options ?? {}
         this.strokeStyle = strokeStyle ?? "#00ff00"
         this.pointFill = pointFill ?? "#ff00ff"
         this.fillStyle = fillStyle ?? "#ff00ff33"
         this.lineWidth = lineWidth ?? 2
         this.pointRadius = pointRadius ?? 10
+        this.width = width
+        this.height = height
     }
 
     style() {
@@ -45,15 +50,23 @@ class CanvasProxy {
     /**
      * Returns the current width of canvas
      */
-    canvasWidth() {
+    get canvasWidth() {
         return this.canvas.width
     }
 
     /**
      * Returns the current height of canvas
      */
-    canvasHeight() {
+    get canvasHeight() {
         return this.canvas.height
+    }
+
+    get paintedImageWidth() {
+        return this.canvas.width - 2 * this.pointRadius
+    }
+
+    get paintedImageHeight() {
+        return this.canvas.height - 2 * this.pointRadius
     }
 
     /**
@@ -73,8 +86,32 @@ class CanvasProxy {
             this.imageWidth = this.imageNode!.width
             this.imageHeight = this.imageNode!.height
 
-            this.canvas.height = this.imageHeight
-            this.canvas.width = this.imageWidth
+            if (this.height && this.width) {
+                // set height and width
+                // content size fit
+                const imgAspRatio = this.imageWidth / this.imageHeight,
+                    boxAspRatio = this.width / this.height
+                // image is "wider" than the box, thus width is limited
+                if (imgAspRatio > boxAspRatio) {
+                    this.canvas.width = this.width
+                    this.canvas.height = this.width * this.imageHeight / this.imageWidth
+                } else {
+                    this.canvas.height = this.height
+                    this.canvas.width = this.height * this.imageWidth / this.imageHeight
+                }
+            } else if (this.width) {
+                // auto height
+                this.canvas.width = this.width
+                this.canvas.height = this.width * this.imageHeight / this.imageWidth
+            } else if (this.height) {
+                // auto width
+                this.canvas.height = this.height
+                this.canvas.width = this.height * this.imageWidth / this.imageHeight
+            } else {
+                // size of image
+                this.canvas.height = this.imageHeight + 2 * this.pointRadius
+                this.canvas.width = this.imageWidth + 2 * this.pointRadius
+            }
         })
     }
 
@@ -100,10 +137,29 @@ class CanvasProxy {
                 return
             }
             this.style()
-            this.ctx.drawImage(img, 0, 0)
+            this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+            this.ctx.drawImage(img, ...this.imageToCanvas(0, 0),
+                this.canvasWidth - 2 * this.pointRadius,
+                this.canvasHeight - 2 * this.pointRadius
+            )
             then && then()
         }
         draw()
+    }
+
+    /**
+     * Coerce the point to fit canvas dimension
+     *
+     * @param p
+     */
+    coerce(p: Point) {
+        if (!this.imageLoaded) {
+            throw TypeError("Image not loaded")
+        }
+        return {
+            x: Math.max(Math.min(p.x, this.paintedImageWidth), 0),
+            y: Math.max(Math.min(p.y, this.paintedImageHeight), 0),
+        }
     }
 
     /**
@@ -114,8 +170,11 @@ class CanvasProxy {
      * @param points
      */
     drawFourPoints(points: FourPoints) {
-        // const pointsOrdered = orderPoints(points)
         const pointsOrdered = points
+            .map(imagePoint => {
+                const [x, y] = this.imageToCanvas(imagePoint.x, imagePoint.y)
+                return { x, y }
+            })
 
         // debugger;
         const { x: xl, y: yl } = pointsOrdered[pointsOrdered.length - 1]
@@ -144,11 +203,65 @@ class CanvasProxy {
      * @param clientX
      * @param clientY
      */
-    clientToCanvas(clientX: number, clientY: number) {
+    clientToCanvas(clientX: number, clientY: number): [number, number] {
         const rect = this.canvas.getBoundingClientRect()
         const canvasX = rect.x,
             canvasY = rect.y
         return [clientX - canvasX, clientY - canvasY]
+    }
+
+    /**
+     * The image on canvas is not painted from top left to
+     * leave space for the points.
+     * This method converts canvas coordinate to the image coordinate
+     *
+     * @param canvasX
+     * @param canvasY
+     */
+    canvasToImage(canvasX: number, canvasY: number): [number, number] {
+        return [canvasX - this.pointRadius, canvasY - this.pointRadius]
+    }
+
+    /**
+     * Inverse function of `canvasToImage`
+     *
+     * @param imageX
+     * @param imageY
+     */
+    imageToCanvas(imageX: number, imageY: number): [number, number] {
+        return [imageX + this.pointRadius, imageY + this.pointRadius]
+    }
+
+    /**
+     * Returns the raw image coordinate based on coordinate of painted image
+     *
+     * @param paintedX
+     * @param paintedY
+     */
+    paintedToRaw(paintedX: number, paintedY: number): [number, number] {
+        if (!this.imageLoaded) {
+            throw TypeError("Image not loaded")
+        }
+        return [
+            paintedX / this.paintedImageWidth * this.imageWidth!,
+            paintedY / this.paintedImageHeight * this.imageHeight!
+        ]
+    }
+
+    /**
+     * Inverse function of `paintedToRaw`
+     *
+     * @param rawX
+     * @param rawY
+     */
+    rawToPainted(rawX: number, rawY: number): [number, number] {
+        if (!this.imageLoaded) {
+            throw TypeError("Image not loaded")
+        }
+        return [
+            rawX / this.imageWidth! * this.paintedImageWidth,
+            rawY / this.imageHeight! * this.paintedImageHeight
+        ]
     }
 }
 

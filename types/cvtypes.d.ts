@@ -17,5 +17,7 @@ interface CanvasOptions {
     fillStyle?: string,
     lineWidth?: number,
     pointRadius?: number,
-    pointFill?: string
+    pointFill?: string,
+    height?: number,
+    width?: number
 }
