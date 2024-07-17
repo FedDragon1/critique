@@ -1,28 +1,15 @@
 <script setup lang="ts">
 import type {UploadInstance} from "element-plus";
-import {useCanvas} from "~/composibles/useCanvas";
 import type {Ref} from "vue";
-import type {Contour} from "~/types/cvtypes";
+import type {Contour, FourPoints} from "~/types/cvtypes";
 
 const upload = ref<UploadInstance>()
-const canvas = ref<HTMLCanvasElement>()
 const contours: Ref<Contour[]> = ref([]);
 const originalSource = ref("")
 const cannySource = ref("");
 const perspectiveImg = ref("")
 
-watchEffect(() => {
-  if (!canvas.value) {
-    return;
-  }
-  canvasController = useCanvas(canvas as Ref<HTMLCanvasElement>)
-})
-
-watch(cannySource, () => {
-  canvasController.paint(cannySource.value)
-})
-
-let canvasController: ReturnType<typeof useCanvas>;
+const fourPoints = ref(contours.value[0]?.points as FourPoints)
 
 const submitted = (resp: any) => {
   cannySource.value = resp.data.png
@@ -33,16 +20,19 @@ const contour = async () => {
     method: "POST",
     body: {image: cannySource.value}
   })
+  if (resp.success === false) {
+    ElMessage.error("No border detected")
+  }
   contours.value = resp.data.contours
   console.log(contours.value)
-  canvasController.drawContour(contours.value[0].points)
+  // canvasController.drawContour(contours.value[0].points)
 }
 
 const perspective = async () => {
   const resp = await $fetch("/api/image/transform", {
     method: "POST",
     body: {
-      points: contours.value[0].points,
+      points: fourPoints.value,
       image: originalSource.value
     }
   })
@@ -78,8 +68,17 @@ const storeImage = (file: File) => {
   </el-upload>
   <el-button type="primary" @click="contour">Extract Border</el-button>
   <el-button type="primary" @click="perspective">Get Perspective</el-button>
-  <img :src="`data:image/png;base64,${originalSource}`"/>
-  <canvas ref="canvas"></canvas>
+<!--  <img :src="`data:image/png;base64,${originalSource}`"/>-->
+<!--  <canvas ref="canvas"></canvas>-->
+  <FourPointsSelection v-if="originalSource"
+                       :image="originalSource"
+                       :point-spacing="50"
+                       fill-style="#c54c4444"
+                       point-fill="#8b2018"
+                       stroke-style="#8b2018"
+                       :line-width="2"
+                       :point-radius="10"
+                       v-model="fourPoints"></FourPointsSelection>
   <img :src="`data:image/png;base64,${perspectiveImg}`"/>
 </template>
 

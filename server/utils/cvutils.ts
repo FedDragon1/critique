@@ -135,7 +135,7 @@ export function approximateContour(mat: cv.Mat) {
     }
 
     withMat([approx], () => {
-        cv.approxPolyDP(mat, approx, 0.02 * perimeter, true)
+        cv.approxPolyDP(mat, approx, 0.05 * perimeter, true)
         const pointsData = approx.data32S
 
         for (let i = 0; i < pointsData.length / 2; i++) {
@@ -393,6 +393,12 @@ export function fourPointTransform(src: cv.Mat, dst: cv.Mat, points: FourPoints,
     return [adjustedWidth, adjustedHeight]
 }
 
+/**
+ * Sharpens the image with Laplacian filter
+ *
+ * @param image
+ * @param dst
+ */
 export function sharpen(image: cv.Mat, dst: cv.Mat) {
     const kernel = cv.matFromArray(3, 3, cv.CV_8S, [-1, -1, -1, -1, 9, -1, -1, -1, -1])
     withMat([kernel], () => {
@@ -400,6 +406,13 @@ export function sharpen(image: cv.Mat, dst: cv.Mat) {
     })
 }
 
+/**
+ * Converts image to greyscale, blue it, sharpen it, and then
+ * use `cv.adaptiveThreshold` in gaussian mode
+ *
+ * @param image
+ * @param dst
+ */
 export function adaptiveThresholding(image: cv.Mat, dst: cv.Mat) {
     const blurred = new cv.Mat();
     withMat([blurred], () => {
@@ -413,4 +426,56 @@ export function adaptiveThresholding(image: cv.Mat, dst: cv.Mat) {
             11, 15
         )
     })
+}
+
+/**
+ * Internal function used to test if a point is inside a triangle
+ * https://www.gamedev.net/forums/topic.asp?topic_id=295943
+ *
+ * @param p1
+ * @param p2
+ * @param p3
+ */
+function sign(p1: cv.Point, p2: cv.Point, p3: cv.Point) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
+}
+
+/**
+ * Detect whether point `p` is inside the triangle `v1, v2, v3`
+ * https://www.gamedev.net/forums/topic.asp?topic_id=295943
+ *
+ * @param p point to test
+ * @param v1 vertex 1
+ * @param v2 vertex 2
+ * @param v3 vertex 3
+ */
+export function pointInTriangle(p: cv.Point, v1: cv.Point, v2: cv.Point, v3: cv.Point) {
+    const d1 = sign(p, v1, v2),
+        d2 = sign(p, v2, v3),
+        d3 = sign(p, v3, v1)
+
+    const hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0),
+        hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0)
+
+    return !(hasNeg && hasPos)
+}
+
+/**
+ * Predicate indicating whether the four-point contour is convex or concave
+ *
+ * @param contour quadrilateral contour
+ */
+export function convexContour(contour: Contour) {
+    // create triangles and see if the other point is inside the triangle
+    for (let i = 0; i < 4; i++) {
+        const p = contour.points[i],
+            v1 = contour.points[(i + 1) % 4],
+            v2 = contour.points[(i + 2) % 4],
+            v3 = contour.points[(i + 3) % 4]
+        if (pointInTriangle(p, v1, v2, v3)) {
+            return false;
+        }
+    }
+
+    return true;
 }
