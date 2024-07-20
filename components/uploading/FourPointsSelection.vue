@@ -37,7 +37,7 @@ watch(() => props.image,
   }
 )
 
-watch(() => props.suggestedContour, () => {
+watchEffect(() => {
   if (!props.suggestedContour || !canvasController.value?.imageLoaded) {
     return
   }

@@ -21,3 +21,9 @@ interface CanvasOptions {
     height?: number,
     width?: number
 }
+
+interface UploadedImage {
+    url: string,
+    image: string
+    canny: string
+}
