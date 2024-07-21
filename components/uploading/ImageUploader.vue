@@ -15,7 +15,7 @@ function useUploadRef(value: any) {
 
         // filter the newValue
         if (!Array.isArray(newValue)) {
-          throw TypeError("Assigning non-array value to upload ref " + newValue)
+          return;
         }
 
         const filtered = newValue.filter(p => p.constructor === ImgProxy)
@@ -24,8 +24,6 @@ function useUploadRef(value: any) {
           return;
         }
         value = filtered
-        console.log(value)
-        console.log(filtered)
       }
     }
   })
@@ -35,11 +33,13 @@ class ImgProxy {
   image
   canny
   index
+  hash
 
   constructor(image: string, canny: string, index: number) {
     this.image = image
     this.canny = canny
     this.index = index
+    this.hash = Math.random().toString(36).slice(2, 7)
   }
 
   get url(): string {
@@ -62,7 +62,6 @@ const storeImage = (file: File) => {
     ElMessage.error("Please wait for the current image to be uploaded")
   }
   const reader = new FileReader()
-  console.log(images.value)
   reader.readAsDataURL(file)
   reader.onload = () => {
     tempImage.value = (reader.result as string).split(',')[1]
@@ -70,7 +69,6 @@ const storeImage = (file: File) => {
 }
 
 const submitted = (resp: any) => {
-  console.log(resp)
   if (!tempImage.value) {
     throw TypeError("No file is found")
   }
@@ -97,6 +95,15 @@ function handlePreview(p: any) {
 
 function handleRemove() {
   images.value = images.value.forEach((p: ImgProxy, i: number) => p.index = i)
+  currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
+}
+
+function handleDelete() {
+  const firstHalf = images.value.slice(0, currentSlide.value)
+  const secondHalf = images.value.slice(currentSlide.value + 1)
+  secondHalf.forEach((p: ImgProxy) => p.index--)
+  images.value = [...firstHalf, ...secondHalf]
+  currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
 }
 </script>
 
@@ -109,12 +116,11 @@ function handleRemove() {
         </el-icon>
       </el-button>
       <div>
-        <template v-for="({image, canny}, i) in images">
+        <template v-for="({image, canny, hash}, i) in images" :key="`${hash}`">
           <KeepAlive>
             <ImageSingle
                 v-if="currentSlide === i"
                 class="image"
-                :key="`${image}-${i}`"
                 :image="image"
                 :canny="canny"></ImageSingle>
           </KeepAlive>
@@ -125,7 +131,7 @@ function handleRemove() {
             <em>{{ currentSlide + 1 }}</em> of {{ images.length }} Picture(s)
           </span>
           <div class="operations">
-            <el-button class="delete" plain>
+            <el-button class="delete" plain @click="handleDelete">
               <el-icon>
                 <el-icon-Delete/>
               </el-icon>
