@@ -2,11 +2,6 @@
 export default defineNuxtConfig({
     devtools: {enabled: true},
     modules: ["@nuxtjs/supabase", "@element-plus/nuxt", '@nuxtjs/color-mode', '@vesp/nuxt-fontawesome', '@vueuse/nuxt',],
-    components: [
-        {
-            pathPrefix: false
-        }
-    ],
     supabase: {
         redirect: false,
     },
