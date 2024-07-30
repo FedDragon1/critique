@@ -22,6 +22,7 @@ useSeoMeta({
 <div class="wrapper">
   <div class="screen-wrapper">
     <div class="header-wrapper">
+      <img src="@/assets/homepage/books.png" alt="books" class="books">
       <header>
         <h1 class="heading">
           Unlock The Power Of<br>
@@ -72,7 +73,6 @@ useSeoMeta({
       <img src="@/assets/homepage/pencil_feather.png" alt="pencil feather" class="pencil-feather">
     </div>
 
-    <img src="@/assets/homepage/books.png" alt="books" class="books">
     <img src="@/assets/homepage/dots.png" alt="dots" class="dots">
     <img src="@/assets/homepage/scribble.png" alt="scribble">
   </div>
@@ -155,23 +155,23 @@ useSeoMeta({
   width: 150px;
   position: absolute;
   top: 23%;
-  left: 8%;
+  left: -180px;
 }
 
 .book-decoration {
   position: absolute;
   left: 50%;
-  top: 30%;
+  top: 25%;
 }
 
 .book-flipping, .pencil-feather {
-  max-height: 50vh;
-  max-width: 30vw;
+  max-height: 60vh;
+  max-width: 50vw;
 }
 
 .pencil-feather {
-  left: -33%;
-  position: relative;
+  right: -20%;
+  position: absolute;
   z-index: -1;
 }
 
