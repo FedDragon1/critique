@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import BrandIconDark from "~/components/svg/BrandIconDark.vue";
+import BrandIconLight from "~/components/svg/BrandIconLight.vue";
 
 withDefaults(defineProps<{
   headerMaxHeight: number
@@ -13,7 +13,7 @@ withDefaults(defineProps<{
 <div class="screen-wrapper">
   <div class="card">
     <div class="header" :style="{ maxHeight: `${headerMaxHeight}px` }">
-      <BrandIconDark width="200" />
+      <BrandIconLight :width="200" />
     </div>
     <div class="title">
       <h1><slot name="title"/></h1>

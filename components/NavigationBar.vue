@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BrandIconDark from "~/components/svg/BrandIconDark.vue";
+import BrandIconLight from "~/components/svg/BrandIconLight.vue";
 
 const searchText = ref<string>("");
 defineProps<{
@@ -13,7 +13,7 @@ defineProps<{
   <div class="nav-wrapper">
     <div class="left">
       <div class="logo-wrapper">
-        <NuxtLink to="/"><BrandIconDark height="40px" /></NuxtLink>
+        <NuxtLink to="/"><BrandIconLight :height="40" /></NuxtLink>
       </div>
       <el-input v-model="searchText" autocomplete="off" clearable placeholder="Search critiques" style="width: 300px; height: 40px" />
     </div>

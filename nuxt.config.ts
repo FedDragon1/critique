@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import AutoImport from 'unplugin-auto-import/vite'
+import {ElementPlusResolver} from "unplugin-vue-components/resolvers";
+
 export default defineNuxtConfig({
     devtools: {enabled: true},
     modules: ["@nuxtjs/supabase", "@element-plus/nuxt", '@nuxtjs/color-mode', '@vesp/nuxt-fontawesome', '@vueuse/nuxt',],
@@ -6,16 +9,32 @@ export default defineNuxtConfig({
         redirect: false,
     },
     elementPlus: {
-        themes: ['dark']
     },
     colorMode: {
-        preference: "dark",
         fallback: "light",
         classSuffix: ''
     },
     routeRules: {
         "/": { prerender: true },
         "/upload": { ssr: false },
+    },
+    vite: {
+      plugins: [
+          AutoImport({
+              resolvers: [
+                  ElementPlusResolver({
+                      importStyle: "sass"
+                  })
+              ]
+          })
+      ],
+    css: {
+        preprocessorOptions: {
+            scss: {
+                additionalData: `@use "@/assets/common.scss" as *;`
+            }
+        }
+    },
     },
     app: {
         head: {

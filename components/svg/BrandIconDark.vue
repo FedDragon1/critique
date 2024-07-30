@@ -1,5 +1,5 @@
 <script setup lang="ts">
-
+console.warn("Deprecated component")
 </script>
 
 <template>
