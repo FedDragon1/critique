@@ -112,9 +112,4 @@ defineProps<{
 .cls-9 {
   fill: #fabcb6;
 }
-
-
-svg {
-  height: 100%;
-}
 </style>

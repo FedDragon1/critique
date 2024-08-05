@@ -3,6 +3,4 @@
 </template>
 
 <script>
-// import 'assets/common.scss'
-
 </script>

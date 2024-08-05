@@ -1,4 +1,4 @@
-@forward "element-plus/theme-chalk/src/common/var.scss" with (
+@use "element-plus/theme-chalk/src/common/var.scss" with (
     $colors: (
         "primary": (
           "base": #8b2018
@@ -11,7 +11,20 @@
         ),
         "white": #fff8f0
     ),
+    $text: (
+        "secondary": #7E858A
+    ),
     $border-radius: (
         "round": 15px
+    ),
+    $border-color: (
+        "": #D9E1E7
+    ),
+    $input: (
+        "border-radius": 15px
     )
 );
+
+:root {
+  --el-text-color-link: #809FB8;
+}

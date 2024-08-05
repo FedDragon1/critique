@@ -1,0 +1,84 @@
+<script setup lang="ts">
+import { DeleteFilled, StarFilled, Edit } from '@element-plus/icons-vue'
+
+defineProps<{
+  fileName: string,
+  previewImage: string,
+  lastModified: string
+}>()
+
+const attrs = useAttrs();
+</script>
+
+<template>
+<div class="preview-wrapper" v-bind="attrs">
+  <div class="preview-operation">
+    <el-dropdown>
+      <el-icon><el-icon-more-filled></el-icon-more-filled></el-icon>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item :icon="DeleteFilled">Delete</el-dropdown-item>
+          <el-dropdown-item :icon="StarFilled">Favorite</el-dropdown-item>
+          <el-dropdown-item :icon="Edit">Rename</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+  </div>
+  <div class="preview-image-wrapper">
+    <span>This file has no preview</span>
+    <div class="preview-image" :style="{'background-image': `url('${previewImage}')`}"></div>
+  </div>
+  <div class="preview-texts">
+    <span>{{ fileName }}</span>
+    <span class="description-text">Last edited {{ lastModified }}</span>
+  </div>
+</div>
+</template>
+
+<style scoped>
+.preview-image {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  position: absolute;
+}
+
+.preview-image-wrapper {
+  aspect-ratio: 4/3;
+  border: 1px solid var(--el-border-color);
+  margin-top: 10px;
+  margin-bottom: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--el-border-radius-round);
+  overflow: hidden;
+}
+
+.preview-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+:focus {
+  outline: none;
+  color: var(--el-color-primary)
+}
+
+.preview-operation {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.preview-wrapper {
+  width: 100%;
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--el-border-color);
+  padding: 20px;
+  border-radius: var(--el-border-radius-round);
+}
+</style>
