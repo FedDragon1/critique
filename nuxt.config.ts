@@ -9,23 +9,18 @@ export default defineNuxtConfig({
     elementPlus: {
         importStyle: "scss"
     },
-    colorMode: {
-        preference: 'light',
-        fallback: "light",
-        classSuffix: ''
-    },
     routeRules: {
         "/": { prerender: true },
         "/upload": { ssr: false },
     },
     css: [
-        "@/assets/common.scss",
+        "@/assets/common.css",
     ],
     vite: {
         css: {
             preprocessorOptions: {
                 scss: {
-                    additionalData: `@use "@/assets/elements" as *;`
+                    additionalData: `@use "@/assets/elements" as element;`
                 }
             }
         },
