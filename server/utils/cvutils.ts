@@ -322,7 +322,7 @@ export function parallelLines(points: FourPoints) {
  *
  * @param src source matrix of image, greyscale
  * @param dst destination matrix
- * @param points four points user entered, no need to order
+ * @param points four points file entered, no need to order
  * @param imageDimension width x height of original image
  */
 export function fourPointTransform(src: cv.Mat, dst: cv.Mat, points: FourPoints, imageDimension: [number, number]) {

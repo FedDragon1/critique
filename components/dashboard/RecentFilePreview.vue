@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { DeleteFilled, StarFilled, Edit } from '@element-plus/icons-vue'
+import { DeleteFilled, StarFilled, Edit, Star } from '@element-plus/icons-vue'
 
 defineProps<{
+  uuid: number,
   fileName: string,
   previewImage: string,
-  lastModified: string
+  lastModified: string,
+  isFavorite: boolean,
+  disableOps?: boolean
 }>()
 
 const attrs = useAttrs();
@@ -15,10 +18,18 @@ const attrs = useAttrs();
   <div class="preview-operation">
     <el-dropdown>
       <el-icon><el-icon-more-filled></el-icon-more-filled></el-icon>
-      <template #dropdown>
+      <template #dropdown v-if="!disableOps">
         <el-dropdown-menu>
-          <el-dropdown-item :icon="DeleteFilled">Delete</el-dropdown-item>
-          <el-dropdown-item :icon="StarFilled">Favorite</el-dropdown-item>
+          <el-dropdown-item @click="$emit('delete', uuid)" :icon="DeleteFilled">Delete</el-dropdown-item>
+          <el-dropdown-item
+              v-if="isFavorite"
+              @click="$emit('unfavorite', uuid)"
+              :icon="Star">Unfavorite</el-dropdown-item>
+          <el-dropdown-item
+              v-else
+              @click="$emit('favorite', uuid)"
+              :icon="StarFilled">Favorite</el-dropdown-item>
+<!--          TODO-->
           <el-dropdown-item :icon="Edit">Rename</el-dropdown-item>
         </el-dropdown-menu>
       </template>
