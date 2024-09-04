@@ -2,11 +2,12 @@
 
 import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import RegisterForm from "~/components/form/RegisterForm.vue";
+import ReturnNav from "~/components/login/ReturnNav.vue";
 
 const form = reactive({
+  username: '',
   email: '',
-  password: '',
-  repeatPassword: ''
+  password: ''
 })
 const supabase = useSupabaseClient()
 const router = useRouter()
@@ -40,10 +41,6 @@ function validateEmail() {
 }
 
 function validatePassword() {
-  if (form.password !== form.repeatPassword) {
-    ElMessage.error("Passwords do not match")
-    return false;
-  }
   if (form.password.length < 8) {
     ElMessage.error("Password must be longer than 8 characters")
     return false;
@@ -69,16 +66,19 @@ function validatePassword() {
 </script>
 
 <template>
-<SeoHead title="Sign Up" />
+  <SeoHead title="Sign Up" />
 
-<CardFrame :header-max-height="60">
-  <template #title>
-    Sign up
-  </template>
-  <OAuthDisplay/>
-  <hr>
-  <RegisterForm :model="form" @register="onRegister" />
-</CardFrame>
+  <ReturnNav></ReturnNav>
+
+  <CardFrame :header-max-height="40">
+    <template #title>
+      Create an Account
+    </template>
+    <RegisterForm :model="form" @register="onRegister" />
+    <template #footer>
+      <OAuthDisplay/>
+    </template>
+  </CardFrame>
 </template>
 
 <style scoped>

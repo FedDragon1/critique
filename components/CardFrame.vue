@@ -41,31 +41,19 @@ withDefaults(defineProps<{
 }
 
 .card {
+  margin-top: 100px;
   height: 80vh;
-  max-height: 550px;
   width: 80vw;
-  max-width: 400px;
+  max-width: 550px;
   border-radius: var(--el-border-radius-base);
-  border: 1px solid var(--el-border-color);
   padding: 50px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-height: 1000px;
 }
 
 .header {
   height: 20%;
-}
-
-.title {
-
-}
-
-.content {
-  flex-grow: 999;
-}
-
-.footer {
-
 }
 </style>

@@ -38,7 +38,7 @@ defineProps<{
 <template>
   <aside class="dashboard-aside">
     <div class="aside-top">
-      <BrandIconLight :height="50"></BrandIconLight>
+      <BrandIconLight :height="40" style="padding-top: 20px;"></BrandIconLight>
       <div class="functions">
         <template v-for="route in routes" :key="route.to">
           <NuxtLink class="function-tab" :to="route.to">
@@ -112,7 +112,8 @@ defineProps<{
 .aside-top {
   display: flex;
   flex-direction: column;
-  gap: 40px
+  gap: 40px;
+  align-content: flex-start;
 }
 
 .router-link-active {

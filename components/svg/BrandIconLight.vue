@@ -3,10 +3,12 @@ defineProps<{
   width?: number,
   height?: number
 }>()
+
+const attrs = useAttrs();
 </script>
 
 <template>
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1533.26 390.92" :width="width" :height="height">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1533.26 390.92" v-bind="attrs" :width="width" :height="height">
     <title>critique</title>
     <g id="icon">
       <path class="cls-1"
@@ -77,6 +79,11 @@ defineProps<{
 </template>
 
 <style scoped>
+svg {
+  width: fit-content;
+  height: fit-content;
+}
+
 .cls-1 {
   fill: #f8bab4;
 }

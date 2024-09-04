@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {Provider} from "@supabase/auth-js";
-import {faGithub, faGoogle, type IconDefinition} from "@fortawesome/free-brands-svg-icons";
+import {faGithub, faGoogle} from "@fortawesome/free-brands-svg-icons";
 
 type SupportedProviders = "Google" | "GitHub";
 
@@ -25,16 +25,21 @@ const signInWith = async (provider: Provider) => {
 </script>
 
 <template>
-  <el-button plain class="oauth-button" @click="signInWith(provider as Provider)">
-    <font-awesome :icon="getIcon[provider]"/>
-    Sign In with {{provider}}
-  </el-button>
+    <font-awesome size="xl"
+                  :icon="getIcon[provider]"
+                  class="oauth-button"
+                  @click="signInWith(provider as Provider)" />
 </template>
 
 <style scoped>
 .oauth-button {
-  width: 100%;
+  width: 1.5rem;
   margin: 0;
-  height: 35px;
+  display: inline;
+  transition: 0.2s color ease-in-out;
+}
+
+.oauth-button:hover {
+  color: var(--el-color-primary)
 }
 </style>

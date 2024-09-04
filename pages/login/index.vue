@@ -2,6 +2,7 @@
 import SeoHead from "~/components/SeoHead.vue";
 import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import EmailPasswordForm from "~/components/form/LoginForm.vue";
+import ReturnNav from "~/components/login/ReturnNav.vue";
 
 definePageMeta({
   middleware: 'login-redirect'
@@ -26,21 +27,17 @@ const signInForm = reactive({
 <template>
   <SeoHead title="Sign In"/>
 
-  <CardFrame :header-max-height="60">
-    <template #title>Sign in</template>
-    <OAuthDisplay/>
-    <hr>
+  <ReturnNav></ReturnNav>
+
+  <CardFrame :header-max-height="40">
+    <template #title>Log in</template>
     <EmailPasswordForm :model="signInForm" @login="signInWithPassword" />
-    <NuxtLink to="/register" class="register"><el-text type="primary">Don't have an account? Register</el-text></NuxtLink>
+<!--    <OAuthDisplay/>-->
+    <template #footer><OAuthDisplay/></template>
   </CardFrame>
 </template>
 
 <style scoped>
-.register {
-  text-decoration: none;
-}
 
-:deep(.form .el-form-item) {
-  align-items: center;
-}
+
 </style>
