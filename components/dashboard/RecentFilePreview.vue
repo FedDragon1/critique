@@ -29,8 +29,8 @@ const attrs = useAttrs();
               v-else
               @click="$emit('favorite', uuid)"
               :icon="StarFilled">Favorite</el-dropdown-item>
-<!--          TODO-->
-          <el-dropdown-item :icon="Edit">Rename</el-dropdown-item>
+          <el-dropdown-item :icon="Edit"
+                            @click="$emit('rename', uuid)">Rename</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -91,5 +91,11 @@ const attrs = useAttrs();
   border: 1px solid var(--el-border-color);
   padding: 20px;
   border-radius: var(--el-border-radius-round);
+  transition: 0.2s all ease-in-out;
+}
+
+.preview-wrapper:hover {
+  border: 1px solid var(--el-color-error);
+  color: var(--el-color-error);
 }
 </style>

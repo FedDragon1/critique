@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {CritiqueFileDesc, CritiqueFileMeta} from "~/types/requests";
+import type {CritiqueFileDesc} from "~/types/requests";
 import {useTime} from "~/composibles/useTime";
 import {useFile} from "~/composibles/useFile";
 import {Calendar, Crop, Sort} from "@element-plus/icons-vue";
@@ -37,21 +37,21 @@ const orderedFiles = computed(() => props.files
       <div class="selection">
         <div class="big-icon selection-button hover-color" :class="{selected: !favoriteOnly}" @click="favoriteOnly = false">
           <h3 class="selection-text">
-            <el-icon><el-icon-folder style="width: 2rem; height: 1.5rem"></el-icon-folder></el-icon>
+            <el-icon size="1.5rem"><el-icon-folder></el-icon-folder></el-icon>
             All Files
           </h3>
         </div>
         <div class="big-icon selection-button hover-color" :class="{selected: favoriteOnly}" @click="favoriteOnly = true">
           <h3 class="selection-text">
-            <el-icon><el-icon-star-filled style="width: 2rem; height: 2rem"></el-icon-star-filled></el-icon>
+            <el-icon size="2rem"><el-icon-star-filled></el-icon-star-filled></el-icon>
             Favorite
           </h3>
         </div>
       </div>
       <div class="order">
         <el-dropdown v-model="orderBy" class="big-icon">
-          <el-icon class="hover-color">
-            <el-icon-grid style="width: 1.5rem; height: 1.5rem"></el-icon-grid>
+          <el-icon class="hover-color" size="1.5rem">
+            <el-icon-grid></el-icon-grid>
           </el-icon>
           <template #dropdown>
             <el-dropdown-item :icon="Calendar" @click="orderBy = 'lastModified'">Most Recent</el-dropdown-item>
@@ -81,8 +81,8 @@ const orderedFiles = computed(() => props.files
                      @click="$emit('favorite', file.uuid)"
                      class="hover-color op-icon secondary"><el-icon-Star /></el-icon>
 
-<!--            TODO: add functionality-->
             <el-icon size="1.5rem"
+                     @click="$emit('rename', file.uuid)"
                      class="hover-color op-icon secondary"><el-icon-edit /></el-icon>
 
             <el-icon size="1.5rem"
@@ -128,6 +128,10 @@ const orderedFiles = computed(() => props.files
 
 .op-icon {
   transition: color 0.2s ease-in-out;
+}
+
+.op-icon:hover {
+  color: var(--el-color-danger);
 }
 
 .secondary {
@@ -180,6 +184,7 @@ aside {
   align-items: center;
   padding: 8px 15px 8px 8px;
   gap: 20px;
+  transition: 0.2s all ease-in-out;
 }
 
 .file-table {
@@ -192,7 +197,8 @@ aside {
   border: 1px solid transparent;
 }
 
-.hover-color:hover {
+.file-entry:hover {
+  border: 1px solid var(--el-color-danger);
   color: var(--el-color-danger)
 }
 
@@ -205,11 +211,6 @@ aside {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
-}
-
-.big-icon:deep(.el-icon) {
-  height: unset;
-  width: unset;
 }
 
 .big-icon:focus-visible {
