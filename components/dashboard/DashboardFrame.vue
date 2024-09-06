@@ -3,9 +3,18 @@ import DashboardAside from "~/components/dashboard/DashboardAside.vue";
 
 const attrs = useAttrs();
 
-defineProps<{
-  activate: "/dashboard" | "/dashboard/analytic" | "/dashboard/profile" | "/dashboard/setting"
+const props = defineProps<{
+  padding?: string,
+  activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/dashboard/setting"
 }>();
+
+const main = ref();
+
+onMounted(() => {
+  if (props.padding) {
+    main.value.style.setProperty("--dashboard-main-padding", props.padding)
+  }
+})
 </script>
 
 <template>
@@ -13,7 +22,7 @@ defineProps<{
     <section class="container">
       <DashboardAside :activate="activate"></DashboardAside>
       <main>
-        <div class="dashboard-main" v-bind="attrs">
+        <div class="dashboard-main" v-bind="attrs" ref="main">
           <slot></slot>
         </div>
       </main>

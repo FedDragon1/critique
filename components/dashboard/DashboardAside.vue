@@ -13,7 +13,7 @@ const routes = [
     caption: "Dashboard"
   },
   {
-    to: "/dashboard/analytic",
+    to: "/analytic",
     component: AnalyticsIcon,
     caption: "Analytics"
   },
@@ -30,7 +30,7 @@ const routes = [
 ]
 
 defineProps<{
-  activate: "/dashboard" | "/dashboard/analytic" | "/dashboard/profile" | "/dashboard/setting"
+  activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/dashboard/setting"
 }>();
 
 </script>
@@ -41,7 +41,7 @@ defineProps<{
       <BrandIconLight :height="40" style="padding-top: 20px;"></BrandIconLight>
       <div class="functions">
         <template v-for="route in routes" :key="route.to">
-          <NuxtLink class="function-tab" :to="route.to">
+          <NuxtLink class="function-tab" :to="route.to" :class="{active: activate === route.to}">
             <component :is="route.component"
                        width="20"
                        height="20"
@@ -58,6 +58,7 @@ defineProps<{
   </aside>
 </template>
 
+<!--suppress CssUnusedSymbol -->
 <style scoped>
 .dashboard-aside {
   width: var(--aside-width);
@@ -116,7 +117,7 @@ defineProps<{
   align-content: flex-start;
 }
 
-.router-link-active {
+.active {
   background-color: var(--el-color-danger);
   color: var(--el-color-white)
 }

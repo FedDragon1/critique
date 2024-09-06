@@ -24,3 +24,34 @@ interface CritiqueFileMeta {
     size: string,
     isFavorite: boolean
 }
+
+// file
+
+interface CritiqueCard {
+    uuid: number,
+    title: string,
+    analysis: string,
+    tags: string[],
+}
+
+interface CritiqueTag {
+    name: string,
+    cards: number[],
+    type: "analysis" | "summary"
+}
+
+interface CritiqueDocument {
+    markup: string,
+    raw: string
+}
+
+interface Critique {
+    uuid: number,
+    fileName: string,
+    lastModified: number,
+    size: number,
+    isFavorite: boolean,
+    document: CritiqueDocument,
+    analysis: CritiqueCard[],
+    tags: CritiqueTag[]
+}

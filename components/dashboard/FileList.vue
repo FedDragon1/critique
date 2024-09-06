@@ -63,6 +63,7 @@ const orderedFiles = computed(() => props.files
     </div>
     <div class="file-table">
       <div class="file-entry"
+           @click="$router.push(`/analytic/${file.uuid}`)"
            v-if="orderedFiles.length > 0"
            v-for="file in orderedFiles"
            :key="file.uuid">
