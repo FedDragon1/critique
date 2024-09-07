@@ -18,7 +18,7 @@ withDefaults(defineProps<{
     <div class="title">
       <h1><slot name="title"/></h1>
     </div>
-    <div class="content">
+    <div class="content-wrapper">
       <slot />
     </div>
     <div class="footer">

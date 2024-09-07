@@ -43,6 +43,7 @@ nav {
   display: flex;
   justify-content: space-around;
   border-bottom: 1px solid var(--el-border-color);
+  flex-shrink: 0;
 }
 
 nav > div {

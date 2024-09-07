@@ -32,3 +32,11 @@ hr {
 i:focus-visible {
     outline: none;
 }
+
+.no-select {
+    user-select: none;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
