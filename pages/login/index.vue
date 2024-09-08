@@ -3,6 +3,7 @@ import SeoHead from "~/components/SeoHead.vue";
 import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import EmailPasswordForm from "~/components/form/LoginForm.vue";
 import ReturnNav from "~/components/login/ReturnNav.vue";
+import CardFrame from "~/components/login/CardFrame.vue";
 
 definePageMeta({
   middleware: 'login-redirect'

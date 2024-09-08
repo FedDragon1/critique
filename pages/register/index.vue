@@ -3,6 +3,7 @@
 import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import RegisterForm from "~/components/form/RegisterForm.vue";
 import ReturnNav from "~/components/login/ReturnNav.vue";
+import CardFrame from "~/components/login/CardFrame.vue";
 
 const form = reactive({
   username: '',
