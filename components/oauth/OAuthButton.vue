@@ -37,6 +37,7 @@ const signInWith = async (provider: Provider) => {
   margin: 0;
   display: inline;
   transition: 0.2s color ease-in-out;
+  cursor: pointer;
 }
 
 .oauth-button:hover {

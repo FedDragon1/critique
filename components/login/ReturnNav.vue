@@ -15,7 +15,7 @@ nav {
   position: fixed;
   top: 0;
   left: 0;
-  width: 80%;
+  width: 100%;
   border-bottom: 1px solid var(--el-border-color);
   padding: 20px 20px 10px;
 }
