@@ -6,6 +6,8 @@ import type {QuickActions, Message} from "~/types/critique";
 import PanelWrapper from "~/components/analytic/PanelWrapper.vue";
 import NoFile from "~/components/analytic/NoFile.vue";
 import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
+import type {Key} from "node:readline";
+import {throttle} from "lodash-es";
 
 const route = useRoute()
 
@@ -132,12 +134,32 @@ function pasteText() {
 const prompt = ref<string>("");
 const promptDom = ref<HTMLTextAreaElement>();
 const generating = ref(false)
+const multiline = ref(false)
 
 watchEffect(() => {
     prompt.value
     promptDom.value
     textareaReflow()
 })
+
+onMounted(() => {
+  promptDom.value?.addEventListener("keypress", multilineGuard)
+})
+
+onBeforeMount(() => {
+  promptDom.value?.removeEventListener("keypress", multilineGuard)
+})
+
+function multilineGuard(e: KeyboardEvent) {
+  if (e.key !== "Enter" || multiline.value || e.shiftKey || !prompt.value.trim().length || generating.value) {
+    return;
+  }
+
+  // hitting enter on the first line with non-white space character
+  // send the message
+  e.preventDefault()
+  sendMessage()
+}
 
 function textareaReflow() {
   if (!promptDom.value) {
@@ -177,7 +199,12 @@ function promptToHTML() {
 }
 
 // TODO: call backend api
-function sendMessage() {
+function sendMessageRaw() {
+  if (!prompt.value.trim().length) {
+    ElMessage.error("Empty prompt")
+    return;
+  }
+
   conversation.value.push({
     uuid: messageUuid(),
     from: "user",
@@ -186,6 +213,7 @@ function sendMessage() {
 
   prompt.value = ""
   generating.value = true
+  multiline.value = false
   setTimeout(textareaReflow, 0)
 
   setTimeout(() => {
@@ -198,6 +226,8 @@ function sendMessage() {
     generating.value = false
   }, 2000)
 }
+
+const sendMessage = throttle(sendMessageRaw, 3000)
 </script>
 
 <template>
@@ -309,6 +339,7 @@ function sendMessage() {
 </template>
 
 <style scoped>
+/*noinspection CssUnusedSymbol*/
 .panel-message-entry:not(.panel-message-entry-critique) {
   display: flex;
   flex-direction: row-reverse;
