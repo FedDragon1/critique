@@ -21,11 +21,9 @@ onMounted(() => {
   <div class="screen-wrapper">
     <section class="container">
       <DashboardAside :activate="activate"></DashboardAside>
-      <main>
         <div class="dashboard-main" v-bind="attrs" ref="main">
           <slot></slot>
         </div>
-      </main>
     </section>
   </div>
 </template>
@@ -52,11 +50,9 @@ main {
 }
 
 .dashboard-main {
-  margin: var(--dashboard-main-margin);
-  width: calc(100% - 2 * var(--dashboard-main-margin) - 2 * var(--dashboard-main-padding));
-  height: calc(100% - 2 * var(--dashboard-main-margin) - 2 * var(--dashboard-main-padding));
+  width: calc(100% - 2 * var(--dashboard-main-padding));
+  height: calc(100% - 2 * var(--dashboard-main-padding));
   background-color: white;
-  border-radius: var(--el-border-radius-round);
   padding: var(--dashboard-main-padding);
   overflow-y: auto;
 }

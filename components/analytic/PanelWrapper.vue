@@ -24,7 +24,7 @@ function dragPanel(e: MouseEvent) {
 function togglePanel() {
   panel.value!.classList.add('ease-width')
   if (dragEnd.value) {
-    panel.value!.style.width = '650px'
+    panel.value!.style.width = '50%'
     dragEnd.value = false
   } else {
     panel.value!.style.width = '45px'
@@ -63,7 +63,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="panel-wrapper" ref="panel">
+  <div class="panel-wrapper" ref="panel">
     <PanelNav :drag-end="dragEnd"
               :dragging-panel="draggingPanel"
               :toggle-panel="togglePanel"
@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: 800px;
+  width: 50%;
   flex-shrink: 0;
 }
 
