@@ -3,8 +3,9 @@
 import PanelNav from "~/components/analytic/PanelNav.vue";
 import type {QuickActions} from "~/types/critique";
 
-defineProps<{
+const props = defineProps<{
   quickActions: QuickActions,
+  postDrag?: () => void,
 }>()
 
 function dragPanel(e: MouseEvent) {
@@ -19,17 +20,22 @@ function dragPanel(e: MouseEvent) {
   const newWidth = Math.min(Math.max(Math.round(dragStartWidth.value + dragStartX.value - e.x), 45), 1000)
   panel.value!.style.width = `${newWidth}px`
   dragEnd.value = (newWidth ?? 0) < 60
+
+  props.postDrag && props.postDrag()
 }
 
 function togglePanel() {
   panel.value!.classList.add('ease-width')
+  let newWidth;
   if (dragEnd.value) {
-    panel.value!.style.width = '50%'
+    newWidth = '50%'
     dragEnd.value = false
   } else {
-    panel.value!.style.width = '45px'
+    newWidth = '45px'
     dragEnd.value = true
   }
+  panel.value!.style.width = newWidth
+  props.postDrag && props.postDrag()
   setTimeout(() => panel.value!.classList.remove('ease-width'), 500)
 }
 
@@ -76,7 +82,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="panel-inner">
         <div class="panel-chat" :class="{ 'no-select': draggingPanel }">
-          <slot/>
+          <slot :dragging-panel="draggingPanel" />
         </div>
       </div>
     </div>
@@ -92,17 +98,23 @@ onBeforeUnmount(() => {
 
 .panel-inner {
   overflow: auto;
+  display: flex;
 }
 
 .panel-chat {
   min-width: 600px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .panel {
   display: flex;
   flex-direction: row;
-  height: 100%;
   width: 100%;
+  flex-grow: 999;
+  min-height: 0;
 }
 
 .panel-wrapper {

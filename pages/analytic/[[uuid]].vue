@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import AnalyticNav from "~/components/analytic/AnalyticNav.vue";
 import type {Critique} from "~/types/requests";
-import {Promotion, QuestionFilled, Tickets} from "@element-plus/icons-vue";
-import type {QuickActions} from "~/types/critique";
+import {CollectionTag, Promotion, QuestionFilled, Tickets} from "@element-plus/icons-vue";
+import type {QuickActions, Message} from "~/types/critique";
 import PanelWrapper from "~/components/analytic/PanelWrapper.vue";
 import NoFile from "~/components/analytic/NoFile.vue";
 import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
@@ -93,21 +93,30 @@ function generateQuestions() {
   // TODO
 }
 
+function generateTags() {
+  // TODO
+}
+
 const quickActions: QuickActions = {
   'annotate': {
     icon: Promotion,
-    caption: "Annotate Selection",
+    caption: "Annotate",
     handler: annotateSelection
   },
   'summarize': {
     icon: Tickets,
-    caption: "Summarize Selection",
+    caption: "Summarize",
     handler: summarizeSelection
   },
   'questions': {
     icon: QuestionFilled,
-    caption: "Critical Questions",
+    caption: "Critical Question",
     handler: generateQuestions
+  },
+  'tags': {
+    icon: CollectionTag,
+    caption: "Tag Critiques",
+    handler: generateTags
   }
 }
 
@@ -117,6 +126,77 @@ function uploadFile() {
 
 function pasteText() {
   // TODO
+}
+
+// Conversations
+const prompt = ref<string>("");
+const promptDom = ref<HTMLTextAreaElement>();
+const generating = ref(false)
+
+watchEffect(() => {
+    prompt.value
+    promptDom.value
+    textareaReflow()
+})
+
+function textareaReflow() {
+  if (!promptDom.value) {
+    return;
+  }
+
+  if (!promptDom.value) {
+    return;
+  }
+  promptDom.value.style.height = '1rem';
+  promptDom.value.style.height = Math.min((promptDom.value.scrollHeight - 6), 200) + "px";
+
+  if (promptDom.value.scrollHeight - 6 > 200) {
+    promptDom.value.style.overflowY = "auto"
+  } else {
+    promptDom.value.style.overflowY = "hidden"
+  }
+}
+
+function messageUuid() {
+  return Math.round(Math.random() * 1_000_000)
+}
+
+const conversation = ref<Message[]>([{
+  uuid: messageUuid(),
+  from: "critique",
+  content: "Hi, I'm Critique, an AI tool designed to enhance your critical reading skills. I don't have personal experiences or emotions, but I can help you analyze and evaluate texts, generate questions, and provide explanations based on what you’re reading. My goal is to assist you with understanding complex materials, improving your analytical skills, and making your reading experience more interactive and insightful. How can I help you today?"
+}])
+
+function promptToHTML() {
+  const segments = prompt.value.split("\n").map(
+      s => `<p class="wrap no-margin">${s}</p>`
+  );
+  const joined = segments.join("<br>")
+
+  return `${joined}`
+}
+
+// TODO: call backend api
+function sendMessage() {
+  conversation.value.push({
+    uuid: messageUuid(),
+    from: "user",
+    content: promptToHTML()
+  })
+
+  prompt.value = ""
+  generating.value = true
+  setTimeout(textareaReflow, 0)
+
+  setTimeout(() => {
+    conversation.value.push({
+      uuid: messageUuid(),
+      from: "critique",
+      content: "This is an auto-response"
+    })
+
+    generating.value = false
+  }, 2000)
 }
 </script>
 
@@ -190,37 +270,37 @@ function pasteText() {
         <!--          TODO-->
         {{ critique }}
       </ContentWrapper>
-      <PanelWrapper :quick-actions="quickActions">
-        <!--          TODO-->
-        <div>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci aliquid architecto aspernatur
-          atque,
-          consectetur, consequuntur cum cupiditate dignissimos doloremque dolores dolorum esse eveniet obcaecati
-          odit
-          officiis sed totam unde voluptate?
+      <PanelWrapper :quick-actions="quickActions"
+                    :post-drag="textareaReflow" v-slot="slotProps">
+        <div class="panel-message-wrapper">
+          <div class="panel-message-entry"
+               v-for="message in conversation"
+               :class="{ 'panel-message-entry-critique': message.from === 'critique' }"
+               :key="message.uuid">
+            <div class="critique-pfp" v-if="message.from === 'critique'">
+              <img alt="critique"
+                   src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAANGSURBVHgBnZZNSFRRFMfPuW+cmaJFGfQhQUHQhzVj6hh9WDmYw/gF2rIgsl20ahMkoQuZsVW0CVqU5EYiglYzQuKoiKSSaQoRWlhgUQtDSLLJ9+7p3MnRGX2Md+a/mPvufeee35xzz3nvIWSh5d7IeVPKagThQ6LDBLRHrSPgHAHOIslBi8zo1mDjqN1+1IHEeyKXJdEtNvbp2CPCe7Aw5ArWdmnDliKR/ZgHnQB0AXIQATyDvOU7W/yNn9VcZDLGbXlOTpUHchSn+pRbsosVZYS5LwRmhGX4Of55yBYEMOtyiAqsrP2SspauoUBgFzitl1JC07lo77Rai3d3e8kwu9m8ADSkQE4D/akgpQ2RYZ5s5d8ziNjfV1N1Qq25qqsneahgL18hR9DKvTW9bggekKY5u7pA8JOr8HQywkWO0GFYMb7cmS1oY2SWdXfd7nwhsG+wpvKQmm7jCF2Ifr6czxaUBqPWVsFRNNrYFAiDgXWBooTTqtopiNNp1cjZgNJgoxPDZ3nIt7UiKDBAxpJAd339DEnDzzU9zw2sBUqDmdI8msmQHecbKKMjDf9T6g4GPwpOqVPogdJgRGLfZsbEEZomV2ldxRE1d3FKdUFpMHbl1tyz10lGF2k+V21hAvCPzgZVDLhE9ZjIbI4wQjm3mbECkZT+M7FYorlDxceutvm8h0FTqzCLHBOgATobjSXOKFTiuUbCeIoEA+2+omLICrYYf8seF2ytCKZlHMuToHCp9wa/tDow8eqC3dyfvTrAVZi/v98kko/AJiIgGSjv6fmWiKiMIwJ4COkFssMiGQ2Xeo5owZQcv+EBD0upoPWpA4kdYFOJ/ETZIwH6wsWFhaADOxWL/eCU3VfX3FPTqaC2Ek+TSh1kKPkEUDiGQqXekk1hSovLop0PPQJ/cS0in+cmPy2egEZvscF2TnNvqKzwhM29zAr5jl8HEo91bNMd03ce/M1jUx/W1jIoXFZ0iSS9gCxBSXGEC9JBF1tGpsbUPOM3iHTACG/phFxF+NyK//qUnGr943CJ54oEvM1N5dWx5+oa4HNvbR6fGkhdzio9904eKzJNo0EIKifCfbz5IKdqWZ0PSZgEIYYthFctb96N2+3/B38BUYfm1GsgAAAAAElFTkSuQmCC">
+            </div>
+            <div class="panel-message-entry-data" v-html="message.content"></div>
+          </div>
         </div>
-        <div>Aperiam asperiores blanditiis consequatur debitis deserunt dignissimos doloribus ea eum excepturi
-          facere
-          illo inventore ipsum iste labore minus, nam, neque nesciunt nihil nostrum porro rem sapiente sint sit
-          unde
-          velit.
-        </div>
-        <div>Aperiam blanditiis, earum error esse iure molestiae nam neque quisquam quod sed! Alias distinctio
-          quisquam
-          velit. Ad alias enim illum nisi provident voluptate. Asperiores inventore iure laborum reprehenderit
-          sequi
-          tempore?
-        </div>
-        <div>Autem, ratione, reprehenderit. Accusamus animi asperiores eaque, eligendi facere molestiae molestias
-          nulla
-          quaerat repellat tempore? Aspernatur consequuntur culpa eaque labore natus nulla, pariatur perferendis,
-          quasi
-          ratione repellendus reprehenderit rerum vel!
-        </div>
-        <div>A ab aliquam animi consequatur, deleniti dicta dolorem doloribus enim eveniet exercitationem facilis
-          harum
-          illum incidunt laudantium maiores molestiae odit officiis optio pariatur perspiciatis rem soluta sunt
-          totam
-          voluptas voluptatum.
+        <div class="panel-message-box">
+          <el-icon size="1.2rem">
+            <el-icon-circle-plus></el-icon-circle-plus>
+          </el-icon>
+          <textarea class="panel-message-input"
+                    placeholder="Chat to the critique bot"
+                    :class="{ 'no-select': slotProps.draggingPanel }"
+                    :readonly="slotProps.draggingPanel"
+                    v-model="prompt"
+                    ref="promptDom"
+                    maxlength="2000" />
+          <el-icon size="1.2rem" @click="sendMessage" v-if="!generating">
+            <el-icon-promotion></el-icon-promotion>
+          </el-icon>
+          <el-icon size="1.2rem" v-else>
+            <el-icon-loading class="spin"></el-icon-loading>
+          </el-icon>
         </div>
       </PanelWrapper>
     </main>
@@ -229,6 +309,97 @@ function pasteText() {
 </template>
 
 <style scoped>
+.panel-message-entry:not(.panel-message-entry-critique) {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.panel-message-entry:not(.panel-message-entry-critique) .panel-message-entry-data {
+  width: auto;
+  max-width: 80%;
+  white-space: wrap;
+  padding: 20px;
+  background: var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-round) var(--el-border-radius-round) 0 var(--el-border-radius-round);
+}
+
+.panel-message-box i {
+  color: var(--el-text-color-secondary);
+  transition: color 0.2s ease-in-out;
+}
+
+.panel-message-box:has(.panel-message-input:focus) i {
+  color: var(--el-text-color);
+}
+
+.panel-message-box i:hover {
+  color: var(--el-color-primary) !important;
+}
+
+.panel-message-wrapper {
+  flex-grow: 999;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.panel-message-input {
+  font-family: var(--el-font-family), sans-serif;
+  border: none;
+  flex-grow: 999;
+  resize: none;
+  height: 1rem;
+  max-height: 200px;
+  overflow-y: hidden;
+}
+
+.panel-message-input:focus {
+  outline: none;
+}
+
+.panel-message-box:has(.panel-message-input:focus) {
+  border: 1px solid var(--el-color-primary);
+}
+
+.panel-message-box {
+  margin: 10px;
+  flex-shrink: 0;
+  border-radius: var(--el-border-radius-round);
+  border: var(--el-border);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 15px;
+  transition: border 0.2s ease-in-out;
+}
+
+.panel-message-entry {
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+  gap: 20px;
+  width: 95%;
+  line-height: 1.8rem;
+}
+
+.panel-message-entry.panel-message-entry-critique > .panel-message-entry-data {
+  margin-top: 8px;
+}
+
+.critique-pfp {
+  border: var(--el-border);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--el-border-radius-circle);
+  flex-shrink: 0;
+}
+
+.critique-pfp > img {
+  translate: -2px 0;
+}
+
 /*noinspection CssUnusedSymbol*/
 .ease-width {
   transition: 0.2s width ease-out;

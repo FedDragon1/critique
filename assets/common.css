@@ -34,9 +34,39 @@ i:focus-visible {
 }
 
 .no-select {
-    user-select: none;
+    cursor: default;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+textarea.no-select::selection {
+    background: transparent;
 }
 
 .nowrap {
     white-space: nowrap;
+}
+
+.wrap {
+    white-space: wrap;
+    word-wrap: break-word;
+}
+
+.spin {
+    animation: spin 1s infinite linear;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
