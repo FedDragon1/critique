@@ -158,6 +158,26 @@ function textareaReflow() {
   }
 }
 
+function reflowDuring(ms: number, per: number = 50) {
+  return () => {
+    const start = Date.now()
+    const fn = () => {
+      const now = Date.now()
+
+      console.log(now - start)
+
+      textareaReflow()
+      if (now - start > ms) {
+        return;
+      }
+
+      // reflow the text, and wait for `per` ms
+      setTimeout(fn, per)
+    }
+    fn()
+  }
+}
+
 function chat(message: Message, postChat?: () => void): Promise<Message> {
   conversation.value.push(message)
 
@@ -236,8 +256,9 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
     </template>
   </el-dialog>
 
-  <DashboardFrame activate="/analytic" padding="0px" style="display: flex;
-  flex-direction: column;">
+  <DashboardFrame activate="/analytic" padding="0px"
+                  :post-toggle="reflowDuring(200)"
+                  style="display: flex; flex-direction: column;">
     <AnalyticNav :title="critique?.fileName || 'New Critique File'"
                  :disable-op="!critiqueUuid"
                  @favorite="favorite"
@@ -270,10 +291,6 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
   flex-grow: 999;
   min-height: 0;
   overflow-y: auto;
-}
-
-.critique-pfp > img {
-  translate: -2px 0;
 }
 
 /*noinspection CssUnusedSymbol*/

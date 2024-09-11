@@ -57,6 +57,10 @@ defineProps<{
   flex-shrink: 0;
 }
 
+.critique-pfp > img {
+  translate: -2px 0;
+}
+
 .panel-message-entry.panel-message-entry-critique > .panel-message-entry-data {
   margin-top: 8px;
 }

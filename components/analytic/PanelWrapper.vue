@@ -18,7 +18,8 @@ function dragPanel(e: MouseEvent) {
     return;
   }
   const newWidth = Math.min(Math.max(Math.round(dragStartWidth.value + dragStartX.value - e.x), 45), 1000)
-  panel.value!.style.width = `${newWidth}px`
+  const parentWidth = panel.value.parentElement!.clientWidth;
+  panel.value!.style.width = `${(newWidth / parentWidth) * 100}%`
   dragEnd.value = (newWidth ?? 0) < 60
 
   props.postDrag && props.postDrag()

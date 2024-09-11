@@ -2,6 +2,7 @@
 
 :root {
     --aside-width: 250px;
+    --aside-width-minimized: 70px;
     --nav-height: 75px;
     --poppins: "poppins";
     --dashboard-background-color: #f0f0f0;

@@ -2,7 +2,18 @@
 
 export default defineNuxtConfig({
   devtools: {enabled: true},
-  modules: ["@nuxtjs/supabase", "@element-plus/nuxt", '@nuxtjs/color-mode', '@vesp/nuxt-fontawesome', '@vueuse/nuxt',],
+  modules: [
+      "@nuxtjs/supabase",
+      "@element-plus/nuxt",
+      '@nuxtjs/color-mode',
+      '@vesp/nuxt-fontawesome',
+      '@vueuse/nuxt',
+      "@pinia/nuxt"
+  ],
+
+  pinia: {
+      storesDirs: ["./stores/**"]
+  },
 
   supabase: {
       redirect: false,

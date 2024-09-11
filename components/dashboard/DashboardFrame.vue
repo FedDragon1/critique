@@ -5,7 +5,8 @@ const attrs = useAttrs();
 
 const props = defineProps<{
   padding?: string,
-  activate: "/dashboard" | "/analytic" | "/setting"
+  activate: "/dashboard" | "/analytic" | "/setting",
+  postToggle?: () => void
 }>();
 
 const main = ref();
@@ -20,7 +21,7 @@ onMounted(() => {
 <template>
   <div class="screen-wrapper">
     <section class="container">
-      <DashboardAside :activate="activate"></DashboardAside>
+      <DashboardAside :activate="activate" :post-toggle="postToggle"></DashboardAside>
       <div class="dashboard-main" v-bind="attrs" ref="main">
         <slot></slot>
       </div>

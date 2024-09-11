@@ -135,7 +135,7 @@ function renameFile() {
       <el-input v-model="searchText" autocomplete="off" clearable placeholder="Search critiques"
                 :suffix-icon="Search" class="search-bar"/>
       <div class="avatar">
-        <div  class="avatar-image" :style="{'background-image': `url('${user?.user_metadata?.avatar_url}')`}"></div>
+        <div class="avatar-image" :style="{'background-image': `url('${user?.user_metadata?.avatar_url}')`}"></div>
       </div>
     </nav>
 
@@ -248,6 +248,7 @@ function renameFile() {
 .avatar-image {
   width: 100%;
   height: 100%;
+  background-size: contain;
 }
 
 .avatar {
