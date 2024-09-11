@@ -3,8 +3,8 @@
 </script>
 
 <template>
-  <DashboardFrame activate="/dashboard/profile">
-    Profile
+  <DashboardFrame activate="/setting">
+    Settings
   </DashboardFrame>
 </template>
 

@@ -6,8 +6,9 @@ import type {QuickActions, Message} from "~/types/critique";
 import PanelWrapper from "~/components/analytic/PanelWrapper.vue";
 import NoFile from "~/components/analytic/NoFile.vue";
 import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
-import type {Key} from "node:readline";
-import {throttle} from "lodash-es";
+import {v4 as uuid} from 'uuid';
+import ChatBox from "~/components/analytic/ChatBox.vue";
+import MessageEnrty from "~/components/analytic/MessageEnrty.vue";
 
 const route = useRoute()
 
@@ -131,35 +132,13 @@ function pasteText() {
 }
 
 // Conversations
-const prompt = ref<string>("");
 const promptDom = ref<HTMLTextAreaElement>();
-const generating = ref(false)
-const multiline = ref(false)
 
-watchEffect(() => {
-    prompt.value
-    promptDom.value
-    textareaReflow()
-})
-
-onMounted(() => {
-  promptDom.value?.addEventListener("keypress", multilineGuard)
-})
-
-onBeforeMount(() => {
-  promptDom.value?.removeEventListener("keypress", multilineGuard)
-})
-
-function multilineGuard(e: KeyboardEvent) {
-  if (e.key !== "Enter" || multiline.value || e.shiftKey || !prompt.value.trim().length || generating.value) {
-    return;
-  }
-
-  // hitting enter on the first line with non-white space character
-  // send the message
-  e.preventDefault()
-  sendMessage()
-}
+const conversation = ref<Message[]>([{
+  uuid: uuid(),
+  from: "critique",
+  content: "Hi, I'm Critique, an AI tool designed to enhance your critical reading skills. I don't have personal experiences or emotions, but I can help you analyze and evaluate texts, generate questions, and provide explanations based on what you’re reading. My goal is to assist you with understanding complex materials, improving your analytical skills, and making your reading experience more interactive and insightful. How can I help you today?"
+}])
 
 function textareaReflow() {
   if (!promptDom.value) {
@@ -179,55 +158,26 @@ function textareaReflow() {
   }
 }
 
-function messageUuid() {
-  return Math.round(Math.random() * 1_000_000)
-}
+function chat(message: Message, postChat?: () => void): Promise<Message> {
+  conversation.value.push(message)
 
-const conversation = ref<Message[]>([{
-  uuid: messageUuid(),
-  from: "critique",
-  content: "Hi, I'm Critique, an AI tool designed to enhance your critical reading skills. I don't have personal experiences or emotions, but I can help you analyze and evaluate texts, generate questions, and provide explanations based on what you’re reading. My goal is to assist you with understanding complex materials, improving your analytical skills, and making your reading experience more interactive and insightful. How can I help you today?"
-}])
+  return new Promise((resolve, reject) => {
+    // TODO
 
-function promptToHTML() {
-  const segments = prompt.value.split("\n").map(
-      s => `<p class="wrap no-margin">${s}</p>`
-  );
-  const joined = segments.join("<br>")
+    setTimeout(() => {
+      const newMessage: Message = {
+        uuid: uuid(),
+        from: "critique",
+        content: `This is an auto-response for ${message.content}`
+      }
 
-  return `${joined}`
-}
+      conversation.value.push(newMessage)
 
-// TODO: call backend api
-function sendMessageRaw() {
-  if (!prompt.value.trim().length) {
-    ElMessage.error("Empty prompt")
-    return;
-  }
-
-  conversation.value.push({
-    uuid: messageUuid(),
-    from: "user",
-    content: promptToHTML()
+      postChat && postChat()
+      resolve(newMessage)
+    }, 2000)
   })
-
-  prompt.value = ""
-  generating.value = true
-  multiline.value = false
-  setTimeout(textareaReflow, 0)
-
-  setTimeout(() => {
-    conversation.value.push({
-      uuid: messageUuid(),
-      from: "critique",
-      content: "This is an auto-response"
-    })
-
-    generating.value = false
-  }, 2000)
 }
-
-const sendMessage = throttle(sendMessageRaw, 3000)
 </script>
 
 <template>
@@ -303,35 +253,12 @@ const sendMessage = throttle(sendMessageRaw, 3000)
       <PanelWrapper :quick-actions="quickActions"
                     :post-drag="textareaReflow" v-slot="slotProps">
         <div class="panel-message-wrapper">
-          <div class="panel-message-entry"
-               v-for="message in conversation"
-               :class="{ 'panel-message-entry-critique': message.from === 'critique' }"
-               :key="message.uuid">
-            <div class="critique-pfp" v-if="message.from === 'critique'">
-              <img alt="critique"
-                   src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAANGSURBVHgBnZZNSFRRFMfPuW+cmaJFGfQhQUHQhzVj6hh9WDmYw/gF2rIgsl20ahMkoQuZsVW0CVqU5EYiglYzQuKoiKSSaQoRWlhgUQtDSLLJ9+7p3MnRGX2Md+a/mPvufeee35xzz3nvIWSh5d7IeVPKagThQ6LDBLRHrSPgHAHOIslBi8zo1mDjqN1+1IHEeyKXJdEtNvbp2CPCe7Aw5ArWdmnDliKR/ZgHnQB0AXIQATyDvOU7W/yNn9VcZDLGbXlOTpUHchSn+pRbsosVZYS5LwRmhGX4Of55yBYEMOtyiAqsrP2SspauoUBgFzitl1JC07lo77Rai3d3e8kwu9m8ADSkQE4D/akgpQ2RYZ5s5d8ziNjfV1N1Qq25qqsneahgL18hR9DKvTW9bggekKY5u7pA8JOr8HQywkWO0GFYMb7cmS1oY2SWdXfd7nwhsG+wpvKQmm7jCF2Ifr6czxaUBqPWVsFRNNrYFAiDgXWBooTTqtopiNNp1cjZgNJgoxPDZ3nIt7UiKDBAxpJAd339DEnDzzU9zw2sBUqDmdI8msmQHecbKKMjDf9T6g4GPwpOqVPogdJgRGLfZsbEEZomV2ldxRE1d3FKdUFpMHbl1tyz10lGF2k+V21hAvCPzgZVDLhE9ZjIbI4wQjm3mbECkZT+M7FYorlDxceutvm8h0FTqzCLHBOgATobjSXOKFTiuUbCeIoEA+2+omLICrYYf8seF2ytCKZlHMuToHCp9wa/tDow8eqC3dyfvTrAVZi/v98kko/AJiIgGSjv6fmWiKiMIwJ4COkFssMiGQ2Xeo5owZQcv+EBD0upoPWpA4kdYFOJ/ETZIwH6wsWFhaADOxWL/eCU3VfX3FPTqaC2Ek+TSh1kKPkEUDiGQqXekk1hSovLop0PPQJ/cS0in+cmPy2egEZvscF2TnNvqKzwhM29zAr5jl8HEo91bNMd03ce/M1jUx/W1jIoXFZ0iSS9gCxBSXGEC9JBF1tGpsbUPOM3iHTACG/phFxF+NyK//qUnGr943CJ54oEvM1N5dWx5+oa4HNvbR6fGkhdzio9904eKzJNo0EIKifCfbz5IKdqWZ0PSZgEIYYthFctb96N2+3/B38BUYfm1GsgAAAAAElFTkSuQmCC">
-            </div>
-            <div class="panel-message-entry-data" v-html="message.content"></div>
-          </div>
+          <MessageEnrty v-for="message in conversation" :message="message"></MessageEnrty>
         </div>
-        <div class="panel-message-box">
-          <el-icon size="1.2rem">
-            <el-icon-circle-plus></el-icon-circle-plus>
-          </el-icon>
-          <textarea class="panel-message-input"
-                    placeholder="Chat to the critique bot"
-                    :class="{ 'no-select': slotProps.draggingPanel }"
-                    :readonly="slotProps.draggingPanel"
-                    v-model="prompt"
-                    ref="promptDom"
-                    maxlength="2000" />
-          <el-icon size="1.2rem" @click="sendMessage" v-if="!generating">
-            <el-icon-promotion></el-icon-promotion>
-          </el-icon>
-          <el-icon size="1.2rem" v-else>
-            <el-icon-loading class="spin"></el-icon-loading>
-          </el-icon>
-        </div>
+        <ChatBox :dragging-panel="slotProps.draggingPanel"
+                 :textarea-reflow="textareaReflow"
+                 :chat="chat"
+                 v-model:dom="promptDom"></ChatBox>
       </PanelWrapper>
     </main>
     <NoFile v-else @upload="uploadFile" @paste="pasteText"></NoFile>
@@ -339,92 +266,10 @@ const sendMessage = throttle(sendMessageRaw, 3000)
 </template>
 
 <style scoped>
-/*noinspection CssUnusedSymbol*/
-.panel-message-entry:not(.panel-message-entry-critique) {
-  display: flex;
-  flex-direction: row-reverse;
-}
-
-.panel-message-entry:not(.panel-message-entry-critique) .panel-message-entry-data {
-  width: auto;
-  max-width: 80%;
-  white-space: wrap;
-  padding: 20px;
-  background: var(--el-border-color-lighter);
-  border-radius: var(--el-border-radius-round) var(--el-border-radius-round) 0 var(--el-border-radius-round);
-}
-
-.panel-message-box i {
-  color: var(--el-text-color-secondary);
-  transition: color 0.2s ease-in-out;
-}
-
-.panel-message-box:has(.panel-message-input:focus) i {
-  color: var(--el-text-color);
-}
-
-.panel-message-box i:hover {
-  color: var(--el-color-primary) !important;
-}
-
 .panel-message-wrapper {
   flex-grow: 999;
   min-height: 0;
   overflow-y: auto;
-}
-
-.panel-message-input {
-  font-family: var(--el-font-family), sans-serif;
-  border: none;
-  flex-grow: 999;
-  resize: none;
-  height: 1rem;
-  max-height: 200px;
-  overflow-y: hidden;
-}
-
-.panel-message-input:focus {
-  outline: none;
-}
-
-.panel-message-box:has(.panel-message-input:focus) {
-  border: 1px solid var(--el-color-primary);
-}
-
-.panel-message-box {
-  margin: 10px;
-  flex-shrink: 0;
-  border-radius: var(--el-border-radius-round);
-  border: var(--el-border);
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  padding: 15px;
-  transition: border 0.2s ease-in-out;
-}
-
-.panel-message-entry {
-  display: flex;
-  flex-direction: row;
-  padding: 10px;
-  gap: 20px;
-  width: 95%;
-  line-height: 1.8rem;
-}
-
-.panel-message-entry.panel-message-entry-critique > .panel-message-entry-data {
-  margin-top: 8px;
-}
-
-.critique-pfp {
-  border: var(--el-border);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: var(--el-border-radius-circle);
-  flex-shrink: 0;
 }
 
 .critique-pfp > img {

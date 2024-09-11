@@ -5,7 +5,7 @@ const attrs = useAttrs();
 
 const props = defineProps<{
   padding?: string,
-  activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/dashboard/setting"
+  activate: "/dashboard" | "/analytic" | "/setting"
 }>();
 
 const main = ref();
@@ -21,9 +21,9 @@ onMounted(() => {
   <div class="screen-wrapper">
     <section class="container">
       <DashboardAside :activate="activate"></DashboardAside>
-        <div class="dashboard-main" v-bind="attrs" ref="main">
-          <slot></slot>
-        </div>
+      <div class="dashboard-main" v-bind="attrs" ref="main">
+        <slot></slot>
+      </div>
     </section>
   </div>
 </template>

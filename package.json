@@ -21,6 +21,7 @@
     "sharp": "^0.33.4",
     "tesseract.js": "^5.1.0",
     "unplugin-element-plus": "^0.8.0",
+    "uuid": "^10.0.0",
     "vue": "^3.4.27",
     "vue-router": "^4.3.3"
   },
@@ -30,6 +31,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.5.2",
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@nuxtjs/color-mode": "^3.4.2",
+    "@types/uuid": "^10.0.0",
     "@vesp/nuxt-fontawesome": "^1.0.4",
     "drizzle-kit": "^0.22.8",
     "element-plus": "^2.7.6",

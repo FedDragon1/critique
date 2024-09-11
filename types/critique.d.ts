@@ -11,5 +11,5 @@ interface QuickActions {
 interface Message {
     from: "user" | "critique",
     content: string,
-    uuid: number
+    uuid: string
 }

@@ -18,19 +18,14 @@ const routes = [
     caption: "Analytics"
   },
   {
-    to: "/dashboard/profile",
-    component: ProfileIcon,
-    caption: "Profile"
-  },
-  {
-    to: "/dashboard/setting",
+    to: "/setting",
     component: SettingsIcon,
     caption: "Settings"
   },
 ]
 
 defineProps<{
-  activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/dashboard/setting"
+  activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/setting"
 }>();
 
 </script>
