@@ -65,6 +65,27 @@ export function withMat<T>(mats: (cv.Mat | cv.MatVector)[], callback: () => T) {
     return ret;
 }
 
+export async function rotateImage(buffer: Buffer, degrees: 90 | 180 | 270 | number) {
+    const {image, width, height} = await bufferToMat(buffer)
+
+    const newWidth = degrees === 180 ? width : height
+    const newHeight = degrees === 180 ? height : width
+    const rotateCode = degrees === 90 ? cv.ROTATE_90_CLOCKWISE
+        : degrees === 180 ? cv.ROTATE_180
+            : degrees === 270 ? cv.ROTATE_90_COUNTERCLOCKWISE
+                : -1
+    if (rotateCode === -1) {
+        image.delete()
+        throw Error(`rotateImage received degrees of ${degrees}, should only be 90, 180, or 270`)
+    }
+
+    const output = new cv.Mat()
+    return withMat([image, output], () => {
+        cv.rotate(image, output, rotateCode)
+        return matToSharp(output, newWidth, newHeight, output.channels() as 1)  // get rid of type check
+    })
+}
+
 /**
  * Converting a variable bit-depth image into greyscale
  *

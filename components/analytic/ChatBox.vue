@@ -9,7 +9,6 @@ const props = defineProps<{
   chat: (message: Message, postChat?: () => void) => Promise<Message>
 }>()
 
-// const prompt = defineModel("prompt", { default: "" });
 const promptDom = defineModel<HTMLTextAreaElement>("dom");
 
 const prompt = ref<string>("");
@@ -35,7 +34,11 @@ onBeforeUnmount(() => {
 })
 
 function multilineGuard(e: KeyboardEvent) {
-  if (e.key !== "Enter" || multiline.value || e.shiftKey || !prompt.value.trim().length || generating.value) {
+  if (e.key !== "Enter"
+      || multiline.value
+      || e.shiftKey
+      || !prompt.value.trim().length
+      || generating.value) {
     return;
   }
 
@@ -113,6 +116,7 @@ const sendMessage = throttle(sendMessageRaw, 3000)
   height: 1rem;
   max-height: 200px;
   overflow-y: hidden;
+  word-break: break-word;
 }
 
 .panel-message-input:focus {

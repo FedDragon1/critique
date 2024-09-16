@@ -1,6 +1,6 @@
 // post /api/image/ocr
 
-import {createWorker, OEM} from 'tesseract.js'
+import {workers} from "~/server/utils/tesseract";
 
 /**
  * Request body:
@@ -26,10 +26,6 @@ export default defineEventHandler(async (event) => {
     const request = await readBody(event)
     const image = request.image
 
-    const worker = await createWorker("eng", OEM.DEFAULT)
-    const data = await worker.recognize(Buffer.from(image, "base64"))
-    return {
-        success: true,
-        data: data
-    }
+    const worker = (await workers).get()
+    return await worker.ocr(image)
 })
