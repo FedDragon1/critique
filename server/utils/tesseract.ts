@@ -138,6 +138,7 @@ class WorkerWrapper {
     }
 
     async ocr(base64: string): Promise<OcrResult> {
+        const startTime = performance.now()
         const {
             status: osdStatus,
             warningMessage: osdWarning,
@@ -149,15 +150,17 @@ class WorkerWrapper {
             text: false,
             hocr: false,
             tsv: false,
-        });
+        })
 
         // less than 1ms
         const ocrData = this.ocrPostProcess(rawOcrData)
+        const endTime = performance.now()
 
         return {
             status: osdStatus,
             warningMessage: osdWarning,
-            data: ocrData
+            timeMs: endTime - startTime,
+            data: ocrData,
         }
     }
 }

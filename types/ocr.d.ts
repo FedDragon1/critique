@@ -2,6 +2,7 @@ type Status = "success" | "error" | "warning"
 
 interface OcrResult {
     status: Status,
+    timeMs: number,
     errorMessage?: string,
     warningMessage?: string,
     data?: OcrData

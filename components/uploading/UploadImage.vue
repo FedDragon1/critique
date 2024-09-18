@@ -20,16 +20,16 @@
     </div>
     <template #tip>
       <div class="el-upload__tip">
-        jpg/png files with a size less than 500kb
+        jpg/png/pdf files
       </div>
     </template>
   </el-upload>
 </template>
 
+<!--suppress CssUnusedSymbol -->
 <style scoped>
 :deep(.el-upload-dragger) {
-  max-height: 80vh;
-  height: 800px;
+  height: 100%;
 }
 
 :deep(.upload-box) {

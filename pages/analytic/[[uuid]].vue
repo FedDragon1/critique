@@ -11,6 +11,7 @@ import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEnrty from "~/components/analytic/MessageEnrty.vue";
 
 const route = useRoute()
+const router = useRouter()
 
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch(`/api/file/${critiqueUuid}`)
@@ -124,7 +125,7 @@ const quickActions: QuickActions = {
 }
 
 function uploadFile() {
-  // TODO
+  router.push("/analytic/upload")
 }
 
 function pasteText() {
@@ -181,7 +182,7 @@ function reflowDuring(ms: number, per: number = 50) {
 function chat(message: Message, postChat?: () => void): Promise<Message> {
   conversation.value.push(message)
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     // TODO
 
     setTimeout(() => {

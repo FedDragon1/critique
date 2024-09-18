@@ -3,6 +3,11 @@ import UploadImage from "~/components/uploading/UploadImage.vue";
 import ImageSingle from "~/components/uploading/ImageSingle.vue";
 import UploadButton from "~/components/uploading/UploadButton.vue";
 
+const emit = defineEmits(["imageChange", "cleanedUp"])
+const props = defineProps<{
+  cleanUpSignal?: () => any
+}>()
+
 function useUploadRef(value: any) {
   return customRef((track: () => void, trigger: () => void) => {
     return {
@@ -105,6 +110,16 @@ function handleDelete() {
   images.value = [...firstHalf, ...secondHalf]
   currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
 }
+
+watch(images, () => emit("imageChange", images.value.length ?? 0))
+watch(() => props.cleanUpSignal, () => {
+  if (!props.cleanUpSignal) {
+    return
+  }
+  images.value = []
+  currentSlide.value = 0
+  emit("cleanedUp", props.cleanUpSignal)
+})
 </script>
 
 <template>
@@ -115,7 +130,7 @@ function handleDelete() {
           <el-icon-ArrowLeftBold/>
         </el-icon>
       </el-button>
-      <div>
+      <div class="gallery-inner">
         <template v-for="({image, canny, hash}, i) in images" :key="`${hash}`">
           <KeepAlive>
             <ImageSingle
@@ -125,12 +140,27 @@ function handleDelete() {
                 :canny="canny"></ImageSingle>
           </KeepAlive>
         </template>
+        <KeepAlive>
+          <UploadImage @success="submitted" @upload="storeImage" v-if="currentSlide === images.length"></UploadImage>
+        </KeepAlive>
 
-        <div class="footer" v-if="currentSlide !== images.length">
-          <span>
+        <div class="footer" :style="{ justifyContent: currentSlide === images.length ? 'center' : '' }">
+          <span v-if="currentSlide !== images.length">
             <em>{{ currentSlide + 1 }}</em> of {{ images.length }} Picture(s)
           </span>
-          <div class="operations">
+          <div class="preview">
+            <el-upload
+                v-model:file-list="images"
+                action="/api/image/scan"
+                list-type="picture-card"
+                :on-success="submitted"
+                :before-upload="storeImage"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove">
+              <el-icon><el-icon-Plus /></el-icon>
+            </el-upload>
+          </div>
+          <div class="operations" v-if="currentSlide !== images.length">
             <el-button class="delete" plain @click="handleDelete">
               <el-icon>
                 <el-icon-Delete/>
@@ -143,40 +173,26 @@ function handleDelete() {
             </UploadButton>
           </div>
         </div>
-
-        <KeepAlive>
-          <UploadImage @success="submitted" @upload="storeImage" v-if="currentSlide === images.length"></UploadImage>
-        </KeepAlive>
       </div>
-      <el-button class="move-page" :disabled="currentSlide === images.length" @click="currentSlide++">
+      <el-button class="move-page"
+                 :disabled="currentSlide === images.length" @click="currentSlide++">
         <el-icon>
           <el-icon-ArrowRightBold/>
         </el-icon>
       </el-button>
     </div>
-    <div class="preview">
-      <el-upload
-          v-model:file-list="images"
-          action="/api/image/scan"
-          list-type="picture-card"
-          :on-success="submitted"
-          :before-upload="storeImage"
-          :on-preview="handlePreview"
-          :on-remove="handleRemove">
-        <el-icon><el-icon-Plus /></el-icon>
-      </el-upload>
-    </div>
   </div>
 </template>
 
 <style scoped>
+/*noinspection CssUnusedSymbol*/
 :deep(.el-upload-list--picture-card .el-upload-list__item-thumbnail) {
   object-fit: cover !important;
 }
 
 .upload {
-  max-width: 80vw;
-  gap: 20px;
+  flex-grow: 999;
+  width: 700px;
 }
 
 .move-page {
@@ -190,15 +206,13 @@ function handleDelete() {
   align-items: center;
   gap: 20px;
   flex-grow: 9999;
-  height: 100%;
+  margin: 50px 0;
 }
 
 .preview {
-  width: 148px;
-  height: 100%;
-  border: 1px solid var(--el-border-color);
-  overflow-y: auto;
-  overflow-x: hidden;
+  max-width: 400px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .image {
@@ -213,6 +227,7 @@ function handleDelete() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
 .operations {
@@ -225,6 +240,34 @@ function handleDelete() {
   height: 30px;
   border-radius: 50%;
   transition: color 0.2s ease-in-out, border 0.2s ease-in-out;
+}
+
+.gallery-inner {
+  display: flex;
+  flex-grow: 9999;
+  flex-direction: column;
+  gap: 50px;
+}
+
+/*noinspection CssUnusedSymbol*/
+:deep(.el-upload-list--picture-card .el-upload-list__item) {
+  margin: 0 2px 0 0;
+}
+
+/*noinspection CssUnusedSymbol*/
+:deep(.el-upload--picture-card) {
+  --el-upload-picture-card-size: 100px;
+}
+
+/*noinspection CssUnusedSymbol*/
+:deep(.el-upload-list--picture-card) {
+  flex-wrap: nowrap !important;
+  --el-upload-list-picture-card-size: 100px;
+}
+
+/*noinspection CssUnusedSymbol*/
+:deep(.el-upload-list__item-status-label) {
+  display: none !important;
 }
 
 .delete:hover {

@@ -3,7 +3,7 @@ import {DeleteFilled, Edit, Star, StarFilled} from "@element-plus/icons-vue";
 
 defineProps<{
   title: string,
-  isFavorite: boolean,
+  isFavorite?: boolean,
   disableOp?: boolean
 }>()
 </script>
