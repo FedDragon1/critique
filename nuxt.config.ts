@@ -5,6 +5,7 @@ import veauryVitePlugins from 'veaury/vite/index.js';
 
 export default defineNuxtConfig({
   devtools: {enabled: true},
+  ssr: false,
   modules: [
     "@nuxtjs/supabase",
     "@element-plus/nuxt",
@@ -29,7 +30,6 @@ export default defineNuxtConfig({
 
   routeRules: {
       "/": { prerender: true },
-      "/upload": { ssr: false },
   },
 
   css: [

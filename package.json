@@ -15,6 +15,7 @@
     "@nuxtjs/supabase": "^1.2.2",
     "@pinia/nuxt": "^0.5.4",
     "@techstark/opencv-js": "^4.9.0-release.3",
+    "@tiptap-pro/extension-details": "^2.11.2",
     "@tiptap-pro/extension-drag-handle": "^2.11.2",
     "@tiptap-pro/extension-node-range": "^2.11.2",
     "@tiptap/extension-blockquote": "^2.7.2",
