@@ -1,8 +1,19 @@
 import type {FourPoints} from "~/types/cvtypes";
 
+interface BaseResponse<T> {
+    success: boolean,
+    errorMessage?: string,
+    data?: T
+}
+
 interface TransformRequest {
     image: string  // base64
     points: FourPoints
+}
+
+interface FixRequest {
+    context: string,
+    total: number
 }
 
 // database store

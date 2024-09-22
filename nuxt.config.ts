@@ -1,14 +1,18 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+// @ts-ignore
+import veauryVitePlugins from 'veaury/vite/index.js';
+
 export default defineNuxtConfig({
   devtools: {enabled: true},
   modules: [
-      "@nuxtjs/supabase",
-      "@element-plus/nuxt",
-      '@nuxtjs/color-mode',
-      '@vesp/nuxt-fontawesome',
-      '@vueuse/nuxt',
-      "@pinia/nuxt"
+    "@nuxtjs/supabase",
+    "@element-plus/nuxt",
+    '@nuxtjs/color-mode',
+    '@vesp/nuxt-fontawesome',
+    '@vueuse/nuxt',
+    "@pinia/nuxt",
+    "nuxt-tiptap-editor",
   ],
 
   pinia: {
@@ -39,7 +43,7 @@ export default defineNuxtConfig({
                   additionalData: `@use "@/assets/elements" as element;`
               }
           }
-      },
+      }
   },
 
   app: {
@@ -58,6 +62,10 @@ export default defineNuxtConfig({
           ]
       }
   },
+
+    build: {
+        transpile: ['@fontawesome/vue-fontawesome']
+    },
 
   compatibilityDate: "2024-09-10",
 })
