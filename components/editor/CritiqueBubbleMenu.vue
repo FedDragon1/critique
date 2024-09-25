@@ -20,8 +20,8 @@ setInterval(() => textType.value = textTf.getTextType(props.editor.commands.getC
 const textTf = useEditorTransforms()
 const textType = ref(textTf.getTextType(props.editor.commands.getCurrentNode()));
 const fixId = ref("")
-const segmentFrom = computed(() => parseInt(fixId.value?.split("-")[1]))
-const segmentTo = computed(() => parseInt(fixId.value?.split("-")[2]))
+const segmentFrom = computed(() => parseInt(fixId.value?.split("-")[1]) + parseInt(fixId.value?.split("-")[3]))
+const segmentTo = computed(() => parseInt(fixId.value?.split("-")[2]) + parseInt(fixId.value?.split("-")[3]))
 
 const possibleTextTypes: NodeType[] = [
     {

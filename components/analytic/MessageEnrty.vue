@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type {Message} from "~/types/critique";
-
 defineProps<{
   message: Message
 }>()
@@ -19,6 +17,7 @@ defineProps<{
 </template>
 
 <style scoped>
+/*noinspection CssUnusedSymbol*/
 .panel-message-entry:not(.panel-message-entry-critique) {
   display: flex;
   flex-direction: row-reverse;
@@ -29,6 +28,7 @@ defineProps<{
   word-break: break-word;
 }
 
+/*noinspection CssUnusedSymbol*/
 .panel-message-entry:not(.panel-message-entry-critique) .panel-message-entry-data {
   width: auto;
   max-width: 80%;

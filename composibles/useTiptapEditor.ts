@@ -25,7 +25,6 @@ import type {NodeTypeRepr, ParagraphCache, PromiseCache} from "~/types/tiptap";
 import {LRUCache} from 'lru-cache'
 import {$fetch} from "ofetch";
 import type {BaseResponse, FixRequest} from "~/types/requests";
-import {debounce} from "lodash-es";
 
 const cacheOptions = {
     max: 200
@@ -36,18 +35,99 @@ const cacheOfStrings: ParagraphCache = new LRUCache(cacheOptions)
 // https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js
 const hash = (str: string, seed = 0) => {
     let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-    for(let i = 0, ch; i < str.length; i++) {
+    for (let i = 0, ch; i < str.length; i++) {
         ch = str.charCodeAt(i);
         h1 = Math.imul(h1 ^ ch, 2654435761);
         h2 = Math.imul(h2 ^ ch, 1597334677);
     }
-    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
     h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
     h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
 
     return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString();
 };
+
+// noinspection JSUnusedGlobalSymbols
+class ThrottleRegistry {
+    // key: ${contentHash}-${position}
+    registry: Map<string, {
+        data: any,
+        renew: () => void
+    }>
+    timeout: number
+
+    constructor(timeout: number = 1000) {
+        this.registry = new Map()
+        this.timeout = timeout
+    }
+
+    getCommonContent(contentHash: string): any {
+        return this.registry.get(contentHash)
+    }
+
+    hasCommonContent(contentHash: string): boolean {
+        return this.registry.has(contentHash)
+    }
+
+    setCommonContent(contentHash: string, data: any) {
+        const hash = contentHash
+
+        if (this.registry.has(hash)) {
+            const item = this.registry.get(hash)!;
+            item.renew()
+            item.data = data
+            return
+        }
+
+        this.registry.set(hash, {
+            data,
+            renew: this.makeRenew(hash)
+        })
+    }
+
+    get(contentHash: string, position: number): any {
+        return this.registry.get(`${contentHash}-${position}`)
+    }
+
+    has(contentHash: string, position: number): boolean {
+        return this.registry.has(`${contentHash}-${position}`)
+    }
+
+    /**
+     * If the hash exists in the registry, cancel the event and renew the timer.
+     * Otherwise, put the hash into the registry, and set a timer to clear it.
+     *
+     * @param contentHash
+     * @param position
+     * @param data
+     */
+    set(contentHash: string, position: number, data: any) {
+        const hash = `${contentHash}-${position}`
+
+        if (this.registry.has(hash)) {
+            const item = this.registry.get(hash)!;
+            item.renew()
+            item.data = data
+            return
+        }
+
+        this.registry.set(hash, {
+            data,
+            renew: this.makeRenew(hash)
+        })
+    }
+
+    makeRenew(hash: string) {
+        let cancel = setTimeout(() => this.registry.delete(hash), this.timeout)
+        return () => {
+            clearTimeout(cancel)
+            cancel = setTimeout(() => this.registry.delete(hash), this.timeout)
+        }
+    }
+}
+
+const throttleRegistry = new ThrottleRegistry()
 
 /**
  * Use the context of current paragraph to predict
@@ -59,6 +139,35 @@ const hash = (str: string, seed = 0) => {
  * @param position
  */
 function getReplacements(node: Node, regexArr: RegExpExecArray[], nodeHash: string, position: number) {
+    // prevent excessive amount of internet requests
+    if (throttleRegistry.has(nodeHash, position)) {
+        // share with other identical paragraphs
+        return throttleRegistry.get(nodeHash, position)
+    }
+
+    // fixId is relative to the node content, not global location
+    const fixId = regexArr.map((dedicatedSegment) => {
+        const from = dedicatedSegment.index || 0
+        const to = dedicatedSegment[0].length + from
+        return `${nodeHash}-${from}-${to}-${position}`
+    })
+    const universalId = regexArr.map((dedicatedSegment) => {
+        const from = dedicatedSegment.index || 0
+        const to = dedicatedSegment[0].length + from
+        return `${nodeHash}-${from}-${to}`
+    })
+
+    // when two identical paragraphs are passed in,
+    // generate different fixId for them to prevent overriding
+    // first paragraph when correcting the second paragraph (as
+    // they share the fixId)
+    throttleRegistry.set(nodeHash, position, fixId)
+    if (throttleRegistry.hasCommonContent(nodeHash)) {
+        // return the fixId right the way, the correction request has
+        // already been sent
+        return fixId;
+    }
+
     const context = node.text?.split("‎").join("$$");
 
     if (!context) {
@@ -74,12 +183,7 @@ function getReplacements(node: Node, regexArr: RegExpExecArray[], nodeHash: stri
         method: "POST",
         body: requestBody
     })
-
-    const fixId = regexArr.map((dedicatedSegment) => {
-        const from = (dedicatedSegment.index || 0) + position
-        const to = dedicatedSegment[0].length + from
-        return `${nodeHash}-${from}-${to}`
-    })
+    throttleRegistry.setCommonContent(nodeHash, replacePromise)
 
     replacePromise.then((replacement) => {
         if (!replacement.success) {
@@ -91,10 +195,11 @@ function getReplacements(node: Node, regexArr: RegExpExecArray[], nodeHash: stri
         // ask for a fix we don't have to call the model again
 
         const words = replacement!.data!
-        words.forEach((word, i) => cacheOfStrings.set(fixId[i], word))
+        words.forEach((word, i) => cacheOfStrings.set(universalId[i], word))
     })
 
-    fixId.forEach(cacheId => {
+    universalId.forEach(cacheId => {
+        // make identical paragraph share the same request
         const wordPromise: Promise<string> = new Promise((resolve) => {
             replacePromise.then(() => {
                 const ret = cacheOfStrings?.get(cacheId);
@@ -110,11 +215,12 @@ function getReplacements(node: Node, regexArr: RegExpExecArray[], nodeHash: stri
     return fixId
 }
 
-const getReplacementDebounce = debounce(getReplacements, 500, {
-    leading: true,
-    trailing: false
-})
 
+/**
+ * Find segments matching `/‎.+?‎/gi` and generate decoration for it
+ *
+ * @param doc document
+ */
 function findLowConfidenceSegments(doc: Node): DecorationSet {
     // suppose the low confidence segments are within the boundary ‎TEXT‎
     const lowConfidenceSegments = /‎.+?‎/gi
@@ -122,7 +228,7 @@ function findLowConfidenceSegments(doc: Node): DecorationSet {
 
     doc.descendants((node, position) => {
         if (!node.text) {
-          return
+            return
         }
 
         const nodeHash = hash(node.text)
@@ -131,7 +237,7 @@ function findLowConfidenceSegments(doc: Node): DecorationSet {
             return
         }
 
-        const fixId: string[] = getReplacementDebounce(node, regexArr, nodeHash, position)
+        const fixId: string[] = getReplacements(node, regexArr, nodeHash, position)
         const decoration = regexArr.map((match, i) => {
             const segment = match[0]
             const index = match.index || 0
@@ -156,8 +262,8 @@ const SelectText = Extension.create({
     addCommands() {
         // noinspection JSUnusedGlobalSymbols
         return {
-            getSelectedText: () => ({ editor }: { editor: Editor }) => {
-                const { from, to, empty } = editor.state.selection
+            getSelectedText: () => ({editor}: { editor: Editor }) => {
+                const {from, to, empty} = editor.state.selection
 
                 if (empty) {
                     return null
@@ -174,9 +280,9 @@ const NodeType = Extension.create({
     // @ts-ignore
     addCommands() {
         return {
-            getCurrentNode: () => ({ editor }: { editor: Editor }) => {
-                const { type: { name }, attrs } = editor.state.selection.$head.parent
-                return { name, attrs }
+            getCurrentNode: () => ({editor}: { editor: Editor }) => {
+                const {type: {name}, attrs} = editor.state.selection.$head.parent
+                return {name, attrs}
             }
         }
     },
@@ -192,11 +298,11 @@ const LowConfidenceMarker = Extension.create({
             key: new PluginKey("marking"),
             state: {
                 init(_, instance) {
-                    // return DecorationSet.create(instance.doc, [])
                     return findLowConfidenceSegments(instance.doc)
                 },
                 apply: (transaction, oldState) => {
-                    return transaction.docChanged ? findLowConfidenceSegments(transaction.doc)! : oldState
+                    console.log("123123")
+                    return transaction.docChanged ? findLowConfidenceSegments(transaction.doc) : oldState
                 }
             },
             props: {
@@ -230,7 +336,7 @@ const func = [
     History,
     LowConfidenceMarker,
     Placeholder.configure({
-       placeholder: "Start your critique here..."
+        placeholder: "Start your critique here..."
     }),
     NodeRange.configure({
         key: null,
@@ -246,9 +352,9 @@ const func = [
     }),
 ]
 
-export function useTiptapEditor(html: string) {
+export function useTiptapEditor(html?: string | null) {
     return useEditor({
-        content: html,
+        content: html ?? '',
         extensions: [
             ...marks,
             ...nodes,
@@ -268,8 +374,8 @@ export function useEditorTransforms() {
             }
             throw Error(`Unrecognized node name ${node.name}`)
         },
-        lowConfidenceInvisibleMarking(text: string): string {
-            return text.replaceAll(/\[low-confidence]|\[\/low-confidence]/g, "‎")
+        lowConfidenceInvisibleMarking(text?: string | null): string {
+            return text?.replaceAll(/\[low-confidence]|\[\/low-confidence]/g, "‎") ?? ""
         }
     }
 }

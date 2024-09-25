@@ -1,8 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
-// @ts-ignore
-import veauryVitePlugins from 'veaury/vite/index.js';
-
 export default defineNuxtConfig({
   devtools: {enabled: true},
   ssr: false,

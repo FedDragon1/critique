@@ -2,10 +2,10 @@ import { defineStore } from 'pinia'
 
 export const useFileStore = defineStore('file', {
     state: () => ({
-        ocrResult: null as OcrResult | null
+        ocrResult: null as string | null
     }),
     actions: {
-        setOcrResult(to: OcrResult) {
+        setOcrResult(to: string) {
             this.$patch(state => state.ocrResult = to)
         }
     }

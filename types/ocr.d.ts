@@ -31,5 +31,5 @@ interface OsdResult {
     status: Status,
     errorMessage?: string,
     warningMessage?: string,
-    data?: Buffer
+    data?: string
 }

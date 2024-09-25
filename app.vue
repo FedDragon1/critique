@@ -1,5 +1,7 @@
 <template>
-  <NuxtPage keepalive>
+  <NuxtPage :keepalive="{
+      include: ['/analytic/upload']
+  }">
   </NuxtPage>
 </template>
 

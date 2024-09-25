@@ -2,11 +2,10 @@
 import UploadImage from "~/components/uploading/UploadImage.vue";
 import ImageSingle from "~/components/uploading/ImageSingle.vue";
 import UploadButton from "~/components/uploading/UploadButton.vue";
+import {ImgProxy} from "~/composibles/useCanvas";
+import type {FourPoints} from "~/types/cvtypes";
 
 const emit = defineEmits(["imageChange", "cleanedUp"])
-const props = defineProps<{
-  cleanUpSignal?: () => any
-}>()
 
 function useUploadRef(value: any) {
   return customRef((track: () => void, trigger: () => void) => {
@@ -34,30 +33,9 @@ function useUploadRef(value: any) {
   })
 }
 
-class ImgProxy {
-  image
-  canny
-  index
-  hash
-
-  constructor(image: string, canny: string, index: number) {
-    this.image = image
-    this.canny = canny
-    this.index = index
-    this.hash = Math.random().toString(36).slice(2, 7)
-  }
-
-  get url(): string {
-    return `data:image/png;base64,${this.image}`
-  }
-
-  set url(newValue: string) {
-    console.log(newValue)
-  }
-}
-
 const attrs = useAttrs();
 const images = useUploadRef([])
+const contours = useTemplateRef("contours")
 const tempImage = ref<string>()
 const switching = ref()
 const currentSlide = ref(0)
@@ -111,14 +89,27 @@ function handleDelete() {
   currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
 }
 
+function clearImages() {
+    images.value = []
+    currentSlide.value = 0
+}
+
+function* items() {
+    for (let i = 0; i < images.value.length; i++) {
+        const image = images.value[i]
+        const contour = (contours.value as { fourPoints: FourPoints }[])[i].fourPoints
+        yield {
+            ...image,
+            contour
+        }
+    }
+}
+
 watch(images, () => emit("imageChange", images.value.length ?? 0))
-watch(() => props.cleanUpSignal, () => {
-  if (!props.cleanUpSignal) {
-    return
-  }
-  images.value = []
-  currentSlide.value = 0
-  emit("cleanedUp", props.cleanUpSignal)
+
+defineExpose({
+    items,
+    clearImages
 })
 </script>
 
@@ -134,7 +125,8 @@ watch(() => props.cleanUpSignal, () => {
         <template v-for="({image, canny, hash}, i) in images" :key="`${hash}`">
           <KeepAlive>
             <ImageSingle
-                v-if="currentSlide === i"
+                v-show="currentSlide === i"
+                ref="contours"
                 class="image"
                 :image="image"
                 :canny="canny"></ImageSingle>

@@ -10,7 +10,6 @@ const props = defineProps<{
 }>()
 
 const contours: Ref<Contour[]> = ref([]);
-const perspectiveImg = ref("")
 
 const fourPoints = ref<FourPoints>()
 const suggestedContour = ref<FourPoints>()
@@ -28,16 +27,9 @@ const contour = async () => {
   suggestedContour.value = resp.data.contours[0].points as FourPoints
 }
 
-const perspective = async () => {
-  const resp = await $fetch("/api/image/transform", {
-    method: "POST",
-    body: {
-      points: fourPoints.value,
-      image: props.image
-    }
-  })
-  perspectiveImg.value = resp.data.png
-}
+defineExpose({
+    fourPoints
+})
 
 await contour()
 </script>

@@ -1,5 +1,7 @@
 // POST /api/critique/generate
 
+// TODO: might not needed
+
 import OpenAI from 'openai'
 import { OpenAIStream } from "ai"
 

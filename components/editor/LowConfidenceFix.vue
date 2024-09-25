@@ -10,10 +10,12 @@ const emit = defineEmits(["fix"])
 const fullFilled = ref(false)
 const display = ref("")
 
-let promise = cacheOfPromises.get(props.segmentId)
+const universalId = computed(() => props.segmentId.split("-").slice(0, -1).join("-"))
+
+let promise = cacheOfPromises.get(universalId.value)
 
 const refreshPromise = () => {
-    promise = cacheOfPromises.get(props.segmentId)
+    promise = cacheOfPromises.get(universalId.value)
     if (promise) {
         promise?.then((v) => {
             fullFilled.value = true

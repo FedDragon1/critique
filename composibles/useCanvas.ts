@@ -1,6 +1,27 @@
 import type { Ref } from "vue";
 import type {CanvasOptions, FourPoints, Point} from "~/types/cvtypes";
 
+export class ImgProxy {
+    image
+    canny
+    index
+    hash
+
+    constructor(image: string, canny: string, index: number) {
+        this.image = image
+        this.canny = canny
+        this.index = index
+        this.hash = Math.random().toString(36).slice(2, 7)
+    }
+
+    get url(): string {
+        return `data:image/png;base64,${this.image}`
+    }
+
+    set url(newValue: string) {
+        console.log(newValue)
+    }
+}
 
 class CanvasProxy {
     // canvas

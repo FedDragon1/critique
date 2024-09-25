@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import AnalyticNav from "~/components/analytic/AnalyticNav.vue";
-import type {Critique} from "~/types/requests";
 import {CollectionTag, Promotion, QuestionFilled, Tickets} from "@element-plus/icons-vue";
-import type {QuickActions, Message} from "~/types/critique";
 import PanelWrapper from "~/components/analytic/PanelWrapper.vue";
 import NoFile from "~/components/analytic/NoFile.vue";
 import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
-import MessageEnrty from "~/components/analytic/MessageEnrty.vue";
+import MessageEntry from "~/components/analytic/MessageEnrty.vue";
+import type {Critique} from "~/types/requests";
 
 const route = useRoute()
 const router = useRouter()
@@ -275,7 +274,7 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
       <PanelWrapper :quick-actions="quickActions"
                     :post-drag="textareaReflow" v-slot="slotProps">
         <div class="panel-message-wrapper">
-          <MessageEnrty v-for="message in conversation" :message="message"></MessageEnrty>
+          <MessageEntry v-for="message in conversation" :message="message"></MessageEntry>
         </div>
         <ChatBox :dragging-panel="slotProps.draggingPanel"
                  :textarea-reflow="textareaReflow"

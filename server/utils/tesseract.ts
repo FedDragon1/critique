@@ -11,15 +11,15 @@ class Workers {
     }
 
     get() {
-        return this.workers[this.pointer++];
+        return this.workers[this.pointer++ % this.workers.length];
     }
 }
 
 class WorkerWrapper {
-    ocrWorker: Tesseract.Worker
+    osdWorker: Tesseract.Worker
 
-    constructor(ocrWorker: Tesseract.Worker) {
-        this.ocrWorker = ocrWorker
+    constructor(osdWorker: Tesseract.Worker) {
+        this.osdWorker = osdWorker
     }
 
     async orientate(buffer: Buffer, degrees: 90 | 180 | 270 | number): Promise<Buffer> {
@@ -38,7 +38,7 @@ class WorkerWrapper {
                 script,
                 script_confidence
             }
-        } = await this.ocrWorker.detect(buffer)
+        } = await this.osdWorker.detect(buffer)
 
         const [status, warningMessage]: [Status, string?] = (script === null && script_confidence === null)
         || (script_confidence as number) <= 0.1
@@ -62,109 +62,17 @@ class WorkerWrapper {
             }
         }
 
+        const ret = image.toString("base64")
+
         return {
             status,
             warningMessage,
-            data: image
-        }
-    }
-
-    /*
-    Transforms the ocr result to an HTML description (object)
-     */
-    ocrPostProcess(result: Tesseract.RecognizeResult): OcrData {
-        const paragraphs: OcrParagraph[] = [];
-        let paragraph: OcrParagraph = {
-            segments: []
-        }
-        let segment: OcrSegmentIntermediate = {
-            isLowConfidence: false,
-            words: []
-        };
-
-        function segmentToText(segment: OcrSegmentIntermediate): OcrSegment {
-            return {
-                text: segment.words.join(" "),
-                isLowConfidence: segment.isLowConfidence
-            }
-        }
-
-        function toggleLowConfidence(to: boolean, word: Tesseract.Word) {
-            if (segment.isLowConfidence === to) {
-                segment.words.push(word.text)
-                return;
-            }
-
-            if (segment.words.length) {
-                // finish current segment and start new segment with
-                // low confidence level
-                paragraph.segments.push(segmentToText(segment))
-            }
-            segment = {
-                isLowConfidence: to,
-                words: [word.text]
-            }
-        }
-
-        function reset() {
-            if (segment.words.length) {
-                paragraph.segments.push(segmentToText(segment))
-            }
-            paragraphs.push(paragraph)
-            paragraph = {
-                segments: []
-            }
-            segment = {
-                isLowConfidence: false,
-                words: []
-            }
-        }
-
-        for (const rawParagraph of result.data.paragraphs) {
-            for (const line of rawParagraph.lines) {
-                for (const word of line.words) {
-                    // low confidence mode is true if the current
-                    // word is not considered as confidence
-                    toggleLowConfidence(word.confidence < WORD_CONFIDENCE_THRESHOLD, word)
-                }
-            }
-            reset()
-        }
-
-        return {
-            paragraphs,
-            confidence: result.data.confidence
-        }
-    }
-
-    async ocr(base64: string): Promise<OcrResult> {
-        const startTime = performance.now()
-        const {
-            status: osdStatus,
-            warningMessage: osdWarning,
-            data: buffer
-        } = await this.osd(base64)
-
-        // 1000 words ~ 10 seconds
-        const rawOcrData = await this.ocrWorker.recognize(buffer, {}, {
-            text: false,
-            hocr: false,
-            tsv: false,
-        })
-
-        // less than 1ms
-        const ocrData = this.ocrPostProcess(rawOcrData)
-        const endTime = performance.now()
-
-        return {
-            status: osdStatus,
-            warningMessage: osdWarning,
-            timeMs: endTime - startTime,
-            data: ocrData,
+            data: ret
         }
     }
 }
 
+// noinspection DuplicatedCode
 async function createEnglishWorker(pageSegMode: PSM, options?: Partial<Tesseract.WorkerOptions>) {
     const worker = await createWorker("eng", OEM.DEFAULT, options);
     await worker.setParameters({
@@ -174,6 +82,7 @@ async function createEnglishWorker(pageSegMode: PSM, options?: Partial<Tesseract
     return worker;
 }
 
+// noinspection DuplicatedCode
 async function spawnWorkers(numWorkers: number) {
     const workers: Promise<Tesseract.Worker>[] = [];
     for (let i = 0; i < numWorkers; i++) {
@@ -185,6 +94,5 @@ async function spawnWorkers(numWorkers: number) {
 
 const NUM_WORKERS = 5
 const ORIENTATION_CONFIDENCE_THRESHOLD = 0.1
-const WORD_CONFIDENCE_THRESHOLD = 85
 
 export const workers = spawnWorkers(NUM_WORKERS)

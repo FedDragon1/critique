@@ -1,14 +1,17 @@
 <script setup lang="ts">
 
 import CritiqueBubbleMenu from "~/components/editor/CritiqueBubbleMenu.vue";
-import {useTiptapEditor} from "~/composibles/useTiptapEditor";
-import Loading from "~/components/svg/Loading.vue";
+import {useEditorTransforms, useTiptapEditor} from "~/composibles/useTiptapEditor";
 
 const props = defineProps<{
-  html: string,
+  html: string | null,
 }>()
 
-const editor = useTiptapEditor(props.html)
+const textTf = useEditorTransforms()
+const text = textTf.lowConfidenceInvisibleMarking(props.html);
+const editor = useTiptapEditor(text)
+
+watch(() => props.html, () => editor.value?.commands.setContent(props.html))
 
 onBeforeUnmount(() => {
   unref(editor)?.destroy()
@@ -21,9 +24,7 @@ onBeforeUnmount(() => {
       <CritiqueBubbleMenu :editor="editor"></CritiqueBubbleMenu>
       <TiptapEditorContent :editor="editor"></TiptapEditorContent>
     </div>
-    <div v-else class="editor-unavailable">
-        <Loading/>
-    </div>
+    <EditorUnavailable v-else />
   </div>
 </template>
 
@@ -39,15 +40,5 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   overflow: auto;
-}
-
-.editor-unavailable {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    align-items: center;
-    flex-direction: column;
 }
 </style>
