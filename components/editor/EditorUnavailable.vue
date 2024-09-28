@@ -1,10 +1,12 @@
 <script setup lang="ts">
 
 import Loading from "~/components/svg/Loading.vue";
+
+const attrs = useAttrs()
 </script>
 
 <template>
-    <div class="editor-unavailable">
+    <div v-bind="attrs" class="editor-unavailable">
         <Loading/>
     </div>
 </template>

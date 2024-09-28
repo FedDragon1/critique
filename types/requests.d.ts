@@ -16,6 +16,19 @@ interface FixRequest {
     total: number
 }
 
+interface FormatRequest {
+    segments: string[]
+}
+
+interface MergeRequest {
+    tail: string,
+    head: string
+}
+
+interface ReviseRequest {
+    selection: string
+}
+
 // database store
 interface CritiqueFileDesc {
     uuid: number,

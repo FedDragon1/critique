@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {faBold, faItalic, faStrikethrough, faUnderline} from '@fortawesome/free-solid-svg-icons'
 import {faCopy, faPaste} from '@fortawesome/free-regular-svg-icons'
-import {useEditorTransforms} from "~/composibles/useTiptapEditor";
+import {cacheOfPromises, forceRender, useEditorTransforms} from "~/composibles/useTiptapEditor";
 import TextIcon from "~/components/svg/TextIcon.vue";
 import H1Icon from "~/components/svg/H1Icon.vue";
 import H2Icon from "~/components/svg/H2Icon.vue";
@@ -10,6 +10,7 @@ import type {NodeType} from "~/types/tiptap";
 import BulletedListIcon from "~/components/svg/BulletedListIcon.vue";
 import NumberedListIcon from "~/components/svg/NumberedListIcon.vue";
 import LowConfidenceFix from "~/components/editor/LowConfidenceFix.vue";
+import type {BaseResponse, ReviseRequest} from "~/types/requests";
 
 const props = defineProps<{
     editor: any,
@@ -104,6 +105,159 @@ function correct(to: string) {
         to: segmentTo.value
     }, to)
 }
+
+function ignoreAll() {
+    let fixes = 0;
+
+    [...document.querySelectorAll("low-confidence")]
+        .map(node => {
+            const id = node.getAttribute("data-id")
+            if (id === null) {
+                return
+            }
+
+            const from = parseInt(id.split("-")[1]) + parseInt(id.split("-")[3])
+            const to = parseInt(id.split("-")[2]) + parseInt(id.split("-")[3])
+
+            return {
+                from,
+                to,
+            }
+        })
+        .filter(x => x !== undefined)
+        .toSorted((a, b) => {
+            if (a === undefined || b === undefined) {
+                return -1;
+            }
+            if (a.from !== b.from) {
+                return a.from - b.from
+            }
+            return a.to - b.to
+        })
+        .forEach(node => {
+            if (!node) {
+                throw Error("node is undefined")
+            }
+
+            let {from, to} = node
+
+            from -= fixes * 2
+            to -= fixes * 2
+            fixes++
+
+            const text = props.editor.state.doc.textBetween(from + 1, to - 1, ' ')
+            props.editor.commands.insertContentAt({
+                from: from,
+                to: to
+            }, text)
+        })
+    forceRender()
+}
+
+function fixMatching() {
+    type FixPromise = {
+        fix: string,
+        id: string
+    }
+
+    let fixed = 0;
+    const promises: Promise<FixPromise>[] = [];
+    document.querySelectorAll("low-confidence").forEach(node => {
+
+        const id = node.getAttribute("data-id")
+        if (id === null) {
+            return
+        }
+        const cacheId = id.split("-").slice(0, -1).join("-")
+
+        const promise = cacheOfPromises.get(cacheId);
+        if (!promise) {
+            setTimeout(() => {
+                throw Error(`fix for ${cacheId} does not exist`)
+            })
+            return;
+        }
+        promises.push(new Promise<FixPromise>((resolve, reject) => {
+            promise.then(fix => resolve({fix, id}))
+                .catch(e => reject(e))
+        }))
+    })
+
+    Promise.all(promises).then((fixes) => {
+        fixes.forEach(({fix, id}) => {
+            // each success fix will reduce two LRM marks from the document
+            const from = parseInt(id.split("-")[1]) + parseInt(id.split("-")[3]) - 2 * fixed
+            const to = parseInt(id.split("-")[2]) + parseInt(id.split("-")[3]) - 2 * fixed
+
+            const text = props.editor.state.doc.textBetween(from + 1, to - 1, ' ')
+            if (text === fix) {
+                props.editor.commands.insertContentAt({
+                    from: from,
+                    to: to
+                }, text)
+                fixed++
+            }
+        })
+        forceRender()
+    })
+}
+
+function fixSelected() {
+    const maxLength = 2600;
+    const minLength = 100;
+
+    const selectedText = props.editor.commands.getSelectedText()
+    const {from, to, empty} = props.editor.state.selection
+
+    if (selectedText === null && empty) {
+        ElMessage.error({
+            message: `No text selected`,
+            grouping: true
+        })
+        return;
+    }
+    if (selectedText.length > maxLength) {
+        ElMessage.error({
+            message: `Selection is too long (>${maxLength})`,
+            grouping: true
+        })
+        return;
+    }
+    if (selectedText.length < minLength) {
+        ElMessage.error({
+            message: `Selection is too short (<${minLength})`,
+            grouping: true
+        })
+        return;
+    }
+
+    const requestBody: ReviseRequest = {
+        selection: selectedText
+    }
+
+    $fetch<BaseResponse<string>>("/api/critique/revise", {
+        method: "POST",
+        body: requestBody
+    }).then(resp => {
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+
+        console.log(resp.data)
+
+        props.editor.commands.insertContentAt({
+            from,
+            to
+        }, resp.data)
+    })
+}
+
+defineExpose({
+    ignoreAll,
+    fixMatching,
+    fixSelected
+})
 </script>
 
 <template>

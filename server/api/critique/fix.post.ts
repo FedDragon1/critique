@@ -2,47 +2,28 @@
 
 import OpenAI from 'openai'
 import {BaseResponse} from "~/types/requests";
+import {createCompletion, getMessages} from "~/server/utils/aiutils";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-})
-
-function getMessages(userPrompt: string, total: number): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
-    return [
-        {
-            role: "system",
-            content: "The user will input the output text from an optical character recognition software. " +
-                "Text with enclosed dollar signs (Ex: $$Revolutlon$$) are low-confidence phrases " +
-                "that may have errors. Correct these phrases if necessary according to the context and remove the " +
-                "dollar signs. Do not add any additional text or formatting features, and do not remove any formatting " +
-                "of the file. For each segment of low confidence, your output should be about the same length. " +
-                "Output all corrected phrases in javascript array " +
-                "format (Ex: [\"Revolution\", \"The war\"]). The user will provide how many low confidence segments " +
-                "are in the paragraph. Make sure you return an array of the same length as that number."
-        },
-        {
-            role: "user",
-            content: `${userPrompt} (Total low confidence segments: ${total})`
-        }
-    ]
-}
+const systemPrompt = `The user will input the output text from an optical character recognition software.
+Text with enclosed dollar signs (Ex: $$Revolutlon$$) are low-confidence phrases that may have errors.
+Correct these phrases if necessary according to the context and remove the dollar signs.
+Do not add any additional text or formatting features, and do not remove any formatting of the file.
+For each segment of low confidence, your output should be about the same length.
+For segments involving both text and punctuation (Ex. 5:), generate concise fix for the segment only, do not restate text around it.
+It is more probable that the letters that look similar both uppercase and lowercase may be confused in the OCR, for example the letter C.
+Sometimes, the letter C will also be incorrectly interpreted as a (, which should be fixed.
+Excess whitespace, like double spaces, should be condensed into one space.
+Output all corrected phrases in javascript array format (Ex: [\\"Revolution\\", \\"The war\\"]).
+The user will provide how many low confidence segments are in the paragraph.
+Make sure you return an array of the same length as that number.`
 
 export default defineEventHandler(async (event): Promise<BaseResponse<string[]>> => {
-
     const request = await readBody(event)
 
-    const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        stream: false,
-        messages: getMessages(request.context, request.total),
-        temperature: 0.7,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        n: 1,
-    });
-
-    console.log(request)
+    const userPrompt = `${request.context} (Total low confidence segments: ${request.total})`
+    const response = await createCompletion(
+        getMessages(systemPrompt, userPrompt)
+    ) as OpenAI.Chat.Completions.ChatCompletion;
 
     const ret = response.choices[0].message.content
     if (ret === null) {

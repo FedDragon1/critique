@@ -5,32 +5,35 @@ import UploadButton from "~/components/uploading/UploadButton.vue";
 import {ImgProxy} from "~/composibles/useCanvas";
 import type {FourPoints} from "~/types/cvtypes";
 
+defineProps<{
+    disabled?: boolean
+}>()
 const emit = defineEmits(["imageChange", "cleanedUp"])
 
 function useUploadRef(value: any) {
-  return customRef((track: () => void, trigger: () => void) => {
-    return {
-      get() {
-        track()
-        return value
-      },
-      set(newValue) {
-        trigger()
+    return customRef((track: () => void, trigger: () => void) => {
+        return {
+            get() {
+                track()
+                return value
+            },
+            set(newValue) {
+                trigger()
 
-        // filter the newValue
-        if (!Array.isArray(newValue)) {
-          return;
-        }
+                // filter the newValue
+                if (!Array.isArray(newValue)) {
+                    return;
+                }
 
-        const filtered = newValue.filter(p => p.constructor === ImgProxy)
-        if (filtered.length === value.length && filtered.map((p, i) => p.image === value[i].image).reduce((a, b) => a && b, true)) {
-          // the array did not change after removing invalid elements
-          return;
+                const filtered = newValue.filter(p => p.constructor === ImgProxy)
+                if (filtered.length === value.length && filtered.map((p, i) => p.image === value[i].image).reduce((a, b) => a && b, true)) {
+                    // the array did not change after removing invalid elements
+                    return;
+                }
+                value = filtered
+            }
         }
-        value = filtered
-      }
-    }
-  })
+    })
 }
 
 const attrs = useAttrs();
@@ -41,52 +44,52 @@ const switching = ref()
 const currentSlide = ref(0)
 
 const storeImage = (file: File) => {
-  if (tempImage.value) {
-    ElMessage.error("Please wait for the current image to be uploaded")
-  }
-  const reader = new FileReader()
-  reader.readAsDataURL(file)
-  reader.onload = () => {
-    tempImage.value = (reader.result as string).split(',')[1]
-  }
+    if (tempImage.value) {
+        ElMessage.error("Please wait for the current image to be uploaded")
+    }
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => {
+        tempImage.value = (reader.result as string).split(',')[1]
+    }
 }
 
 const submitted = (resp: any) => {
-  if (!tempImage.value) {
-    throw TypeError("No file is found")
-  }
-  images.value = [...images.value, new ImgProxy(tempImage.value!, resp.data.png, images.value.length)]
-  tempImage.value = undefined
-  currentSlide.value = images.value.length - 1
+    if (!tempImage.value) {
+        throw TypeError("No file is found")
+    }
+    images.value = [...images.value, new ImgProxy(tempImage.value!, resp.data.png, images.value.length)]
+    tempImage.value = undefined
+    currentSlide.value = images.value.length - 1
 }
 
 function switchImage(resp: any) {
-  if (!tempImage.value) {
-    throw TypeError("No file is found")
-  }
-  const newValue = [...images.value]
-  newValue[switching.value] = new ImgProxy(tempImage.value!, resp.data.png, switching.value)
-  images.value = newValue
-  tempImage.value = undefined
-  currentSlide.value = switching.value
+    if (!tempImage.value) {
+        throw TypeError("No file is found")
+    }
+    const newValue = [...images.value]
+    newValue[switching.value] = new ImgProxy(tempImage.value!, resp.data.png, switching.value)
+    images.value = newValue
+    tempImage.value = undefined
+    currentSlide.value = switching.value
 }
 
 function handlePreview(p: any) {
-  const img = p as ImgProxy
-  currentSlide.value = img.index
+    const img = p as ImgProxy
+    currentSlide.value = img.index
 }
 
 function handleRemove() {
-  images.value = images.value.forEach((p: ImgProxy, i: number) => p.index = i)
-  currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
+    images.value = images.value.forEach((p: ImgProxy, i: number) => p.index = i)
+    currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
 }
 
 function handleDelete() {
-  const firstHalf = images.value.slice(0, currentSlide.value)
-  const secondHalf = images.value.slice(currentSlide.value + 1)
-  secondHalf.forEach((p: ImgProxy) => p.index--)
-  images.value = [...firstHalf, ...secondHalf]
-  currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
+    const firstHalf = images.value.slice(0, currentSlide.value)
+    const secondHalf = images.value.slice(currentSlide.value + 1)
+    secondHalf.forEach((p: ImgProxy) => p.index--)
+    images.value = [...firstHalf, ...secondHalf]
+    currentSlide.value = Math.min(currentSlide.value, images.value.length ?? 0)
 }
 
 function clearImages() {
@@ -114,156 +117,162 @@ defineExpose({
 </script>
 
 <template>
-  <div class="upload" v-bind="attrs">
-    <div class="gallery">
-      <el-button class="move-page" :disabled="currentSlide === 0" @click="currentSlide--">
-        <el-icon>
-          <el-icon-ArrowLeftBold/>
-        </el-icon>
-      </el-button>
-      <div class="gallery-inner">
-        <template v-for="({image, canny, hash}, i) in images" :key="`${hash}`">
-          <KeepAlive>
-            <ImageSingle
-                v-show="currentSlide === i"
-                ref="contours"
-                class="image"
-                :image="image"
-                :canny="canny"></ImageSingle>
-          </KeepAlive>
-        </template>
-        <KeepAlive>
-          <UploadImage @success="submitted" @upload="storeImage" v-if="currentSlide === images.length"></UploadImage>
-        </KeepAlive>
+    <div class="upload" v-bind="attrs">
+        <div class="gallery">
+            <el-button class="move-page" :disabled="currentSlide === 0" @click="currentSlide--">
+                <el-icon>
+                    <el-icon-ArrowLeftBold/>
+                </el-icon>
+            </el-button>
+            <div class="gallery-inner">
+                <template v-for="({image, canny, hash}, i) in images" :key="`${hash}`">
+                    <KeepAlive>
+                        <ImageSingle
+                            v-show="currentSlide === i"
+                            ref="contours"
+                            class="image"
+                            :image="image"
+                            :canny="canny"></ImageSingle>
+                    </KeepAlive>
+                </template>
+                <KeepAlive>
+                    <UploadImage @success="submitted"
+                                 @upload="storeImage"
+                                 :disabled="disabled"
+                                 v-if="currentSlide === images.length"></UploadImage>
+                </KeepAlive>
 
-        <div class="footer" :style="{ justifyContent: currentSlide === images.length ? 'center' : '' }">
+                <div class="footer" :style="{ justifyContent: currentSlide === images.length ? 'center' : '' }">
           <span v-if="currentSlide !== images.length">
             <em>{{ currentSlide + 1 }}</em> of {{ images.length }} Picture(s)
           </span>
-          <div class="preview">
-            <el-upload
-                v-model:file-list="images"
-                action="/api/image/scan"
-                list-type="picture-card"
-                :on-success="submitted"
-                :before-upload="storeImage"
-                :on-preview="handlePreview"
-                :on-remove="handleRemove">
-              <el-icon><el-icon-Plus /></el-icon>
-            </el-upload>
-          </div>
-          <div class="operations" v-if="currentSlide !== images.length">
-            <el-button class="delete" plain @click="handleDelete">
-              <el-icon>
-                <el-icon-Delete/>
-              </el-icon>
+                    <div class="preview">
+                        <el-upload
+                            :disabled="disabled ?? false"
+                            v-model:file-list="images"
+                            action="/api/image/scan"
+                            list-type="picture-card"
+                            :on-success="submitted"
+                            :before-upload="storeImage"
+                            :on-preview="handlePreview"
+                            :on-remove="handleRemove">
+                            <el-icon>
+                                <el-icon-Plus/>
+                            </el-icon>
+                        </el-upload>
+                    </div>
+                    <div class="operations" v-if="currentSlide !== images.length">
+                        <el-button class="delete" plain @click="handleDelete">
+                            <el-icon>
+                                <el-icon-Delete/>
+                            </el-icon>
+                        </el-button>
+                        <UploadButton @success="switchImage" @upload="(f) => {switching = currentSlide; storeImage(f)}">
+                            <el-icon>
+                                <el-icon-Switch/>
+                            </el-icon>
+                        </UploadButton>
+                    </div>
+                </div>
+            </div>
+            <el-button class="move-page"
+                       :disabled="currentSlide === images.length" @click="currentSlide++">
+                <el-icon>
+                    <el-icon-ArrowRightBold/>
+                </el-icon>
             </el-button>
-            <UploadButton @success="switchImage" @upload="(f) => {switching = currentSlide; storeImage(f)}" >
-              <el-icon>
-                <el-icon-Switch/>
-              </el-icon>
-            </UploadButton>
-          </div>
         </div>
-      </div>
-      <el-button class="move-page"
-                 :disabled="currentSlide === images.length" @click="currentSlide++">
-        <el-icon>
-          <el-icon-ArrowRightBold/>
-        </el-icon>
-      </el-button>
     </div>
-  </div>
 </template>
 
 <style scoped>
 /*noinspection CssUnusedSymbol*/
 :deep(.el-upload-list--picture-card .el-upload-list__item-thumbnail) {
-  object-fit: cover !important;
+    object-fit: cover !important;
 }
 
 .upload {
-  flex-grow: 999;
-  width: 700px;
+    flex-grow: 999;
+    width: 700px;
 }
 
 .move-page {
-  border-radius: 50%;
-  height: 30px;
-  width: 30px;
+    border-radius: 50%;
+    height: 30px;
+    width: 30px;
 }
 
 .gallery {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-grow: 9999;
-  margin: 50px 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-grow: 9999;
+    margin: 50px 0;
 }
 
 .preview {
-  max-width: 400px;
-  overflow-x: auto;
-  overflow-y: hidden;
+    max-width: 400px;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .image {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
 }
 
 .footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
 }
 
 .operations {
-  display: flex;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 .delete {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  transition: color 0.2s ease-in-out, border 0.2s ease-in-out;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: color 0.2s ease-in-out, border 0.2s ease-in-out;
 }
 
 .gallery-inner {
-  display: flex;
-  flex-grow: 9999;
-  flex-direction: column;
-  gap: 50px;
+    display: flex;
+    flex-grow: 9999;
+    flex-direction: column;
+    gap: 50px;
 }
 
 /*noinspection CssUnusedSymbol*/
 :deep(.el-upload-list--picture-card .el-upload-list__item) {
-  margin: 0 2px 0 0;
+    margin: 0 2px 0 0;
 }
 
 /*noinspection CssUnusedSymbol*/
 :deep(.el-upload--picture-card) {
-  --el-upload-picture-card-size: 100px;
+    --el-upload-picture-card-size: 100px;
 }
 
 /*noinspection CssUnusedSymbol*/
 :deep(.el-upload-list--picture-card) {
-  flex-wrap: nowrap !important;
-  --el-upload-list-picture-card-size: 100px;
+    flex-wrap: nowrap !important;
+    --el-upload-list-picture-card-size: 100px;
 }
 
 /*noinspection CssUnusedSymbol*/
 :deep(.el-upload-list__item-status-label) {
-  display: none !important;
+    display: none !important;
 }
 
 .delete:hover {
-  --el-button-hover-text-color: var(--el-color-danger) !important;
-  --el-button-hover-border-color: var(--el-color-danger) !important;
+    --el-button-hover-text-color: var(--el-color-danger) !important;
+    --el-button-hover-border-color: var(--el-color-danger) !important;
 }
 </style>

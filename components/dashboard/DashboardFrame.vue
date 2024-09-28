@@ -9,12 +9,16 @@ const props = defineProps<{
   postToggle?: () => void
 }>();
 
-const main = ref();
+const main = useTemplateRef<HTMLDivElement>("main");
 
 onMounted(() => {
   if (props.padding) {
-    main.value.style.setProperty("--dashboard-main-padding", props.padding)
+    main.value?.style.setProperty("--dashboard-main-padding", props.padding)
   }
+})
+
+defineExpose({
+    element: main
 })
 </script>
 

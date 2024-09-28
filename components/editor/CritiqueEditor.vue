@@ -10,18 +10,24 @@ const props = defineProps<{
 const textTf = useEditorTransforms()
 const text = textTf.lowConfidenceInvisibleMarking(props.html);
 const editor = useTiptapEditor(text)
+const menu = useTemplateRef<typeof CritiqueBubbleMenu>("menu")
 
 watch(() => props.html, () => editor.value?.commands.setContent(props.html))
 
 onBeforeUnmount(() => {
   unref(editor)?.destroy()
 })
+
+defineExpose({
+    menu,
+    editor
+})
 </script>
 
 <template>
   <div class="editor-wrapper">
     <div v-if="editor" class="editor">
-      <CritiqueBubbleMenu :editor="editor"></CritiqueBubbleMenu>
+      <CritiqueBubbleMenu :editor="editor" ref="menu"></CritiqueBubbleMenu>
       <TiptapEditorContent :editor="editor"></TiptapEditorContent>
     </div>
     <EditorUnavailable v-else />
@@ -31,14 +37,11 @@ onBeforeUnmount(() => {
 <style scoped lang="css">
 .editor-wrapper {
   margin: 20px;
-  height: 800px;
   width: 800px;
-  overflow: hidden;
 }
 
 .editor {
   width: 100%;
   height: 100%;
-  overflow: auto;
 }
 </style>

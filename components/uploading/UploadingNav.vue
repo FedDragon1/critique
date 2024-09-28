@@ -1,14 +1,14 @@
 <script setup lang="ts">
 defineProps<{
     title: string,
-    disableContinue?: boolean
+    disabled?: boolean
 }>()
 </script>
 
 <template>
     <nav>
         <div class="wrapper">
-            <div style="height: 1.8rem" @click="$emit('return')">
+            <div style="height: 1.8rem" @click="disabled ? 0 : $emit('return')">
                 <el-icon size="1.5rem" class="hover-color">
                     <el-icon-back></el-icon-back>
                 </el-icon>
@@ -16,7 +16,7 @@ defineProps<{
             <div>
                 <span>{{ title }}</span>
             </div>
-            <el-button :disabled="disableContinue ?? false" plain @click="$emit('continue')">Continue</el-button>
+            <el-button :disabled="disabled ?? false" plain @click="$emit('continue')">Continue</el-button>
         </div>
     </nav>
 </template>

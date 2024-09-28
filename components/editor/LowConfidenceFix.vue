@@ -20,7 +20,6 @@ const refreshPromise = () => {
         promise?.then((v) => {
             fullFilled.value = true
             display.value = v
-            console.log(v)
         })
     } else {
         setTimeout(refreshPromise, 100)
@@ -31,7 +30,10 @@ if (!promise) {
     setTimeout(refreshPromise, 100)
 }
 
-watch(() => [props.segmentId], refreshPromise)
+watch(() => [props.segmentId], () => {
+    fullFilled.value = false
+    refreshPromise()
+})
 
 function fix() {
     if (fullFilled.value) {

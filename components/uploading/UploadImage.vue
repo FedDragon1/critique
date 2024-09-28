@@ -1,12 +1,14 @@
 <script setup lang="ts">
-
+defineProps<{
+    disabled?: boolean
+}>()
 </script>
 
 <template>
   <el-upload
       class="upload"
       drag
-      ref="upload"
+      :disabled="disabled ?? false"
       :show-file-list="false"
       :multiple="false"
       :on-success="(resp) => $emit('success', resp)"

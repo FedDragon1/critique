@@ -29,6 +29,12 @@ import type {BaseResponse, FixRequest} from "~/types/requests";
 const cacheOptions = {
     max: 200
 }
+
+let render: boolean = false
+export function forceRender() {
+    setTimeout(() => render = true, 100)
+}
+
 export const cacheOfPromises: PromiseCache = new LRUCache(cacheOptions)
 const cacheOfStrings: ParagraphCache = new LRUCache(cacheOptions)
 
@@ -140,7 +146,7 @@ const throttleRegistry = new ThrottleRegistry()
  */
 function getReplacements(node: Node, regexArr: RegExpExecArray[], nodeHash: string, position: number) {
     // prevent excessive amount of internet requests
-    if (throttleRegistry.has(nodeHash, position)) {
+    if (throttleRegistry.has(nodeHash, position) && !render) {
         // share with other identical paragraphs
         return throttleRegistry.get(nodeHash, position)
     }
@@ -162,7 +168,7 @@ function getReplacements(node: Node, regexArr: RegExpExecArray[], nodeHash: stri
     // first paragraph when correcting the second paragraph (as
     // they share the fixId)
     throttleRegistry.set(nodeHash, position, fixId)
-    if (throttleRegistry.hasCommonContent(nodeHash)) {
+    if (throttleRegistry.hasCommonContent(nodeHash) && !render) {
         // return the fixId right the way, the correction request has
         // already been sent
         return fixId;
@@ -254,6 +260,10 @@ function findLowConfidenceSegments(doc: Node): DecorationSet {
         decorations.push(...decoration)
     })
 
+    if (render) {
+        render = false
+    }
+
     return DecorationSet.create(doc, decorations)
 }
 
@@ -301,8 +311,7 @@ const LowConfidenceMarker = Extension.create({
                     return findLowConfidenceSegments(instance.doc)
                 },
                 apply: (transaction, oldState) => {
-                    console.log("123123")
-                    return transaction.docChanged ? findLowConfidenceSegments(transaction.doc) : oldState
+                    return transaction.docChanged || render ? findLowConfidenceSegments(transaction.doc) : oldState
                 }
             },
             props: {
@@ -371,6 +380,9 @@ export function useEditorTransforms() {
             }
             if (node.name === "heading") {
                 return `Heading ${node.attrs.level}`
+            }
+            if (node.name === "doc") {
+                return "Document"
             }
             throw Error(`Unrecognized node name ${node.name}`)
         },
