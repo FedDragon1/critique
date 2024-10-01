@@ -4,7 +4,7 @@ import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import EmailPasswordForm from "~/components/form/LoginForm.vue";
 import ReturnNav from "~/components/login/ReturnNav.vue";
 import CardFrame from "~/components/login/CardFrame.vue";
-import {useUserStore} from "~/stores/UserStore";
+import {useUserStore} from "~/stores/userStore";
 
 definePageMeta({
     middleware: 'login-redirect'

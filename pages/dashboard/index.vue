@@ -5,7 +5,7 @@ import {useTime} from "~/composibles/useTime";
 // import {useFile} from "~/composibles/useFile";
 import FileList from "~/components/dashboard/FileList.vue";
 import {Search} from "@element-plus/icons-vue";
-import {useUserStore} from "~/stores/UserStore";
+import {useUserStore} from "~/stores/userStore";
 
 definePageMeta({
     middleware: 'auth'

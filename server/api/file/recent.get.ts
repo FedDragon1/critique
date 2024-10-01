@@ -1,7 +1,6 @@
 // get /api/file/recent
 
 // TODO
-import {CritiqueFileDesc} from "~/types/requests";
 
 export default defineEventHandler((): CritiqueFileDesc[] => {
     return [

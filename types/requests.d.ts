@@ -45,14 +45,3 @@ interface RotateImageRequest {
     image: string,
     degrees: number
 }
-
-// database store
-//TODO move
-interface CritiqueFileDesc {
-    uuid: number,
-    fileName: string,
-    lastModified: number,
-    preview: string,
-    size: number,
-    isFavorite: boolean
-}

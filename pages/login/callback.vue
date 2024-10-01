@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {useSupabaseUser} from "#imports";
+import {useUserStore} from "~/stores/userStore";
 
 definePageMeta({
     middleware: 'auth'

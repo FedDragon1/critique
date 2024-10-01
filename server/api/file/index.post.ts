@@ -2,7 +2,7 @@
 
 import { v4 as uuid } from 'uuid'
 import { serverSupabaseClient } from '#supabase/server'
-import type {CritiqueFileDesc, BaseResponse, FilePostRequest} from "~/types/requests"
+import type {BaseResponse, FilePostRequest} from "~/types/requests"
 
 export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFileDesc>> => {
     const client = await serverSupabaseClient(event)
