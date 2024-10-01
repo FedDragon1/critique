@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type {CritiqueFileDesc} from "~/types/requests";
 import {useTime} from "~/composibles/useTime";
 import {useFile} from "~/composibles/useFile";
 import {Calendar, Crop, Sort} from "@element-plus/icons-vue";

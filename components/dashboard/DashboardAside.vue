@@ -4,7 +4,7 @@ import DashboardIcon from "~/components/svg/DashboardIcon.vue";
 import AnalyticsIcon from "~/components/svg/AnalyticsIcon.vue";
 import SettingsIcon from "~/components/svg/SettingsIcon.vue";
 import BrandIcon from "~/components/svg/BrandIcon.vue";
-import {useUiStore} from "~/stores/UiOptionStore";
+import {useUiStore} from "~/stores/uiOptionStore";
 
 const routes = [
   {

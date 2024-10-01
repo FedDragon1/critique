@@ -214,10 +214,6 @@ async function ocr(osdResult: OsdResult) {
  */
 async function osd(image: string): Promise<OsdResult> {
     uploadingStatus.value = "Performing OSD..."
-    // const osdResult = await $fetch<OsdResult>("/api/image/osd", {
-    //     method: "POST",
-    //     body: {image}
-    // });
     const osdResult = await tesseract.get().osd(image)
     if (osdResult.status === "error") {
         ElMessage.error(osdResult.errorMessage)
