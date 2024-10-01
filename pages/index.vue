@@ -31,7 +31,6 @@ if (route.query.code) {
     ElMessage.success("Account Verified!")
     router.push("/login")
 }
-
 </script>
 
 <template>

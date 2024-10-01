@@ -3,7 +3,7 @@ import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import RegisterForm from "~/components/form/RegisterForm.vue";
 import ReturnNav from "~/components/login/ReturnNav.vue";
 import CardFrame from "~/components/login/CardFrame.vue";
-import type {BaseResponse, UserPostRequest} from "~/types/requests";
+import type {BaseResponse, EmailExistRequest, EmailExistResponse, UserPostRequest} from "~/types/requests";
 import {useUserStore} from "~/stores/userStore";
 
 const form = reactive({
@@ -20,6 +20,30 @@ async function onRegister() {
         return;
     }
 
+    let success = true;
+    const existRequest: EmailExistRequest = {
+        email: form.email
+    }
+    const existResp = await $fetch<BaseResponse<EmailExistResponse>>("/api/user/repeat", {
+        method: "POST",
+        body: existRequest
+    })
+
+    if (!existResp.success) {
+        ElMessage.error(existResp.errorMessage);
+        return;
+    }
+    if (existResp.data?.exist) {
+        if (existResp.data?.verified) {
+            // repeat sign up
+            ElMessage.error("A user already exists with the email")
+            return;
+        }
+        // resend email
+        ElMessage.warning("An unverified user is associated with the email")
+        success = false
+    }
+
     const {data, error} = await supabase.auth.signUp({
         email: form.email,
         password: form.password
@@ -34,16 +58,22 @@ async function onRegister() {
         return;
     }
 
+    if (!success) {
+        // data exist in database, dont send again
+        setTimeout(() => router.push("/register/callback"))
+        return;
+    }
+
     const requestBody: UserPostRequest = {
         name: form.username,
-        uuid: data.user.id
+        uuid: data.user.id,
+        email: form.email,
+        validated: false
     }
     const response = await $fetch<BaseResponse<CritiqueUser>>("/api/user", {
         method: "POST",
         body: requestBody
     })
-
-    console.log(response)
 
     if (!response.success || !response.data) {
         ElMessage.error(response.errorMessage ?? "No user")

@@ -20,7 +20,9 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueUs
         .insert({
             uuid: request.uuid,
             display_name: request.name,
-            avatar: request.avatar
+            avatar: request.avatar,
+            validated: request.validated,
+            email: request.email
         })
         .select()
 

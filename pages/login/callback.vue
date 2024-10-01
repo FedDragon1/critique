@@ -1,29 +1,38 @@
 <script setup lang="ts">
-import {useSupabaseUser} from "#imports";
-import {useUserStore} from "~/stores/userStore";
+import type {BaseResponse, VerifyUserRequest} from "~/types/requests";
 
 definePageMeta({
     middleware: 'auth'
 })
 
 const router = useRouter()
-
 const user = useSupabaseUser()
-const userStore = useUserStore()
+
+function verify(uuid: string) {
+    const request: VerifyUserRequest = {
+        uuid
+    }
+    $fetch<BaseResponse<CritiqueUser>>("/api/user/verify", {
+        method: "POST",
+        body: request
+    }).then(resp => {
+        if (!resp.success) {
+            ElMessage.error("Failed to verify the account")
+            return
+        }
+        setTimeout(() => {
+            router.push('/dashboard');
+        }, 1000)
+    })
+}
 
 onMounted(() => {
-    if (user.value === null) {
+    if (user.value === null || !user.value.id) {
         ElMessage.error("No user")
         return
     }
 
-    if (!userStore.getUserAuth) {
-        // OAuth
-        userStore.setUserAuth(user.value)
-    }
-    setTimeout(() => {
-        router.push('/dashboard');
-    }, 1000)
+    verify(user.value!.id)
 })
 </script>
 

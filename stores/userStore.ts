@@ -20,11 +20,17 @@ export const useUserStore = defineStore('user', {
                 let resp = await $fetch<BaseResponse<CritiqueUser>>(`/api/user/${this.userAuth.id}`);
                 if (!resp.success) {
                     // no user with userAuth == OAuth
+                    if (!this.userAuth.email) {
+                        throw Error("No email")
+                    }
+
                     // should append user into the database
                     const postBody: UserPostRequest = {
                         name: this.userAuth.user_metadata.name ?? "Critique User",
                         uuid: this.userAuth.id,
-                        avatar: this.userAuth?.user_metadata?.avatar_url
+                        avatar: this.userAuth?.user_metadata?.avatar_url,
+                        email: this.userAuth.email,
+                        validated: true
                     }
                     const append = await $fetch("/api/user", {
                         method: "POST",

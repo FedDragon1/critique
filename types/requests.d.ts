@@ -38,10 +38,25 @@ interface FilePostRequest {
 interface UserPostRequest {
     name: string,
     uuid: string,
-    avatar?: string
+    email: string,
+    avatar?: string,
+    validated: boolean
 }
 
 interface RotateImageRequest {
     image: string,
     degrees: number
+}
+
+interface EmailExistRequest {
+    email: string
+}
+
+interface VerifyUserRequest {
+    uuid: string
+}
+
+interface EmailExistResponse {
+    exist: boolean,
+    verified: boolean
 }

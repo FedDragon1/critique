@@ -295,6 +295,10 @@ const userActions: UserActions[] = [
     background-size: contain;
 }
 
+.avatar-image:focus-visible {
+    outline: none;
+}
+
 .avatar {
     height: 40px;
     width: 40px;
