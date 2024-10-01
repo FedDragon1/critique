@@ -11,6 +11,8 @@ const props = defineProps<{
 const { makeDate } = useTime()
 const { makeFileSize } = useFile()
 
+const router = useRouter()
+
 const favoriteOnly = ref(false);
 const orderBy = ref<keyof CritiqueFileDesc>("lastModified")
 
@@ -63,7 +65,7 @@ const orderedFiles = computed(() => props.files
     </div>
     <div class="file-table">
       <div class="file-entry"
-           @click="$router.push(`/analytic/${file.uuid}`)"
+           @click="() => router.push(`/analytic/${file.uuid}`)"
            v-if="orderedFiles.length > 0"
            v-for="file in orderedFiles"
            :key="file.uuid">

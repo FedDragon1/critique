@@ -20,7 +20,7 @@ const signInWith = async (provider: Provider) => {
     options: {
       redirectTo: `${window.origin}/login/callback`,
     }
-  })
+  });
 }
 </script>
 

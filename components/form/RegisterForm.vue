@@ -14,7 +14,7 @@ defineProps<{
   <FormFrame>
     <el-form :model="model" label-width="auto" class="form">
       <el-form-item label="User name">
-        <el-input type="password" show-password v-model="model.username" class="form-element"/>
+        <el-input type="text" v-model="model.username" class="form-element"/>
       </el-form-item>
       <el-form-item label="Email">
         <el-input v-model="model.email" class="form-element"/>
@@ -24,7 +24,7 @@ defineProps<{
       </el-form-item>
       <span>By continuing, you agree to the <u>Terms of use</u> and <u>Privacy Policy</u></span>
       <el-form-item class="submit-button-wrapper">
-        <el-button type="primary" @click="$emit('register')" plain  class="submit-button">Sign In</el-button>
+        <el-button type="primary" @click="$emit('register')" plain  class="submit-button">Sign Up</el-button>
       </el-form-item>
     </el-form>
     <template #footer>

@@ -7,6 +7,10 @@ import DashboardFrame from "~/components/dashboard/DashboardFrame.vue";
 import ContextMenu from "~/components/editor/ContextMenu.vue";
 import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
 
+definePageMeta({
+    middleware: 'auth'
+})
+
 const fileStore = useFileStore()
 const router = useRouter()
 const route = useRoute()
@@ -38,6 +42,10 @@ function fixMatching() {
     editor.value!.menu.fixMatching()
 }
 
+function paste() {
+    editor.value!.editor.commands.paste()
+}
+
 onMounted(() => setTimeout(() => timeout.value = true, 5000))
 </script>
 
@@ -63,6 +71,7 @@ onMounted(() => setTimeout(() => timeout.value = true, 5000))
     <ContextMenu :scope="frame" v-if="frame !== null">
         <ReviewContextMenu @fix-selected="fixSelected"
                            @fix-matching="fixMatching"
+                           @paste="paste"
                            @ignore-all="ignoreAll"></ReviewContextMenu>
     </ContextMenu>
 </template>

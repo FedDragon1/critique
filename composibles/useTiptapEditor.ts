@@ -280,7 +280,43 @@ const SelectText = Extension.create({
                 }
 
                 return editor.state.doc.textBetween(from, to, ' ')
-            }
+            },
+            copy: () => ({ editor }: { editor: Editor }) => {
+                // @ts-ignore
+                const text: string | null = editor.commands.getSelectedText()
+                navigator.clipboard.writeText(text ?? "").then(
+                    (text) => {
+                        ElMessage.success({
+                            message: "Text Copied!",
+                            grouping: true
+                        })
+                        console.log(`[Clipboard] write: ${text}`)
+                    }
+                )
+            },
+            paste: () => ({ editor }: { editor: Editor }) => {
+                // @ts-ignore
+                const {from, to, empty} = editor.state.selection
+                navigator.clipboard.readText().then(
+                    (text) => {
+                        if (text === "") {
+                            ElMessage.error({
+                                message: "Nothing to paste",
+                                grouping: true
+                            })
+                        }
+
+                        if (empty) {
+                            editor.commands.insertContentAt(from, text)
+                        } else {
+                            editor.commands.insertContentAt({
+                                from, to,
+                            }, text)
+                        }
+                        console.log(`[Clipboard] paste: ${text}`)
+                    }
+                )
+            },
         }
     },
     name: "selectText"

@@ -29,7 +29,25 @@ interface ReviseRequest {
     selection: string
 }
 
+interface FilePostRequest {
+    name: string,
+    markup: string,
+    raw: string
+}
+
+interface UserPostRequest {
+    name: string,
+    uuid: string,
+    avatar?: string
+}
+
+interface RotateImageRequest {
+    image: string,
+    degrees: number
+}
+
 // database store
+//TODO move
 interface CritiqueFileDesc {
     uuid: number,
     fileName: string,
@@ -37,45 +55,4 @@ interface CritiqueFileDesc {
     preview: string,
     size: number,
     isFavorite: boolean
-}
-
-// transformed object
-interface CritiqueFileMeta {
-    uuid: number,
-    fileName: string,
-    lastModified: string,
-    preview: string,
-    size: string,
-    isFavorite: boolean
-}
-
-// file
-
-interface CritiqueCard {
-    uuid: number,
-    title: string,
-    analysis: string,
-    tags: string[],
-}
-
-interface CritiqueTag {
-    name: string,
-    cards: number[],
-    type: "analysis" | "summary"
-}
-
-interface CritiqueDocument {
-    markup: string,
-    raw: string
-}
-
-interface Critique {
-    uuid: number,
-    fileName: string,
-    lastModified: number,
-    size: number,
-    isFavorite: boolean,
-    document: CritiqueDocument,
-    analysis: CritiqueCard[],
-    tags: CritiqueTag[]
 }

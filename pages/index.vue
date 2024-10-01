@@ -16,6 +16,22 @@ useSeoMeta({
       "interactive and productive manner.",
   ogImage: `https://critique-neon.vercel.app/android-chrome-512x512.png`
 })
+
+// supabase redirects the email confirmation to index page
+// we'll need to deal with it here
+const route = useRoute()
+const router = useRouter()
+
+if (route.query.error) {
+    ElMessage.error(route.query.error_description as string)
+    router.push("/register")
+}
+
+if (route.query.code) {
+    ElMessage.success("Account Verified!")
+    router.push("/login")
+}
+
 </script>
 
 <template>
@@ -188,25 +204,6 @@ useSeoMeta({
   padding: 0;
   margin: 0;
   font-size: 42px;
-}
-
-.register {
-  background-color: var(--el-color-primary);
-  padding: 16px 32px;
-  border-radius: var(--el-border-radius-round);
-  color: var(--el-color-white);
-  text-decoration: none;
-  user-select: none;
-  cursor: pointer;
-  display: inline-block;
-  border: 1px solid transparent;
-  transition: 0.2s ease-in-out;
-}
-
-.register:hover {
-  background-color: initial;
-  color: var(--el-color-primary);
-  border: 1px solid var(--el-color-primary);
 }
 
 .wrapper {

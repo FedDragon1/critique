@@ -1,7 +1,12 @@
-export default defineNuxtRouteMiddleware(() => {
+export default defineNuxtRouteMiddleware(async () => {
     const user = useSupabaseUser();
 
     if (!user.value) {
-        return navigateTo("/");
+        ElMessage.info("Please login first")
+        return navigateTo("/login");
     }
+
+    const userStore = useUserStore();
+    userStore.setUserAuth(user.value);
+    await userStore.getUserInfo
 })

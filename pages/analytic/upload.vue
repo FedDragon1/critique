@@ -6,7 +6,10 @@ import {useTesseract} from "~/composibles/useTesseract";
 import type {FourPoints} from "~/types/cvtypes";
 import ForfeitDialog from "~/components/uploading/ForfeitDialog.vue";
 import type {BaseResponse, FormatRequest, MergeRequest} from "~/types/requests";
-import {$fetch} from "ofetch";
+
+definePageMeta({
+    middleware: 'auth'
+})
 
 const imageUploader = useTemplateRef<typeof ImageUploader>("imageUploader")
 
@@ -211,10 +214,11 @@ async function ocr(osdResult: OsdResult) {
  */
 async function osd(image: string): Promise<OsdResult> {
     uploadingStatus.value = "Performing OSD..."
-    const osdResult = await $fetch<OsdResult>("/api/image/osd", {
-        method: "POST",
-        body: {image}
-    });
+    // const osdResult = await $fetch<OsdResult>("/api/image/osd", {
+    //     method: "POST",
+    //     body: {image}
+    // });
+    const osdResult = await tesseract.get().osd(image)
     if (osdResult.status === "error") {
         ElMessage.error(osdResult.errorMessage)
         throw Error(osdResult.errorMessage)

@@ -7,7 +7,10 @@ import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
-import type {Critique} from "~/types/requests";
+
+definePageMeta({
+    middleware: 'auth'
+})
 
 const route = useRoute()
 const router = useRouter()

@@ -11,6 +11,10 @@ const menu = [
     {
         display: "Ignore All",
         event: "ignore-all"
+    },
+    {
+        display: "Paste",
+        event: "paste"
     }
 ]
 </script>

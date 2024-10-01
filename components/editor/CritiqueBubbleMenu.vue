@@ -244,8 +244,6 @@ function fixSelected() {
             return;
         }
 
-        console.log(resp.data)
-
         props.editor.commands.insertContentAt({
             from,
             to
@@ -329,12 +327,12 @@ defineExpose({
             </div>
             <span class="divider">|</span>
             <div class="bubble-section">
-        <span @click="editor.chain().focus().toggleUnderline().run()"
+        <span @click="editor.commands.copy()"
               class="bubble-op">
           <font-awesome :icon="faCopy" size="xs"/>
           Copy
         </span>
-                <span @click="editor.chain().focus().toggleUnderline().run()"
+                <span @click="editor.commands.paste()"
                       class="bubble-op">
           <font-awesome :icon="faPaste" size="xs"/>
           Paste
