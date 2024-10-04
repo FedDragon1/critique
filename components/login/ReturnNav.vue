@@ -18,6 +18,8 @@ nav {
   width: 100%;
   border-bottom: 1px solid var(--el-border-color);
   padding: 20px 20px 10px;
+    height: var(--nav-height);
+    box-sizing: border-box;
 }
 
 .hover-color {

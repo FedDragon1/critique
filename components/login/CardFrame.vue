@@ -32,17 +32,16 @@ withDefaults(defineProps<{
 
 <style scoped>
 .screen-wrapper {
-  height: 100vh;
+  height: calc(100vh - var(--nav-height));
   width: 100vw;
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  overflow: auto;
+  position: relative;
+  bottom: calc(-1 * var(--nav-height));
 }
 
 .card {
-  margin-top: 100px;
-  height: 80vh;
   width: 80vw;
   max-width: 550px;
   border-radius: var(--el-border-radius-base);
@@ -51,6 +50,7 @@ withDefaults(defineProps<{
   flex-direction: column;
   gap: 20px;
   max-height: 1000px;
+  margin: auto;
 }
 
 .header {

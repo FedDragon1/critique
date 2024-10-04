@@ -3,7 +3,7 @@ import OAuthDisplay from "~/components/oauth/OAuthDisplay.vue";
 import RegisterForm from "~/components/form/RegisterForm.vue";
 import ReturnNav from "~/components/login/ReturnNav.vue";
 import CardFrame from "~/components/login/CardFrame.vue";
-import type {BaseResponse, EmailExistRequest, EmailExistResponse, UserPostRequest} from "~/types/requests";
+import type {BaseResponse, EmailExistRequest, EmailExistResponse, NewUserRequest} from "~/types/requests";
 import {useUserStore} from "~/stores/userStore";
 
 const form = reactive({
@@ -64,7 +64,7 @@ async function onRegister() {
         return;
     }
 
-    const requestBody: UserPostRequest = {
+    const requestBody: NewUserRequest = {
         name: form.username,
         uuid: data.user.id,
         email: form.email,

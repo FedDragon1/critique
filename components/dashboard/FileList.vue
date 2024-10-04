@@ -4,7 +4,7 @@ import {useFile} from "~/composibles/useFile";
 import {Calendar, Crop, Sort} from "@element-plus/icons-vue";
 
 const props = defineProps<{
-  files: CritiqueFileDesc[]
+  files: CritiqueFull[]
 }>()
 
 const { makeDate } = useTime()
@@ -13,7 +13,7 @@ const { makeFileSize } = useFile()
 const router = useRouter()
 
 const favoriteOnly = ref(false);
-const orderBy = ref<keyof CritiqueFileDesc>("lastModified")
+const orderBy = ref<keyof CritiqueFull>("lastModified")
 
 const orderedFiles = computed(() => props.files
     .toSorted((f1, f2) =>
@@ -76,19 +76,19 @@ const orderedFiles = computed(() => props.files
           <aside>
             <el-icon v-if="file.isFavorite"
                      size="1.8rem"
-                     @click="$emit('unfavorite', file.uuid)"
+                     @click.stop="$emit('unfavorite', file.uuid)"
                      class="op-icon favorite"><el-icon-Star-filled /></el-icon>
             <el-icon v-else
                      size="1.5rem"
-                     @click="$emit('favorite', file.uuid)"
+                     @click.stop="$emit('favorite', file.uuid)"
                      class="hover-color op-icon secondary"><el-icon-Star /></el-icon>
 
             <el-icon size="1.5rem"
-                     @click="$emit('rename', file.uuid)"
+                     @click.stop="$emit('rename', file.uuid)"
                      class="hover-color op-icon secondary"><el-icon-edit /></el-icon>
 
             <el-icon size="1.5rem"
-                     @click="$emit('delete', file.uuid)"
+                     @click.stop="$emit('delete', file.uuid)"
                      class="hover-color op-icon secondary"><el-icon-delete /></el-icon>
           </aside>
         </div>

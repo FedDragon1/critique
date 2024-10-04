@@ -1,16 +1,15 @@
-// get /api/file/[id]
+// get /api/file/tag/[id]
 
 import type { BaseResponse } from "~/types/requests";
 import {serverSupabaseClient, serverSupabaseUser} from "#supabase/server";
-import {transformCritiqueFull} from "~/server/utils/dbutils";
 
-export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFull>> => {
-    const fileUuid = getRouterParam(event, 'id')
+export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueTagFull>> => {
+    const tagUuid = getRouterParam(event, 'id')
 
-    if (!fileUuid) {
+    if (!tagUuid) {
         return {
             success: false,
-            errorMessage: "No file uuid specified"
+            errorMessage: "No tag uuid specified"
         }
     }
 
@@ -25,11 +24,10 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFu
     }
 
     const { data, error } = await client
-        .from("file")
-        .select("uuid, created_at, modified_at, size, favorite, file_name, preview_link, file_link, user_uuid, " +
-            "card(uuid, created_at, title, content_link, file_uuid, user_uuid, tag(*)), tag(*, card(*))")
+        .from("tag")
+        .select("uuid, name, file_uuid, type, user_uuid, card(*)")
         .eq("user_uuid", user.id)
-        .eq("uuid", fileUuid)
+        .eq("uuid", tagUuid)
 
     if (error) {
         return {
@@ -40,17 +38,17 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFu
     if (data.length > 1) {
         return {
             success: false,
-            errorMessage: "Multiple files with the same uuid"
+            errorMessage: "Multiple tags with the same uuid"
         }
     }
     if (!data.length) {
         return {
             success: false,
-            errorMessage: "No file found with the uuid"
+            errorMessage: "No tag found with the uuid"
         }
     }
 
-    const ret: CritiqueFull = data.map(transformCritiqueFull)[0]
+    const ret: CritiqueTagFull = data.map((dbTag) => transformTagFull(dbTag))[0]
 
     return {
         success: true,

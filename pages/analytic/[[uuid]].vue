@@ -17,7 +17,7 @@ const router = useRouter()
 
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch(`/api/file/${critiqueUuid}`)
-const critique = ref(critiqueResp?.data as unknown as Critique | null)
+const critique = ref(critiqueResp?.data as unknown as CritiqueFull | null)
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success")) {
     console.error(critiqueResp.error);

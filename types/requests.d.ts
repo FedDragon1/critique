@@ -29,20 +29,6 @@ interface ReviseRequest {
     selection: string
 }
 
-interface FilePostRequest {
-    name: string,
-    markup: string,
-    raw: string
-}
-
-interface UserPostRequest {
-    name: string,
-    uuid: string,
-    email: string,
-    avatar?: string,
-    validated: boolean
-}
-
 interface RotateImageRequest {
     image: string,
     degrees: number
@@ -59,4 +45,72 @@ interface VerifyUserRequest {
 interface EmailExistResponse {
     exist: boolean,
     verified: boolean
+}
+
+interface NewUserRequest {
+    name: string,
+    uuid: string,
+    email: string,
+    avatar?: string,
+    validated: boolean
+}
+
+interface NewCardRequest {
+    uuid?: string,
+    createdAt?: string,
+    title: string,
+    fileUuid: string,
+    data: CritiqueCardStorage
+}
+
+interface UpdateCardRequest {
+    uuid: string,
+    title?: string,
+    data?: CritiqueCardStorage
+}
+
+interface DeleteCardRequest {
+    uuids: string[]
+}
+
+interface NewTagRequest {
+    uuid?: string,
+    name: string,
+    type: string
+    fileUuid: string,
+}
+
+interface UpdateTagRequest {
+    uuid: string,
+    name?: string,
+    type?: string
+}
+
+interface DeleteTagRequest {
+    uuids: string[]
+}
+
+interface NewFileRequest {
+    uuid?: string,
+    createdAt?: string,
+    modifiedAt?: string,
+    size?: number,
+    favorite?: boolean,
+    fileName: string,
+    dataMarkUp: string,
+    previewBase64?: string
+}
+
+interface UpdateFileRequest {
+    uuid: string,
+    modifiedAt?: string,
+    size?: number,
+    favorite?: boolean,
+    fileName?: string,
+    dataMarkUp?: string,
+    previewBase64?: string
+}
+
+interface DeleteFileRequest {
+    uuids: string[]
 }

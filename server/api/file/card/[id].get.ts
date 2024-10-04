@@ -1,16 +1,16 @@
-// get /api/file/[id]
+// get /api/file/card/[id]
 
 import type { BaseResponse } from "~/types/requests";
 import {serverSupabaseClient, serverSupabaseUser} from "#supabase/server";
-import {transformCritiqueFull} from "~/server/utils/dbutils";
+import {transformCardFull} from "~/server/utils/dbutils";
 
-export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFull>> => {
-    const fileUuid = getRouterParam(event, 'id')
+export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCardFull>> => {
+    const cardUuid = getRouterParam(event, 'id')
 
-    if (!fileUuid) {
+    if (!cardUuid) {
         return {
             success: false,
-            errorMessage: "No file uuid specified"
+            errorMessage: "No card uuid specified"
         }
     }
 
@@ -25,11 +25,10 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFu
     }
 
     const { data, error } = await client
-        .from("file")
-        .select("uuid, created_at, modified_at, size, favorite, file_name, preview_link, file_link, user_uuid, " +
-            "card(uuid, created_at, title, content_link, file_uuid, user_uuid, tag(*)), tag(*, card(*))")
+        .from("card")
+        .select("uuid, created_at, file_uuid, title, user_uuid, content_link, tag(*)")
         .eq("user_uuid", user.id)
-        .eq("uuid", fileUuid)
+        .eq("uuid", cardUuid)
 
     if (error) {
         return {
@@ -40,17 +39,17 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFu
     if (data.length > 1) {
         return {
             success: false,
-            errorMessage: "Multiple files with the same uuid"
+            errorMessage: "Multiple cards with the same uuid"
         }
     }
     if (!data.length) {
         return {
             success: false,
-            errorMessage: "No file found with the uuid"
+            errorMessage: "No card found with the uuid"
         }
     }
 
-    const ret: CritiqueFull = data.map(transformCritiqueFull)[0]
+    const ret: CritiqueCardFull = data.map((dbCard) => transformCardFull(dbCard))[0]
 
     return {
         success: true,

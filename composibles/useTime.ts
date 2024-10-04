@@ -7,7 +7,7 @@ const modifiedTime = {
     days: 1000 * 60 * 60 * 24 * 10, // 10 days
 }
 
-function makeDate(modifiedDate: number) {
+function makeDate(modifiedDate: number | string) {
     const now = new Date();
     const modDate = new Date(modifiedDate)
 

@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia'
 import type {User} from "@supabase/auth-js";
-import type {BaseResponse, UserPostRequest} from "~/types/requests";
+import type {BaseResponse, NewUserRequest} from "~/types/requests";
 import {SupabaseClient} from "@supabase/supabase-js";
 
 export const useUserStore = defineStore('user', {
@@ -25,7 +25,7 @@ export const useUserStore = defineStore('user', {
                     }
 
                     // should append user into the database
-                    const postBody: UserPostRequest = {
+                    const postBody: NewUserRequest = {
                         name: this.userAuth.user_metadata.name ?? "Critique User",
                         uuid: this.userAuth.id,
                         avatar: this.userAuth?.user_metadata?.avatar_url,

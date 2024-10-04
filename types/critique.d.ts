@@ -43,7 +43,7 @@ interface CritiqueUser {
 
 // database store
 interface CritiqueFileDesc {
-    uuid: number,
+    uuid: string,
     fileName: string,
     lastModified: number,
     preview: string,
@@ -53,7 +53,7 @@ interface CritiqueFileDesc {
 
 // transformed object
 interface CritiqueFileMeta {
-    uuid: number,
+    uuid: string,
     fileName: string,
     lastModified: string,
     preview: string,
@@ -63,31 +63,65 @@ interface CritiqueFileMeta {
 
 // file
 
+interface Critique {
+    uuid: string,
+    size: number,
+    fileLink: string,
+    previewLink: string,
+    fileName: string,
+    isFavorite: boolean,
+    lastModified: string,
+    userUuid: string
+}
+
 interface CritiqueCard {
-    uuid: number,
+    uuid: string,
     title: string,
-    analysis: string,
-    tags: string[],
+    contentLink: string,
+    fileUuid: string,
+    userUuid: string,
 }
 
 interface CritiqueTag {
+    uuid: string,
     name: string,
-    cards: number[],
-    type: "analysis" | "summary"
+    type: "analysis" | "summary",
+    fileUuid: string,
+    userUuid: string,
 }
 
-interface CritiqueDocument {
-    markup: string,
-    raw: string
-}
-
-interface Critique {
-    uuid: number,
-    fileName: string,
-    lastModified: number,
-    size: number,
-    isFavorite: boolean,
-    document: CritiqueDocument,
-    analysis: CritiqueCard[],
+interface CritiqueCardFull {
+    uuid: string,
+    title: string,
+    contentLink: string,
+    fileUuid: string,
+    userUuid: string,
     tags: CritiqueTag[]
+}
+
+interface CritiqueTagFull {
+    uuid: string,
+    name: string,
+    type: "analysis" | "summary",
+    fileUuid: string,
+    userUuid: string,
+    cards: CritiqueCard[]
+}
+
+interface CritiqueFull {
+    uuid: string,
+    size: number,
+    fileLink: string,
+    previewLink: string,
+    fileName: string,
+    isFavorite: boolean,
+    lastModified: string,
+    cards: CritiqueCardFull[],
+    tags: CritiqueTagFull[],
+    userUuid: string
+}
+
+interface CritiqueCardStorage {
+    originalText: string,
+    critique: string
 }

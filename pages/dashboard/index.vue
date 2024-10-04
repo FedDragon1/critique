@@ -2,10 +2,10 @@
 import {faArrowRightFromBracket, faGear} from '@fortawesome/free-solid-svg-icons'
 import RecentFilePreview from "~/components/dashboard/RecentFilePreview.vue";
 import {useTime} from "~/composibles/useTime";
-// import {useFile} from "~/composibles/useFile";
 import FileList from "~/components/dashboard/FileList.vue";
 import {Search} from "@element-plus/icons-vue";
 import {useUserStore} from "~/stores/userStore";
+import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
 
 definePageMeta({
     middleware: 'auth'
@@ -17,47 +17,118 @@ const userAvatar = await userStore.getUserAvatar(client)
 
 const searchText = ref("");
 
-const deletingFileUuid = ref<number>(-1)
+const deletingFileUuid = ref<string>("")
 const deletingFile = computed(
-    () => recentFiles.data.value!.filter(f => f.uuid === deletingFileUuid.value)[0])
-const isDeletingFile = computed(() => deletingFileUuid.value !== -1)
+    () => recentFiles?.data?.filter(f => f.uuid === deletingFileUuid.value)[0])
+const isDeletingFile = computed(() => deletingFileUuid.value !== "")
 
-const renamingFileUuid = ref<number>(-1)
+const renamingFileUuid = ref<string>("")
 const renamingFile = computed(
-    () => recentFiles.data.value!.filter(f => f.uuid === renamingFileUuid.value)[0])
-const isRenamingFile = computed(() => renamingFileUuid.value !== -1)
+    () => recentFiles?.data?.filter(f => f.uuid === renamingFileUuid.value)[0])
+const isRenamingFile = computed(() => renamingFileUuid.value !== "")
 const renamingError = ref("")
 const renamingTo = ref("")
 
 const router = useRouter()
-
 const {makeDate} = useTime();
-// const {makeFileSize} = useFile();
 
-const recentFiles = await useFetch("/api/file/recent")
+const recentFiles = (await useFetch<BaseResponse<CritiqueFull[]>>("/api/file/recent")).data.value
 
-function favorite(uuid: number) {
-    recentFiles.data.value!.filter(f => f.uuid === uuid)[0].isFavorite = true
+function favorite(uuid: string) {
+    if (!recentFiles?.data) {
+        ElMessage.error("No files")
+        return;
+    }
+
+    const request: UpdateFileRequest = {
+        uuid,
+        favorite: true
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "PUT",
+        body: request
+    }).then(resp => {
+        if (!recentFiles?.data) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success({
+            message: `Added "${resp.data?.fileName}" to favorite`,
+            grouping: true
+        })
+        recentFiles.data.filter(f => f.uuid === uuid)[0].isFavorite = true
+    })
 }
 
-function unfavorite(uuid: number) {
-    recentFiles.data.value!.filter(f => f.uuid === uuid)[0].isFavorite = false
+function unfavorite(uuid: string) {
+    const request: UpdateFileRequest = {
+        uuid,
+        favorite: false
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "PUT",
+        body: request
+    }).then(resp => {
+        if (!recentFiles?.data) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success({
+            message: `Removed "${resp.data?.fileName}" from favorite`,
+            grouping: true
+        })
+        recentFiles.data.filter(f => f.uuid === uuid)[0].isFavorite = false
+    })
 }
 
 function deleteFile() {
-    // TODO: Sync database
+    if (!recentFiles?.data) {
+        ElMessage.error("No files")
+        return;
+    }
 
-    recentFiles.data.value = recentFiles.data.value!.filter(f => f.uuid !== deletingFileUuid.value)
-    deletingFileUuid.value = -1;
+    const request: DeleteFileRequest = {
+        uuids: [deletingFileUuid.value]
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "DELETE",
+        body: request
+    }).then(resp => {
+        if (!recentFiles?.data) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        // @ts-ignore
+        ElMessage.success(`Deleted file "${resp.data[0].fileName}"`)
+        recentFiles.data = recentFiles.data.filter(f => f.uuid !== deletingFileUuid.value)
+        deletingFileUuid.value = "";
+    })
 }
 
 function resetRenaming() {
-    renamingFileUuid.value = -1
+    renamingFileUuid.value = ""
     renamingError.value = ""
     renamingTo.value = ""
 }
 
 function renameFile() {
+    if (!recentFiles?.data) {
+        ElMessage.error("No files")
+        return;
+    }
+
     const newName = renamingTo.value.trim()
 
     if (newName.length === 0) {
@@ -73,10 +144,26 @@ function renameFile() {
         return;
     }
 
-    // TODO: Sync database
-
-    recentFiles.data.value!.filter(f => f.uuid === renamingFileUuid.value)[0].fileName = renamingTo.value;
-    resetRenaming()
+    const request: UpdateFileRequest = {
+        uuid: renamingFileUuid.value,
+        fileName: renamingTo.value
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "PUT",
+        body: request
+    }).then(resp => {
+        if (!recentFiles?.data) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success(`Renamed to "${renamingTo.value}"`)
+        recentFiles.data.filter(f => f.uuid === renamingFileUuid.value)[0].fileName = renamingTo.value;
+        resetRenaming()
+    })
 }
 
 const userActions: UserActions[] = [
@@ -101,7 +188,7 @@ const userActions: UserActions[] = [
         v-model="isDeletingFile"
         title="Warning"
         width="500"
-        :before-close="() => deletingFileUuid = -1"
+        :before-close="() => deletingFileUuid = ''"
     >
         <template v-if="deletingFile">
             <span>Are you sure you want to delete "{{ deletingFile.fileName }}"?</span>
@@ -114,7 +201,7 @@ const userActions: UserActions[] = [
 
         <template #footer>
             <div class="dialog-footer">
-                <el-button @click="deletingFileUuid = -1">Cancel</el-button>
+                <el-button @click="deletingFileUuid = ''">Cancel</el-button>
                 <el-button type="primary" @click="deleteFile()">
                     Confirm
                 </el-button>
@@ -142,7 +229,7 @@ const userActions: UserActions[] = [
 
         <template #footer>
             <div class="dialog-footer">
-                <el-button @click="renamingFileUuid = -1">Cancel</el-button>
+                <el-button @click="renamingFileUuid = ''">Cancel</el-button>
                 <el-button type="primary" @click="renameFile()">
                     Confirm
                 </el-button>
@@ -188,8 +275,8 @@ const userActions: UserActions[] = [
             <h3 class="subheading">Recent Files</h3>
             <div class="recent-file-display">
                 <RecentFilePreview
-                    v-if="recentFiles.status.value === 'success'"
-                    v-for="file of recentFiles.data.value!.slice(0, 3)"
+                    v-if="recentFiles?.success"
+                    v-for="file of recentFiles?.data?.slice(0, 3)"
                     @delete="uuid => deletingFileUuid = uuid"
                     @favorite="favorite"
                     @unfavorite="unfavorite"
@@ -199,16 +286,16 @@ const userActions: UserActions[] = [
                     :key="file.uuid"
                     :file-name="file.fileName"
                     :last-modified="makeDate(file.lastModified)"
-                    :preview-image="file.preview"
+                    :preview-image="file.previewLink"
                     :is-favorite="file.isFavorite"></RecentFilePreview>
                 <RecentFilePreview
-                    v-for="i in Math.max(3 - (recentFiles.data.value?.length ?? 0), 0)"
+                    v-for="i in Math.max(3 - (recentFiles?.data?.length ?? 0), 0)"
                     file-name="It is empty here."
                     last-modified="--"
                     preview-image=""
                     :is-favorite="false"
                     :key="i"
-                    :uuid="i"
+                    :uuid="i.toString()"
                     disable-ops>
                     <span class="secondary">It is empty here.</span>
                 </RecentFilePreview>
@@ -217,12 +304,12 @@ const userActions: UserActions[] = [
 
         <div class="file-list">
             <FileList
-                v-if="recentFiles.status.value === 'success'"
+                v-if="recentFiles?.success"
                 @unfavorite="unfavorite"
                 @favorite="favorite"
                 @delete="uuid => deletingFileUuid = uuid"
                 @rename="uuid => renamingFileUuid = uuid"
-                :files="recentFiles.data.value!"></FileList>
+                :files="recentFiles?.data ?? []"></FileList>
         </div>
     </DashboardFrame>
 </template>

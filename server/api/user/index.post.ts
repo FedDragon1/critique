@@ -1,11 +1,11 @@
 // POST /api/user
 
 import {serverSupabaseServiceRole } from '#supabase/server'
-import type {BaseResponse, UserPostRequest} from "~/types/requests";
+import type {BaseResponse, NewUserRequest} from "~/types/requests";
 
 export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueUser>> => {
     const service = serverSupabaseServiceRole(event)
-    const request = await readBody(event) as UserPostRequest
+    const request = await readBody(event) as NewUserRequest
 
     if (!request.uuid) {
         return {
