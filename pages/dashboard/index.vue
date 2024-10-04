@@ -218,7 +218,7 @@ const userActions: UserActions[] = [
             <span style="line-height: 2rem">Renaming "{{ renamingFile.fileName }}" to</span>
             <br>
             <el-input
-                maxlength="20"
+                maxlength="50"
                 placeholder="New file name"
                 v-model="renamingTo"></el-input>
             <el-text type="danger">{{ renamingError }}</el-text>

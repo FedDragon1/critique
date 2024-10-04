@@ -42,36 +42,17 @@ function storeCritique(critique: string) {
 async function formatting(paragraphs: string[]): Promise<string> {
     uploadingStatus.value = "Formatting File..."
 
-    // chunk the paragraphs so each segment is less than 3000 characters (~750 tokens)
-    // if the paragraph itself is bigger than 3000 characters, it is considered as plain text
-    const tokenMax = 3000
-
+    // if the paragraph itself is bigger than 2000 characters, it is considered as plain text
+    const tokenMax = 2000
     const chunkedParagraphs: string[] = []
     const extraLong: { [index: number]: string } = {}
-    let currentChunk: string[] = []
-    let currentChunkLength = 0
-
     paragraphs.forEach((para, i) => {
         if (para.length > tokenMax) {
-            extraLong[i] = `<p>${para}</p>`
-            if (currentChunk.length) {
-                chunkedParagraphs.push(currentChunk.join("\n"))
-            }
-            currentChunk = []
-            currentChunkLength = 0
+            extraLong[i] = para
             return
         }
-        if (currentChunkLength + para.length > tokenMax) {
-            chunkedParagraphs.push(currentChunk.join("\n"))
-            currentChunk = []
-            currentChunkLength = 0
-        }
-        currentChunk.push(para)
-        currentChunkLength += para.length
+        chunkedParagraphs.push(para)
     })
-    if (currentChunk.length) {
-        chunkedParagraphs.push(currentChunk.join("\n"))
-    }
 
     const body: FormatRequest = {
         segments: chunkedParagraphs

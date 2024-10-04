@@ -13,7 +13,9 @@ Use plain text, no markdown.
 Not all segments start with a title, they may be excerpts in a larger piece of text. Make sure the rest of paragraph makes sense when creating titles. 
 Use title only when it is obvious. A title should be five words at max in length. Use as few titles as possible
 Return only the tags, no <html> tag and <body> tag. 
-Do not modify the user's content. Generate as much text as you need to completely format the text.`
+Do not modify the user's content. Generate as much text as you need to completely format the text.
+It is crucial to include all the information the user gives to you.
+Cutting off during a sentence is considered detrimental and complete failure on your job.`
 
 export default defineEventHandler(async (event): Promise<BaseResponse<string[]>> => {
     const request = await readBody(event)
@@ -51,6 +53,14 @@ export default defineEventHandler(async (event): Promise<BaseResponse<string[]>>
         }
     }
 
+    console.log(response.map((resp, i) => {
+        console.log("*******")
+        console.log(i)
+        console.log(request.segments[i])
+        console.log("---")
+        console.log(resp.choices[0].message)
+        console.log("*******")
+    }))
     const ret = response.map(resp => resp.choices[0].message.content!)
 
     return {

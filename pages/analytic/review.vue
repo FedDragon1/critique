@@ -6,6 +6,7 @@ import ForfeitDialog from "~/components/uploading/ForfeitDialog.vue";
 import DashboardFrame from "~/components/dashboard/DashboardFrame.vue";
 import ContextMenu from "~/components/editor/ContextMenu.vue";
 import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
+import type {BaseResponse, NewFileRequest} from "~/types/requests";
 
 definePageMeta({
     middleware: 'auth'
@@ -20,14 +21,63 @@ const returning = ref(false)
 const frame = useTemplateRef<HTMLDivElement>("frame")
 const editor = useTemplateRef<typeof CritiqueEditor>("editor")
 
+const uploading = ref(false)
+const fileName = ref("")
+const fileNameError = ref("")
+
 function toDashboard() {
     fileStore.setOcrResult("")
     router.push("/")
 }
 
+function validateFileName() {
+    if (!fileName.value.trim().length) {
+        fileNameError.value = "File name cannot be empty"
+        return false;
+    }
+    if (fileName.value.length > 50) {
+        fileNameError.value = "File name must be less than 50 letters"
+        return false;
+    }
+    fileNameError.value = ""
+    return true;
+}
+
+/**
+ * Ask the user of file name, then upload the file to database
+ */
 function uploadCritique() {
+    if (!validateFileName()) {
+        return;
+    }
+
+    // assume the user has corrected all low
+    ignoreAll()
+
+    const content = editor.value!.editor.getHTML()
     console.log("create critique")
-    // TODO
+
+    const message = ElMessage.info({
+        message: "Uploading file",
+        duration: 0
+    })
+
+    // TODO preview for the file
+    const request: NewFileRequest = {
+        fileName: fileName.value,
+        dataMarkUp: content,
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "POST",
+        body: request
+    }).then(resp => {
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success("File created")
+        router.push(`/analytic/${resp.data?.uuid}`)
+    }).finally(() => message.close())
 }
 
 function fixSelected() {
@@ -50,11 +100,40 @@ onMounted(() => setTimeout(() => timeout.value = true, 5000))
 </script>
 
 <template>
+    <el-dialog
+        v-model="uploading"
+        title="Edit"
+        width="500"
+        :before-close="() => uploading = false"
+    >
+        <template v-if="uploading">
+            <span style="line-height: 2rem">What do you want to name the file?</span>
+            <br>
+            <el-input
+                maxlength="50"
+                placeholder="New file name"
+                v-model="fileName"></el-input>
+            <el-text type="danger">{{ fileNameError }}</el-text>
+        </template>
+        <template v-else>
+            Operation complete.
+        </template>
+
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="uploading = false">Cancel</el-button>
+                <el-button type="primary" @click="uploadCritique">
+                    Confirm
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
+
     <DashboardFrame activate="/analytic"
                     padding="0px"
                     style="display: flex; flex-direction: column; overflow: hidden">
         <UploadingNav @return="() => returning = true"
-                      @continue="uploadCritique"
+                      @continue="() => uploading = true"
                       title="New Critique File"></UploadingNav>
         <div class="content-wrapper" ref="frame">
             <CritiqueEditor v-if="fileStore.ocrResult || timeout || route.query.new"
