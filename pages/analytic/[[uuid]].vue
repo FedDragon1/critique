@@ -7,6 +7,7 @@ import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
+import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
 
 definePageMeta({
     middleware: 'auth'
@@ -17,9 +18,9 @@ const router = useRouter()
 
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch(`/api/file/${critiqueUuid}`)
-const critique = ref(critiqueResp?.data as unknown as CritiqueFull | null)
+const critique = ref(critiqueResp?.data.value?.data as CritiqueFull | null)
 
-if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success")) {
+if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
     ElMessage.error(`Error fetching file: ${critiqueResp.error.value}`)
 }
@@ -34,8 +35,29 @@ function favorite() {
         ElMessage.error("No file opened")
         return;
     }
-    critique.value.isFavorite = true
-    // TODO: network
+
+    const request: UpdateFileRequest = {
+        uuid: critique.value.uuid,
+        favorite: true
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "PUT",
+        body: request
+    }).then(resp => {
+        if (!critique.value) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success({
+            message: `Added "${resp.data?.fileName}" to favorite`,
+            grouping: true
+        })
+        critique.value.isFavorite = true
+    })
 }
 
 function unfavorite() {
@@ -43,13 +65,47 @@ function unfavorite() {
         ElMessage.error("No file opened")
         return;
     }
-    critique.value.isFavorite = false
-    // TODO: network
+
+    const request: UpdateFileRequest = {
+        uuid: critique.value.uuid,
+        favorite: false
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "PUT",
+        body: request
+    }).then(resp => {
+        if (!critique.value) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success({
+            message: `Removed "${resp.data?.fileName}" from favorite`,
+            grouping: true
+        })
+        critique.value.isFavorite = false
+    })
 }
 
 function deleteFile() {
-    // TODO: Sync database
-    ElMessage.success(`File "${critique.value?.fileName}" is deleted`)
+    if (!critique.value) {
+        ElMessage.error("No file opened")
+        return;
+    }
+
+    const request: DeleteFileRequest = {
+        uuids: [critique.value.uuid]
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "DELETE",
+        body: request
+    }).then(() => {
+        ElMessage.success(`File "${critique.value?.fileName}" is deleted`)
+        router.push("/dashboard")
+    })
 }
 
 function resetRenaming() {
@@ -79,10 +135,26 @@ function renameFile() {
         return;
     }
 
-    // TODO: Sync database
-
-    critique.value.fileName = renamingTo.value;
-    resetRenaming()
+    const request: UpdateFileRequest = {
+        uuid: critique.value.uuid,
+        fileName: renamingTo.value
+    }
+    $fetch<BaseResponse<Critique>>("/api/file", {
+        method: "PUT",
+        body: request
+    }).then(resp => {
+        if (!critique.value) {
+            ElMessage.error("No files")
+            return;
+        }
+        if (!resp.success) {
+            ElMessage.error(resp.errorMessage)
+            return;
+        }
+        ElMessage.success(`Renamed to "${renamingTo.value}"`)
+        critique.value.fileName = renamingTo.value;
+        resetRenaming()
+    })
 }
 
 // Panel data models / functions
@@ -240,7 +312,7 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
             <span style="line-height: 2rem">Renaming "{{ critique.fileName }}" to</span>
             <br>
             <el-input
-                maxlength="20"
+                maxlength="50"
                 placeholder="New file name"
                 v-model="renamingTo"></el-input>
             <el-text type="danger">{{ renamingError }}</el-text>
@@ -272,6 +344,8 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
         <main v-if="critiqueUuid" class="critique">
             <ContentWrapper>
                 <!--          TODO-->
+                {{ critiqueResp }}
+                <br>
                 {{ critique }}
             </ContentWrapper>
             <PanelWrapper :quick-actions="quickActions"
