@@ -1,34 +1,41 @@
 <script setup lang="ts">
+defineExpose({
+    // @ts-ignore
+    addEventListener: (...args: any[]) => frame.value?.addEventListener(...args),
+    // @ts-ignore
+    removeEventListener: (...args: any[]) => frame.value?.removeEventListener(...args),
+})
 
-import DocumentNav from "~/components/analytic/DocumentNav.vue";
+const frame = useTemplateRef<HTMLDivElement>("frame");
 </script>
 
 <template>
-  <div class="content-wrapper">
-    <DocumentNav></DocumentNav>
-    <div class="content-scroll-clip">
-      <div class="content">
-        <slot/>
-      </div>
+    <div class="content-wrapper">
+        <slot name="header"/>
+        <div class="content-scroll-clip" ref="frame">
+            <div class="content">
+                <slot/>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <style scoped>
 .content-scroll-clip {
-  width: 100%;
-  overflow: auto;
-  flex-grow: 999;
+    width: 100%;
+    overflow: auto;
+    flex-grow: 999;
 }
 
 .content {
-  min-width: 600px;
+    min-width: 600px;
 }
 
 .content-wrapper {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.2s ease-in-out;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.2s ease-in-out;
+    flex-grow: 999;
 }
 </style>

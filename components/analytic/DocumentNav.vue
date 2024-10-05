@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import {Edit, Position} from "@element-plus/icons-vue";
+import {Position} from "@element-plus/icons-vue";
 
 const emit = defineEmits([
-    "show-document",
-    "show-summary",
-    "show-editor",
     "toggle-critiques",
     "toggle-summaries"
 ])
@@ -12,15 +9,12 @@ const emit = defineEmits([
 const viewModeDisplay: ViewModes = {
     document: {
         display: 'Document View',
-        callback: () => emit("show-document")
     },
     summary: {
         display: 'Summary View',
-        callback: () => emit("show-summary")
     },
     edit: {
         display: 'Text Editor View',
-        callback: () => emit("show-editor")
     }
 } as const
 const controls: ShortCut = {
@@ -36,24 +30,20 @@ const controls: ShortCut = {
     }
 }
 const documentTools = {
-    'selector': {
+    selector: {
         icon: Position,
         display: 'Selector'
-    },
-    'edit': {
-        icon: Edit,
-        display: 'Edit Text'
-    },
+    }
 } as const
 
-const viewMode = ref<keyof ViewModes>("document")
-const documentActiveTool = ref<keyof typeof documentTools>("selector")
+const viewMode = defineModel<keyof typeof viewModeDisplay>("viewMode")
+const documentActiveTool = defineModel<string>("docActiveTool")
 </script>
 
 <template>
     <nav class="sub-nav">
         <div class="view-selector">
-            <span class="nowrap">{{ viewModeDisplay[viewMode].display }}</span>
+            <span class="nowrap">{{ viewModeDisplay[viewMode!].display }}</span>
             <el-dropdown>
                 <el-icon>
                     <el-icon-arrow-down></el-icon-arrow-down>
@@ -61,7 +51,7 @@ const documentActiveTool = ref<keyof typeof documentTools>("selector")
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item v-for="(mode, view) in viewModeDisplay"
-                                          @click="viewMode = view"
+                                          @click="() => viewMode = view"
                                           :key="view">{{ mode.display }}
                         </el-dropdown-item>
                     </el-dropdown-menu>

@@ -36,7 +36,7 @@ defineExpose({
 
 <style scoped lang="css">
 .editor-wrapper {
-  margin: 20px;
+  margin: 20px auto;
   width: 800px;
 }
 

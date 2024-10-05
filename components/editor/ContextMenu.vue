@@ -60,6 +60,7 @@ onBeforeUnmount(() => {
     --top: 0px;
     --left: 0px;
     left: var(--left);
-    top: var(--top)
+    top: var(--top);
+    z-index: 1000;
 }
 </style>

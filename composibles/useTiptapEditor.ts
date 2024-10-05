@@ -359,45 +359,78 @@ const LowConfidenceMarker = Extension.create({
     ]
 })
 
-const marks = [Bold, Italic, Strike, Underline]
-const nodes = [
-    Document,
-    Paragraph,
-    Text,
-    Blockquote,
-    BulletList,
-    HardBreak,
-    ListItem,
-    OrderedList,
-    Heading.configure({
-            levels: [1, 2, 3]
-        }
-    )]
-const func = [
-    NodeType,
-    SelectText,
-    Dropcursor,
-    Gapcursor,
-    History,
-    LowConfidenceMarker,
-    Placeholder.configure({
-        placeholder: "Start your critique here..."
-    }),
-    NodeRange.configure({
-        key: null,
-    }),
-    DragHandle.configure({
-        render() {
-            const element = document.createElement('div')
+export function useTiptapViewer(html?: string | null) {
+    const marks = [Bold, Italic, Strike, Underline]
+    const nodes = [
+        Document,
+        Paragraph,
+        Text,
+        Blockquote,
+        BulletList,
+        HardBreak,
+        ListItem,
+        OrderedList,
+        Heading.configure({
+                levels: [1, 2, 3]
+            }
+        )]
+    const func = [
+        NodeType,
+        SelectText,
+        Dropcursor,
+        Gapcursor,
+    ]
 
-            element.classList.add('custom-drag-handle')
-
-            return element
-        },
-    }),
-]
+    return useEditor({
+        content: html ?? '',
+        extensions: [
+            ...marks,
+            ...nodes,
+            ...func
+        ],
+        editable: false
+    })
+}
 
 export function useTiptapEditor(html?: string | null) {
+    const marks = [Bold, Italic, Strike, Underline]
+    const nodes = [
+        Document,
+        Paragraph,
+        Text,
+        Blockquote,
+        BulletList,
+        HardBreak,
+        ListItem,
+        OrderedList,
+        Heading.configure({
+                levels: [1, 2, 3]
+            }
+        )]
+    const func = [
+        NodeType,
+        SelectText,
+        Dropcursor,
+        Gapcursor,
+        History,
+        LowConfidenceMarker,
+        Placeholder.configure({
+            placeholder: "Start your critique here..."
+        }),
+        NodeRange.configure({
+            key: null,
+        }),
+        DragHandle.configure({
+            render() {
+                const element = document.createElement('div')
+
+                element.classList.add('custom-drag-handle')
+
+                return element
+            },
+        }),
+    ]
+
     return useEditor({
         content: html ?? '',
         extensions: [

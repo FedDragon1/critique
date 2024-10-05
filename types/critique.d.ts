@@ -15,7 +15,6 @@ interface Message {
 interface ViewModes {
     [mode: string]: {
         display: string,
-        callback: () => any
     }
 }
 

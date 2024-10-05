@@ -8,6 +8,11 @@ import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
 import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
+import CritiqueViewer from "~/components/editor/CritiqueViewer.vue";
+import DocumentNav from "~/components/analytic/DocumentNav.vue";
+import CritiqueEditor from "~/components/editor/CritiqueEditor.vue";
+import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
+import ContextMenu from "~/components/editor/ContextMenu.vue";
 
 definePageMeta({
     middleware: 'auth'
@@ -19,16 +24,24 @@ const router = useRouter()
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch(`/api/file/${critiqueUuid}`)
 const critique = ref(critiqueResp?.data.value?.data as CritiqueFull | null)
+const critiqueStorage = ref("")
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
     ElMessage.error(`Error fetching file: ${critiqueResp.error.value}`)
 }
 
+const client = useSupabaseClient()
+client.storage.from("file").download(critique.value!.fileLink)
+    .then((resp) => resp.data?.text())
+    .then((text) => critiqueStorage.value = text!)
+
 const isDeletingFile = ref(false)
 const isRenamingFile = ref(false)
 const renamingError = ref("")
 const renamingTo = ref("")
+const viewMode = ref("document")
+const documentActiveTool = ref("selector")
 
 function favorite() {
     if (!critique.value) {
@@ -155,6 +168,27 @@ function renameFile() {
         critique.value.fileName = renamingTo.value;
         resetRenaming()
     })
+}
+
+// Editor
+
+const frame = useTemplateRef<HTMLElement>("frame")
+const editor = useTemplateRef<typeof CritiqueEditor>("editor")
+
+function fixSelected() {
+    editor.value!.menu.fixSelected()
+}
+
+function ignoreAll() {
+    editor.value!.menu.ignoreAll()
+}
+
+function fixMatching() {
+    editor.value!.menu.fixMatching()
+}
+
+function paste() {
+    editor.value!.editor.commands.paste()
 }
 
 // Panel data models / functions
@@ -331,6 +365,13 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
         </template>
     </el-dialog>
 
+    <ContextMenu :scope="frame" v-if="frame !== null && viewMode === 'edit'">
+        <ReviewContextMenu @fix-selected="fixSelected"
+                           @fix-matching="fixMatching"
+                           @paste="paste"
+                           @ignore-all="ignoreAll"></ReviewContextMenu>
+    </ContextMenu>
+
     <DashboardFrame activate="/analytic" padding="0px"
                     :post-toggle="reflowDuring(200)"
                     style="display: flex; flex-direction: column;">
@@ -342,11 +383,14 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
                      @delete="isDeletingFile = true"
                      :is-favorite="!!critique?.isFavorite"></AnalyticNav>
         <main v-if="critiqueUuid" class="critique">
-            <ContentWrapper>
-                <!--          TODO-->
-                {{ critiqueResp }}
-                <br>
-                {{ critique }}
+            <ContentWrapper ref="frame">
+                <template #header>
+                    <DocumentNav v-model:view-mode="viewMode"
+                                 v-model:doc-active-tool="documentActiveTool"></DocumentNav>
+                </template>
+                <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'"></CritiqueViewer>
+<!--                TODO: save edit changes-->
+                <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
             </ContentWrapper>
             <PanelWrapper :quick-actions="quickActions"
                           :post-drag="textareaReflow" v-slot="slotProps">
