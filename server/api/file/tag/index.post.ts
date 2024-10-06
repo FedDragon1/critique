@@ -20,6 +20,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueTa
         uuid: request.uuid,
         name: request.name,
         type: request.type,
+        created_at: request.createdAt,
         file_uuid: request.fileUuid,
         user_uuid: user.id
     }

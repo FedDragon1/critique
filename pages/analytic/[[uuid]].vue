@@ -13,6 +13,7 @@ import DocumentNav from "~/components/analytic/DocumentNav.vue";
 import CritiqueEditor from "~/components/editor/CritiqueEditor.vue";
 import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
 import ContextMenu from "~/components/editor/ContextMenu.vue";
+import CritiqueAnalysis from "~/components/analytic/CritiqueAnalysis.vue";
 
 definePageMeta({
     middleware: 'auth'
@@ -32,9 +33,11 @@ if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.va
 }
 
 const client = useSupabaseClient()
-client.storage.from("file").download(critique.value!.fileLink)
-    .then((resp) => resp.data?.text())
-    .then((text) => critiqueStorage.value = text!)
+if (critiqueUuid){
+    client.storage.from("file").download(critique.value!.fileLink)
+        .then((resp) => resp.data?.text())
+        .then((text) => critiqueStorage.value = text!)
+}
 
 const isDeletingFile = ref(false)
 const isRenamingFile = ref(false)
@@ -273,8 +276,6 @@ function reflowDuring(ms: number, per: number = 50) {
         const fn = () => {
             const now = Date.now()
 
-            console.log(now - start)
-
             textareaReflow()
             if (now - start > ms) {
                 return;
@@ -306,6 +307,39 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
             resolve(newMessage)
         }, 2000)
     })
+}
+
+// summary view tabs
+//TODO
+const genericTabStatus = reactive({
+    cards: false,
+    analysis: false,
+    summary: false,
+    questions: false,
+})
+
+function allCards() {
+    ElMessage.info("view all cards")
+}
+
+function allAnalysis() {
+    ElMessage.info("view all analysis")
+}
+
+function allSummary() {
+    ElMessage.info("view all summaries")
+}
+
+function allQuestions() {
+    ElMessage.info("view all questions")
+}
+
+function viewCard(card: CritiqueCardFull) {
+    ElMessage.info(`view card with title ${card.title}`)
+}
+
+function viewTag(tag: CritiqueTagFull) {
+    ElMessage.info(`view tag with title ${tag.name}`)
 }
 </script>
 
@@ -391,6 +425,15 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
                 <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'"></CritiqueViewer>
 <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
+                <CritiqueAnalysis :file="critique"
+                                  v-else-if="critique && viewMode === 'summary'"
+                                  @all-cards="allCards"
+                                  @all-analysis="allAnalysis"
+                                  @all-summary="allSummary"
+                                  @all-questions="allQuestions"
+                                  @view-card="viewCard"
+                                  @view-tag="viewTag"
+                                  :element-loading-background></CritiqueAnalysis>
             </ContentWrapper>
             <PanelWrapper :quick-actions="quickActions"
                           :post-drag="textareaReflow" v-slot="slotProps">

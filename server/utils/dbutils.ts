@@ -2,6 +2,7 @@ export function transformCard(card: any): CritiqueCard {
     return {
         uuid: card.uuid,
         title: card.title,
+        createdAt: card.created_at,
         contentLink: card.content_link,
         fileUuid: card.file_uuid,
         userUuid: card.user_uuid,
@@ -13,6 +14,7 @@ export function transformTag(tag: any): CritiqueTag {
         uuid: tag.uuid,
         name: tag.name,
         type: tag.type,
+        createdAt: tag.created_at,
         fileUuid: tag.file_uuid,
         userUuid: tag.user_uuid,
     }

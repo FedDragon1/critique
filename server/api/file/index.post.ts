@@ -48,6 +48,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<Critique>>
 
     const insertData = {
         uuid: fileUuid,
+        file_name: request.fileName,
         created_at: request.createdAt,
         modified_at: request.modifiedAt,
         size: request.size,

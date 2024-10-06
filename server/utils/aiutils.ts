@@ -5,7 +5,7 @@ const openai = new OpenAI({
 })
 
 const defaultParams = {
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
     stream: false,
     temperature: 0.4,
     top_p: 0.5,

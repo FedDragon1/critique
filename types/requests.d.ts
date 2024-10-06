@@ -75,6 +75,7 @@ interface DeleteCardRequest {
 
 interface NewTagRequest {
     uuid?: string,
+    createdAt?: string,
     name: string,
     type: string
     fileUuid: string,

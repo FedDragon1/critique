@@ -40,26 +40,6 @@ interface CritiqueUser {
     bytesUsed: number
 }
 
-// database store
-interface CritiqueFileDesc {
-    uuid: string,
-    fileName: string,
-    lastModified: number,
-    preview: string,
-    size: number,
-    isFavorite: boolean
-}
-
-// transformed object
-interface CritiqueFileMeta {
-    uuid: string,
-    fileName: string,
-    lastModified: string,
-    preview: string,
-    size: string,
-    isFavorite: boolean
-}
-
 // file
 
 interface Critique {
@@ -76,6 +56,7 @@ interface Critique {
 interface CritiqueCard {
     uuid: string,
     title: string,
+    createdAt: string,
     contentLink: string,
     fileUuid: string,
     userUuid: string,
@@ -84,7 +65,8 @@ interface CritiqueCard {
 interface CritiqueTag {
     uuid: string,
     name: string,
-    type: "analysis" | "summary",
+    type: "analysis" | "summary" | "question",
+    createdAt: string,
     fileUuid: string,
     userUuid: string,
 }
@@ -92,6 +74,7 @@ interface CritiqueTag {
 interface CritiqueCardFull {
     uuid: string,
     title: string,
+    createdAt: string,
     contentLink: string,
     fileUuid: string,
     userUuid: string,
@@ -101,7 +84,8 @@ interface CritiqueCardFull {
 interface CritiqueTagFull {
     uuid: string,
     name: string,
-    type: "analysis" | "summary",
+    type: "analysis" | "summary" | "question",
+    createdAt: string,
     fileUuid: string,
     userUuid: string,
     cards: CritiqueCard[]
