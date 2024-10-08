@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type {NewCardRequest, NewTagRequest} from "~/types/requests";
 import { computedAsync } from '@vueuse/core'
 import CritiqueCard from "~/components/analytic/CritiqueCard.vue";
 import CritiqueTag from "~/components/analytic/CritiqueTag.vue";
@@ -28,7 +27,7 @@ const tags = computed(() => {
     const analysis: CritiqueTagFull[] = [],
         summary: CritiqueTagFull[] = [],
         question: CritiqueTagFull[] = []
-    props.file.tags.forEach(t => {
+    Object.values(props.file.tags).forEach(t => {
         switch (t.type) {
             case "analysis":
                 analysis.push(t)
@@ -77,14 +76,14 @@ const tagGroups = ref([
 ])
 
 const recentCards = computed(() => {
-    const sorted = props.file.cards.toSorted((card1, card2) =>
+    const sorted = Object.values(props.file.cards).toSorted((card1, card2) =>
         new Date(card2.createdAt).getTime() - new Date(card1.createdAt).getTime())
     return sorted.slice(0, RECENT_LIMIT)
 })
-const uncategorizedCards = computed(() => props.file.cards.filter(c => !c.tags.length))
+const uncategorizedCards = computed(() => Object.values(props.file.cards).filter(c => !c.tags.length))
 const cardContents = computedAsync(
     async () => {
-        const contentPromises = props.file.cards
+        const contentPromises = Object.values(props.file.cards)
             .map(card => new Promise<{ uuid: string, content: string}>((resolve, reject) => {
                 client.storage.from("card").download(card.contentLink)
                     .then((data) => data.data?.text())
@@ -102,34 +101,7 @@ const cardContents = computedAsync(
     undefined
 )
 
-// TODO: abstract and move it to a composable
-
-function newCard() {
-    const body: NewCardRequest = {
-        title: `Card ${Math.random().toFixed(5) * 10}`,
-        fileUuid: props.file.uuid,
-        data: {
-            originalText: "original",
-            critique: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Animi beatae earum eius eligendi, eos exercitationem expedita incidunt ipsum laborum magnam neque perferendis, ratione sed temporibus vel. Ab perferendis perspiciatis placeat."
-        }
-    }
-    $fetch("/api/file/card", {
-        method: "POST",
-        body: body
-    }).then(console.log)
-}
-
-function newTag(type: string) {
-    const body: NewTagRequest = {
-        name: `Tag${Math.random().toFixed(4) * 10}`,
-        fileUuid: props.file.uuid,
-        type
-    }
-    $fetch("/api/file/tag", {
-        method: "POST",
-        body: body
-    }).then(console.log)
-}
+console.log(props.file)
 </script>
 
 <template>
@@ -142,7 +114,7 @@ function newTag(type: string) {
                               @click="() => emit('view-card', card)"
                               :key="card.uuid"
                               :content="cardContents[card.uuid]"
-                              :tags="card.tags.map(t => t.name)"
+                              :tags="Object.values(card.tags).map(t => t.name)"
                               :title="card.title">
                 </CritiqueCard>
                 <div class="no-content" style="height: 180px" v-if="!recentCards.length">
@@ -167,7 +139,7 @@ function newTag(type: string) {
                          @detail="() => emit('view-tag', tag)"
                          :key="tag.uuid"
                          :name="tag.name"
-                         :count="tag.cards.length" />
+                         :count="Object.values(tag.cards).length" />
             <div class="no-content" style="height: 300px" v-if="!(section.tags as CritiqueTagFull[]).length">
                 <h3>It is empty here</h3>
                 <span>Talk to Critique AI to generate some</span>
@@ -186,7 +158,7 @@ function newTag(type: string) {
                           @click="() => emit('view-card', card)"
                           :key="card.uuid"
                           :title="card.title"
-                          :tags="card.tags.map(t => t.name)"
+                          :tags="Object.values(card.tags).map(t => t.name)"
                           :content="cardContents[card.uuid]"></CritiqueCard>
             <EditorUnavailable v-else style="height: 200px"></EditorUnavailable>
             <div class="no-content" style="height: 180px" v-if="!uncategorizedCards.length">
@@ -195,9 +167,6 @@ function newTag(type: string) {
             </div>
         </div>
     </div>
-    <el-button type="primary" @click="newCard">New card</el-button>
-    <el-button type="primary" @click="() => newTag('analysis')">New Analysis</el-button>
-    <el-button type="primary" @click="() => newTag('summary')">New Summary</el-button>
 </div>
 </template>
 

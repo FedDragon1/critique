@@ -33,6 +33,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCa
 
     const insertData = {
         uuid: cardUuid,
+        type: request.type,
         created_at: request.createdAt,
         title: request.title,
         file_uuid: request.fileUuid,

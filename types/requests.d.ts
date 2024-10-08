@@ -55,9 +55,12 @@ interface NewUserRequest {
     validated: boolean
 }
 
+type CardType = "analysis" | "summary" | "question";
+
 interface NewCardRequest {
     uuid?: string,
     createdAt?: string,
+    type: CardType,
     title: string,
     fileUuid: string,
     data: CritiqueCardStorage
@@ -77,14 +80,14 @@ interface NewTagRequest {
     uuid?: string,
     createdAt?: string,
     name: string,
-    type: string
+    type: CardType
     fileUuid: string,
 }
 
 interface UpdateTagRequest {
     uuid: string,
     name?: string,
-    type?: string
+    type?: CardType
 }
 
 interface DeleteTagRequest {
@@ -114,4 +117,11 @@ interface UpdateFileRequest {
 
 interface DeleteFileRequest {
     uuids: string[]
+}
+
+interface NewCardTagRequest {
+    cardUuid: string,
+    tagUuid: string,
+    cardType: CardType,
+    tagType: CardType
 }

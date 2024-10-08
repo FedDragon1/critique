@@ -26,7 +26,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCa
 
     const { data, error } = await client
         .from("card")
-        .select("uuid, created_at, file_uuid, title, user_uuid, content_link, tag(*)")
+        .select("uuid, created_at, file_uuid, title, user_uuid, content_link, type, tag(*)")
         .eq("user_uuid", user.id)
         .eq("uuid", cardUuid)
 

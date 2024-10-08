@@ -56,6 +56,7 @@ interface Critique {
 interface CritiqueCard {
     uuid: string,
     title: string,
+    type: "analysis" | "summary" | "question",
     createdAt: string,
     contentLink: string,
     fileUuid: string,
@@ -74,11 +75,12 @@ interface CritiqueTag {
 interface CritiqueCardFull {
     uuid: string,
     title: string,
+    type: "analysis" | "summary" | "question",
     createdAt: string,
     contentLink: string,
     fileUuid: string,
     userUuid: string,
-    tags: CritiqueTag[]
+    tags: { [uuid: string]: CritiqueTag }
 }
 
 interface CritiqueTagFull {
@@ -88,7 +90,7 @@ interface CritiqueTagFull {
     createdAt: string,
     fileUuid: string,
     userUuid: string,
-    cards: CritiqueCard[]
+    cards: { [uuid: string]: CritiqueCard }
 }
 
 interface CritiqueFull {
@@ -99,8 +101,8 @@ interface CritiqueFull {
     fileName: string,
     isFavorite: boolean,
     lastModified: string,
-    cards: CritiqueCardFull[],
-    tags: CritiqueTagFull[],
+    cards: { [uuid: string]: CritiqueCardFull },
+    tags: { [uuid: string]: CritiqueTagFull },
     userUuid: string
 }
 
