@@ -7,15 +7,18 @@ import type {
     UpdateCardRequest, UpdateFileRequest, UpdateTagRequest
 } from "~/types/requests";
 import type {Ref} from "vue";
+import {isEqual} from 'lodash'
 
 // TODO: add test
 
-class CritiqueHandler {
+export class CritiqueHandler {
     file
+    tabHandler
     onError
 
-    constructor(file: Ref<CritiqueFull>, onError: (errorMessage?: string) => any) {
+    constructor(file: Ref<CritiqueFull>, tabHandler: TabHandler, onError: (errorMessage?: string) => any) {
         this.file = file
+        this.tabHandler = tabHandler
         this.onError = onError
     }
 
@@ -81,6 +84,7 @@ class CritiqueHandler {
             (tag) => tag.uuid in uuids, 
             (tag, parentCard) => delete parentCard.tags[tag.uuid]
         )
+        this.tabHandler.removeTagTabs(uuids)
     }
 
     /**
@@ -94,6 +98,7 @@ class CritiqueHandler {
             (card) => card.uuid in uuids,
             (card, parentTag) => delete parentTag.cards[card.uuid]
         )
+        this.tabHandler.removeCardTabs(uuids)
     }
 
     /**
@@ -321,7 +326,7 @@ class CritiqueHandler {
         return undefined
     }
 
-    updateFile(content: string) {
+    updateFileContent(content: string) {
         const body: UpdateFileRequest = {
             uuid: this.file.value.uuid,
             dataMarkUp: content,
@@ -332,4 +337,174 @@ class CritiqueHandler {
             body
         }).then(this.guard(() => {}))
     }
+
+    updateFileProperties(postProcess: (file: Critique) => any, options : {
+        favorite?: boolean,
+        fileName?: string,
+        size?: number })
+    {
+        const request: UpdateFileRequest = {
+            uuid: this.file.value.uuid,
+            ...options
+        }
+        $fetch<BaseResponse<Critique>>("/api/file", {
+            method: "PUT",
+            body: request
+        }).then(this.guard((resp) => {
+            this.file.value.isFavorite = options.favorite ?? this.file.value.isFavorite
+            this.file.value.fileName = options.fileName ?? this.file.value.fileName
+            this.file.value.size = options.size ?? this.file.value.size
+            postProcess(resp)
+        }))
+    }
+}
+
+export class TabHandler {
+    tabs: Tab[]
+    focused: boolean
+    on: number
+
+    cards: AllCardsTab = {
+        display: "Cards",
+        type: "generic",
+        uuid: "cards"
+    }
+    analysis: AllAnalysisTab = {
+        display: "Analysis",
+        type: "generic",
+        uuid: "analysis"
+    }
+    summary: AllSummaryTab = {
+        display: "Summary",
+        type: "generic",
+        uuid: "summary"
+    }
+    questions: AllQuestionsTab = {
+        display: "Questions",
+        type: "generic",
+        uuid: "questions"
+    }
+
+    constructor() {
+        this.tabs = []
+        this.focused = false
+        this.on = -1    // not focused on anything
+    }
+
+    checkPush(tab: Tab) {
+        let sameTab = -1;
+        this.tabs.forEach((t, i) => {
+            if (isEqual(tab, t)) {
+                sameTab = i
+            }
+        })
+
+        if (sameTab !== -1) {
+            this.focusTo(sameTab)
+            return
+        }
+
+        this.tabs.push(tab)
+        this.focusTo(this.tabs.length - 1)
+    }
+
+    removeCardTabs(uuids: string[]) {
+        this.tabs = this.tabs.filter(tab => tab.type === "card" && tab.uuid in uuids)
+        // Don't bother with shifting tabs
+        // when delete multiple, you can't be focusing on anything
+        // when deleting single, and you are on the tab to be deleted
+        // just navigate to the next one if there is any
+        this.focusTo(Math.min(this.tabs.length - 1, this.on))
+    }
+
+    removeTagTabs(uuids: string[]) {
+        this.tabs = this.tabs.filter(tab => tab.type === "tag" && tab.uuid in uuids)
+        this.focusTo(Math.min(this.tabs.length - 1, this.on))
+    }
+
+    removeByIndex(index: number) {
+        this.tabs = [...this.tabs.slice(0, index), ...this.tabs.slice(index + 1)]
+        if (this.on === index) {
+            this.focusTo(Math.min(this.tabs.length - 1, this.on))
+        } else if (this.on > index) {
+            this.on--
+        }
+        // do nothing if before the removed element
+    }
+
+    pushTagTab(tag: CritiqueTag | CritiqueTagFull) {
+        this.checkPush({
+            display: tag.name,
+            type: "tag",
+            uuid: tag.uuid
+        })
+    }
+
+    pushCardTab(card: CritiqueCard | CritiqueCardFull) {
+        this.checkPush({
+            display: card.title,
+            type: "card",
+            uuid: card.uuid
+        })
+    }
+
+    pushAllCardsTab() {
+        this.checkPush(this.cards)
+    }
+
+    pushAllAnalysisTab() {
+        this.checkPush(this.analysis)
+    }
+
+    pushAllSummaryTab() {
+        this.checkPush(this.summary)
+    }
+
+    pushAllQuestionsTab() {
+        this.checkPush(this.questions)
+    }
+
+    pushGenericTabs(type: GenericTabTypes) {
+        switch (type) {
+            case "analysis":
+                this.pushAllAnalysisTab()
+                break
+            case "cards":
+                this.pushAllCardsTab()
+                break
+            case "questions":
+                this.pushAllQuestionsTab()
+                break
+            case "summary":
+                this.pushAllSummaryTab()
+                break
+            default:
+                throw Error(`Unknown tab type ${type}`)
+        }
+    }
+
+    blur() {
+        this.focused = false
+        this.on = -1
+    }
+
+    focusTo(index: number) {
+        if (index >= this.tabs.length || index < 0) {
+            if (index === -1) {
+                // no more tabs open
+                this.blur()
+                return;
+            }
+            throw Error(`Index out of bound (${index})`)
+        }
+        if (index % 1 !== 0) {
+            this.blur()
+            throw Error("Index must be an integer")
+        }
+        this.on = index
+    }
+}
+
+export default function useCritique(file: Ref<CritiqueFull>, onError: (errorMessage?: string) => any) {
+    return ref(new CritiqueHandler(file, new TabHandler(), onError))
 }

@@ -22,7 +22,6 @@ interface ShortCut {
     [shortCut: string]: {
         display: string,
         hotkey: string,
-        callback: () => any
     }
 }
 
@@ -110,3 +109,45 @@ interface CritiqueCardStorage {
     originalText: string,
     critique: string
 }
+
+type GenericTabTypes = "cards" | "analysis" | "summary" | "questions"
+
+interface AllCardsTab {
+    display: "Cards"
+    type: "generic",
+    uuid: "cards"
+}
+
+interface AllAnalysisTab {
+    display: "Analysis"
+    type: "generic",
+    uuid: "analysis"
+}
+
+interface AllSummaryTab {
+    display: "Summary"
+    type: "generic",
+    uuid: "summary"
+}
+
+interface AllQuestionsTab {
+    display: "Questions"
+    type: "generic",
+    uuid: "questions"
+}
+
+type GenericTabs = AllCardsTab | AllAnalysisTab | AllQuestionsTab | AllSummaryTab
+
+interface CardTab {
+    display: string,
+    type: "card",
+    uuid: string
+}
+
+interface TagTab {
+    display: string,
+    type: "tag",
+    uuid: string
+}
+
+type Tab = GenericTabs | CardTab | TagTab

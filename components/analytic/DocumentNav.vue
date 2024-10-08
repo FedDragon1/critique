@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {Position} from "@element-plus/icons-vue";
+import type {TabHandler} from "~/composibles/useCritique";
+import TabButton from "~/components/analytic/tabs/TabButton.vue";
 
-const emit = defineEmits([
-    "toggle-critiques",
-    "toggle-summaries"
-])
+defineProps<{
+    tabHandler: TabHandler
+}>();
 
 const viewModeDisplay: ViewModes = {
     document: {
@@ -21,12 +22,10 @@ const controls: ShortCut = {
     toggleCritiques: {
         display: 'Show/Hide all critiques',
         hotkey: 'Ctrl+H',
-        callback: () => emit("toggle-critiques")
     },
     toggleSummaries: {
         display: 'Show/Hide all summaries',
         hotkey: 'Ctrl+Shift+H',
-        callback: () => emit("toggle-summaries")
     }
 }
 const documentTools = {
@@ -38,11 +37,12 @@ const documentTools = {
 
 const viewMode = defineModel<keyof typeof viewModeDisplay>("viewMode")
 const documentActiveTool = defineModel<string>("docActiveTool")
+
 </script>
 
 <template>
     <nav class="sub-nav">
-        <div class="view-selector">
+        <div class="view-selector" @click="() => viewMode === 'summary' && (tabHandler.blur())">
             <span class="nowrap">{{ viewModeDisplay[viewMode!].display }}</span>
             <el-dropdown>
                 <el-icon>
@@ -90,13 +90,29 @@ const documentActiveTool = defineModel<string>("docActiveTool")
                 </el-dropdown>
             </div>
         </div>
+        <div v-else-if="viewMode === 'edit'">
+            edit
+<!--            TODO: save-->
+        </div>
         <div v-else class="summary-tabs">
-            <!--TODO-->
+            <TabButton v-for="[index, tab] in tabHandler.tabs.entries()"
+                       :key="index"
+                       :focused="index === tabHandler.on"
+                       :index="index"
+                       :display="tab.display"
+                       @click="() => tabHandler.focusTo(index)"
+                       @close="() => tabHandler.removeByIndex(index)"></TabButton>
         </div>
     </nav>
 </template>
 
 <style scoped>
+.summary-tabs {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
 .hover-color {
     color: var(--el-text-color);
     transition: color 0.2s ease-in-out;
@@ -138,6 +154,7 @@ const documentActiveTool = defineModel<string>("docActiveTool")
 }
 
 .view-selector {
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -150,7 +167,7 @@ const documentActiveTool = defineModel<string>("docActiveTool")
     flex-direction: row;
     border-bottom: 1px solid var(--el-border-color);
     padding: 0 15px;
-    height: 40px;
+    height: 50px;
     flex-shrink: 0;
 }
 

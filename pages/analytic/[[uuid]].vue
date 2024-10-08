@@ -7,13 +7,21 @@ import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
-import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
+import type {BaseResponse, DeleteFileRequest} from "~/types/requests";
 import CritiqueViewer from "~/components/editor/CritiqueViewer.vue";
 import DocumentNav from "~/components/analytic/DocumentNav.vue";
 import CritiqueEditor from "~/components/editor/CritiqueEditor.vue";
 import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
 import ContextMenu from "~/components/editor/ContextMenu.vue";
 import CritiqueAnalysis from "~/components/analytic/CritiqueAnalysis.vue";
+import useCritique, {TabHandler} from "~/composibles/useCritique";
+import type {Ref} from "vue";
+import TagTab from "~/components/analytic/tabs/TagTab.vue";
+import CardTab from "~/components/analytic/tabs/CardTab.vue";
+import AllSummaryTab from "~/components/analytic/tabs/AllSummaryTab.vue";
+import AllAnalysisTab from "~/components/analytic/tabs/AllAnalysisTab.vue";
+import AllCardsTab from "~/components/analytic/tabs/AllCardsTab.vue";
+import AllQuestionsTab from "~/components/analytic/tabs/AllQuestionsTab.vue";
 
 definePageMeta({
     middleware: 'auth'
@@ -23,9 +31,10 @@ const route = useRoute()
 const router = useRouter()
 
 const critiqueUuid = route.params.uuid as string
-const critiqueResp = await useFetch(`/api/file/${critiqueUuid}`)
-const critique = ref(critiqueResp?.data.value?.data as CritiqueFull | null)
+const critiqueResp = await useFetch<BaseResponse<CritiqueFull>>(`/api/file/${critiqueUuid}`)
+const critique = ref<CritiqueFull | null>(critiqueResp?.data.value?.data as CritiqueFull | null)
 const critiqueStorage = ref("")
+const critiqueHandler = ref(critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined)
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
@@ -52,28 +61,12 @@ function favorite() {
         return;
     }
 
-    const request: UpdateFileRequest = {
-        uuid: critique.value.uuid,
-        favorite: true
-    }
-    $fetch<BaseResponse<Critique>>("/api/file", {
-        method: "PUT",
-        body: request
-    }).then(resp => {
-        if (!critique.value) {
-            ElMessage.error("No files")
-            return;
-        }
-        if (!resp.success) {
-            ElMessage.error(resp.errorMessage)
-            return;
-        }
+    critiqueHandler.value?.updateFileProperties((resp) => {
         ElMessage.success({
-            message: `Added "${resp.data?.fileName}" to favorite`,
+            message: `Added "${resp.fileName}" to favorite`,
             grouping: true
         })
-        critique.value.isFavorite = true
-    })
+    }, { favorite: true })
 }
 
 function unfavorite() {
@@ -82,28 +75,12 @@ function unfavorite() {
         return;
     }
 
-    const request: UpdateFileRequest = {
-        uuid: critique.value.uuid,
-        favorite: false
-    }
-    $fetch<BaseResponse<Critique>>("/api/file", {
-        method: "PUT",
-        body: request
-    }).then(resp => {
-        if (!critique.value) {
-            ElMessage.error("No files")
-            return;
-        }
-        if (!resp.success) {
-            ElMessage.error(resp.errorMessage)
-            return;
-        }
+    critiqueHandler.value?.updateFileProperties((resp) => {
         ElMessage.success({
-            message: `Removed "${resp.data?.fileName}" from favorite`,
+            message: `Removed "${resp.fileName}" to favorite`,
             grouping: true
         })
-        critique.value.isFavorite = false
-    })
+    }, { favorite: false })
 }
 
 function deleteFile() {
@@ -151,25 +128,14 @@ function renameFile() {
         return;
     }
 
-    const request: UpdateFileRequest = {
-        uuid: critique.value.uuid,
-        fileName: renamingTo.value
-    }
-    $fetch<BaseResponse<Critique>>("/api/file", {
-        method: "PUT",
-        body: request
-    }).then(resp => {
-        if (!critique.value) {
-            ElMessage.error("No files")
-            return;
-        }
-        if (!resp.success) {
-            ElMessage.error(resp.errorMessage)
-            return;
-        }
-        ElMessage.success(`Renamed to "${renamingTo.value}"`)
-        critique.value.fileName = renamingTo.value;
+    critiqueHandler.value?.updateFileProperties(() => {
+        ElMessage.success({
+            message: `Renamed to "${renamingTo.value}`,
+            grouping: true
+        })
         resetRenaming()
+    }, {
+        fileName: newName
     })
 }
 
@@ -310,36 +276,58 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
 }
 
 // summary view tabs
-//TODO
-const genericTabStatus = reactive({
-    cards: false,
-    analysis: false,
-    summary: false,
-    questions: false,
-})
+// TODO
+
+const tabHandler = computed(() => critiqueHandler.value!.tabHandler)
+
+function mapComponent(tab: Tab) {
+    switch (tab.type) {
+        case "card":
+            return CardTab
+        case "tag":
+            return TagTab
+        case "generic":
+            switch (tab.uuid) {
+                case "summary":
+                    return AllSummaryTab
+                case "analysis":
+                    return AllAnalysisTab
+                case "cards":
+                    return AllCardsTab
+                case "questions":
+                    return AllQuestionsTab
+                default:
+                    // @ts-ignore
+                    throw Error(`Unknown generic tab ${tab.uuid}`)
+            }
+        default:
+            // @ts-ignore
+            throw Error(`Unknown tab type ${tab.type}`)
+    }
+}
 
 function allCards() {
-    ElMessage.info("view all cards")
+    tabHandler.value.pushAllCardsTab()
 }
 
 function allAnalysis() {
-    ElMessage.info("view all analysis")
+    tabHandler.value.pushAllAnalysisTab()
 }
 
 function allSummary() {
-    ElMessage.info("view all summaries")
+    tabHandler.value.pushAllSummaryTab()
 }
 
 function allQuestions() {
-    ElMessage.info("view all questions")
+    tabHandler.value.pushAllQuestionsTab()
 }
 
 function viewCard(card: CritiqueCardFull) {
-    ElMessage.info(`view card with title ${card.title}`)
+    tabHandler.value.pushCardTab(card)
 }
 
 function viewTag(tag: CritiqueTagFull) {
-    ElMessage.info(`view tag with title ${tag.name}`)
+    tabHandler.value.pushTagTab(tag)
 }
 </script>
 
@@ -420,20 +408,27 @@ function viewTag(tag: CritiqueTagFull) {
             <ContentWrapper ref="frame">
                 <template #header>
                     <DocumentNav v-model:view-mode="viewMode"
+                                 :tab-handler="tabHandler as TabHandler"
                                  v-model:doc-active-tool="documentActiveTool"></DocumentNav>
                 </template>
                 <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'"></CritiqueViewer>
 <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
                 <CritiqueAnalysis :file="critique"
-                                  v-else-if="critique && viewMode === 'summary'"
+                                  v-else-if="critique && viewMode === 'summary' && tabHandler.on === -1"
                                   @all-cards="allCards"
                                   @all-analysis="allAnalysis"
                                   @all-summary="allSummary"
                                   @all-questions="allQuestions"
                                   @view-card="viewCard"
-                                  @view-tag="viewTag"
-                                  :element-loading-background></CritiqueAnalysis>
+                                  @view-tag="viewTag"></CritiqueAnalysis>
+
+                <template v-for="[i, tab] in tabHandler.tabs.entries()" :key="i">
+                    <component v-if="tabHandler.on === i"
+                               :tab="tab"
+                               :is="mapComponent(tab)" />
+                </template>
+
             </ContentWrapper>
             <PanelWrapper :quick-actions="quickActions"
                           :post-drag="textareaReflow" v-slot="slotProps">
