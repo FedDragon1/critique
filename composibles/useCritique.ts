@@ -11,6 +11,17 @@ import {isEqual} from 'lodash'
 
 // TODO: add test
 
+function objectFilter<T extends HaveUuid>(obj: MapOf<T>, predicate: (e: T) => boolean) {
+    const ret: MapOf<T> = {}
+    Object.values(obj).forEach(value => {
+        if (predicate(value)) {
+            ret[value.uuid] = value
+        }
+    })
+    return ret
+}
+
+
 export class CritiqueHandler {
     file
     tabHandler
@@ -361,32 +372,44 @@ export class CritiqueHandler {
 
 export class TabHandler {
     tabs: Tab[]
+    file: CritiqueFull
     focused: boolean
     on: number
 
-    cards: AllCardsTab = {
+    readonly cards: AllCardsTab = {
         display: "Cards",
         type: "generic",
-        uuid: "cards"
+        uuid: "cards",
+        content: () => this.file.cards
     }
-    analysis: AllAnalysisTab = {
+    readonly analysis: AllAnalysisTab = {
         display: "Analysis",
         type: "generic",
-        uuid: "analysis"
+        uuid: "analysis",
+        content: () => objectFilter(this.file.tags,
+            (t: CritiqueTagFull) => t.type === 'analysis'
+        )
     }
-    summary: AllSummaryTab = {
+    readonly summary: AllSummaryTab = {
         display: "Summary",
         type: "generic",
-        uuid: "summary"
+        uuid: "summary",
+        content: () => objectFilter(this.file.tags,
+            (t: CritiqueTagFull) => t.type === 'summary'
+        )
     }
-    questions: AllQuestionsTab = {
+    readonly questions: AllQuestionsTab = {
         display: "Questions",
         type: "generic",
-        uuid: "questions"
+        uuid: "questions",
+        content: () => objectFilter(this.file.tags,
+            (t: CritiqueTagFull) => t.type === 'question'
+        )
     }
 
-    constructor() {
+    constructor(file: CritiqueFull) {
         this.tabs = []
+        this.file = file
         this.focused = false
         this.on = -1    // not focused on anything
     }
@@ -433,18 +456,22 @@ export class TabHandler {
     }
 
     pushTagTab(tag: CritiqueTag | CritiqueTagFull) {
+        const content = () => this.file.cards
         this.checkPush({
             display: tag.name,
             type: "tag",
-            uuid: tag.uuid
+            uuid: tag.uuid,
+            content
         })
     }
 
     pushCardTab(card: CritiqueCard | CritiqueCardFull) {
+        const content = () => this.file.cards[card.uuid]
         this.checkPush({
             display: card.title,
             type: "card",
-            uuid: card.uuid
+            uuid: card.uuid,
+            content
         })
     }
 
@@ -506,5 +533,5 @@ export class TabHandler {
 }
 
 export default function useCritique(file: Ref<CritiqueFull>, onError: (errorMessage?: string) => any) {
-    return ref(new CritiqueHandler(file, new TabHandler(), onError))
+    return new CritiqueHandler(file, new TabHandler(unref(file)), onError)
 }

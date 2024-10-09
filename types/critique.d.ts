@@ -41,6 +41,9 @@ interface CritiqueUser {
 
 // file
 
+type MapOf<T> = { [uuid: string]: T }
+type HaveUuid = { uuid: string }
+
 interface Critique {
     uuid: string,
     size: number,
@@ -79,7 +82,7 @@ interface CritiqueCardFull {
     contentLink: string,
     fileUuid: string,
     userUuid: string,
-    tags: { [uuid: string]: CritiqueTag }
+    tags: MapOf<CritiqueTag>
 }
 
 interface CritiqueTagFull {
@@ -89,7 +92,7 @@ interface CritiqueTagFull {
     createdAt: string,
     fileUuid: string,
     userUuid: string,
-    cards: { [uuid: string]: CritiqueCard }
+    cards: MapOf<CritiqueCard>
 }
 
 interface CritiqueFull {
@@ -100,8 +103,8 @@ interface CritiqueFull {
     fileName: string,
     isFavorite: boolean,
     lastModified: string,
-    cards: { [uuid: string]: CritiqueCardFull },
-    tags: { [uuid: string]: CritiqueTagFull },
+    cards: MapOf<CritiqueCardFull>,
+    tags: MapOf<CritiqueTagFull>,
     userUuid: string
 }
 
@@ -115,25 +118,29 @@ type GenericTabTypes = "cards" | "analysis" | "summary" | "questions"
 interface AllCardsTab {
     display: "Cards"
     type: "generic",
-    uuid: "cards"
+    uuid: "cards",
+    content: () => MapOf<CritiqueCardFull>
 }
 
 interface AllAnalysisTab {
     display: "Analysis"
     type: "generic",
-    uuid: "analysis"
+    uuid: "analysis",
+    content: () => MapOf<CritiqueTagFull>
 }
 
 interface AllSummaryTab {
     display: "Summary"
     type: "generic",
-    uuid: "summary"
+    uuid: "summary",
+    content: () => MapOf<CritiqueTagFull>
 }
 
 interface AllQuestionsTab {
     display: "Questions"
     type: "generic",
-    uuid: "questions"
+    uuid: "questions",
+    content: () => MapOf<CritiqueTagFull>
 }
 
 type GenericTabs = AllCardsTab | AllAnalysisTab | AllQuestionsTab | AllSummaryTab
@@ -141,13 +148,15 @@ type GenericTabs = AllCardsTab | AllAnalysisTab | AllQuestionsTab | AllSummaryTa
 interface CardTab {
     display: string,
     type: "card",
-    uuid: string
+    uuid: string,
+    content: () => CritiqueCardFull
 }
 
 interface TagTab {
     display: string,
     type: "tag",
-    uuid: string
+    uuid: string,
+    content: () => MapOf<CritiqueCardFull>
 }
 
 type Tab = GenericTabs | CardTab | TagTab

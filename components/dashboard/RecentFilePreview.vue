@@ -14,7 +14,7 @@ const preview = ref("")
 
 const client = useSupabaseClient()
 
-if (!props.disableOps) {
+if (!props.disableOps && props.previewImage !== "default_file_preview") {
     client.storage.from("file-preview").download(props.previewImage)
         .then(result => result.data?.text())
         .then(link => preview.value = link ?? "")

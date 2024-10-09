@@ -34,8 +34,16 @@ function makeDate(modifiedDate: number | string) {
     }
 }
 
+function formatDate(date: number | string) {
+    const d = new Date(date)
+    const options = { day: 'numeric', month: 'short', year: 'numeric' }
+    // @ts-ignore
+    return d.toLocaleDateString("en-US", options)
+}
+
 export function useTime() {
     return {
-        makeDate
+        makeDate,
+        formatDate
     }
 }

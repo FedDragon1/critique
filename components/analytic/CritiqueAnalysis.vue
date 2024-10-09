@@ -2,6 +2,7 @@
 import { computedAsync } from '@vueuse/core'
 import CritiqueCard from "~/components/analytic/CritiqueCard.vue";
 import CritiqueTag from "~/components/analytic/CritiqueTag.vue";
+import NoContent from "~/components/analytic/NoContent.vue";
 
 const props = defineProps<{
     file: CritiqueFull
@@ -100,8 +101,6 @@ const cardContents = computedAsync(
     },
     undefined
 )
-
-console.log(props.file)
 </script>
 
 <template>
@@ -117,10 +116,10 @@ console.log(props.file)
                               :tags="Object.values(card.tags).map(t => t.name)"
                               :title="card.title">
                 </CritiqueCard>
-                <div class="no-content" style="height: 180px" v-if="!recentCards.length">
+                <NoContent style="height: 180px" v-if="!recentCards.length">
                     <h3>Nothing Here!</h3>
                     <span>Talk to Critique to generate cards</span>
-                </div>
+                </NoContent>
                 <div class="tag-detail" title="see all tags" @click="() => emit('all-cards')">
                     <el-icon size="1.5rem"><el-icon-right/></el-icon>
                 </div>
@@ -140,10 +139,7 @@ console.log(props.file)
                          :key="tag.uuid"
                          :name="tag.name"
                          :count="Object.values(tag.cards).length" />
-            <div class="no-content" style="height: 300px" v-if="!(section.tags as CritiqueTagFull[]).length">
-                <h3>It is empty here</h3>
-                <span>Talk to Critique AI to generate some</span>
-            </div>
+            <NoContent style="height: 300px" v-if="!(section.tags as CritiqueTagFull[]).length"></NoContent>
             <div class="tag-detail" title="see all tags" @click="section.seeAll">
                 <el-icon size="1.5rem"><el-icon-right/></el-icon>
             </div>
@@ -161,10 +157,10 @@ console.log(props.file)
                           :tags="Object.values(card.tags).map(t => t.name)"
                           :content="cardContents[card.uuid]"></CritiqueCard>
             <EditorUnavailable v-else style="height: 200px"></EditorUnavailable>
-            <div class="no-content" style="height: 180px" v-if="!uncategorizedCards.length">
+            <NoContent style="height: 180px" v-if="!uncategorizedCards.length">
                 <h3>Nothing Here!</h3>
                 <span>You have organized all your cards!</span>
-            </div>
+            </NoContent>
         </div>
     </div>
 </div>
@@ -173,21 +169,6 @@ console.log(props.file)
 <style scoped>
 .uncategorized.horizontal-flex {
     flex-wrap: wrap;
-}
-
-.no-content {
-    width: 300px;
-    border: var(--el-border);
-    border-radius: var(--el-border-radius-round);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-}
-
-.no-content span {
-    margin-bottom: 2rem;
 }
 
 .tag-detail {

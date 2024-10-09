@@ -27,7 +27,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueFu
     const { data, error } = await client
         .from("file")
         .select("uuid, created_at, modified_at, size, favorite, file_name, preview_link, file_link, user_uuid, " +
-            "card(uuid, created_at, title, content_link, file_uuid, user_uuid, tag(*)), tag(*, card(*))")
+            "card(*, tag(*)), tag(*, card(*))")
         .eq("user_uuid", user.id)
         .eq("uuid", fileUuid)
 

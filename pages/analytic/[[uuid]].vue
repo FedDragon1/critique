@@ -18,10 +18,8 @@ import useCritique, {TabHandler} from "~/composibles/useCritique";
 import type {Ref} from "vue";
 import TagTab from "~/components/analytic/tabs/TagTab.vue";
 import CardTab from "~/components/analytic/tabs/CardTab.vue";
-import AllSummaryTab from "~/components/analytic/tabs/AllSummaryTab.vue";
-import AllAnalysisTab from "~/components/analytic/tabs/AllAnalysisTab.vue";
+import AllTagsTab from "~/components/analytic/tabs/AllTagsTab.vue";
 import AllCardsTab from "~/components/analytic/tabs/AllCardsTab.vue";
-import AllQuestionsTab from "~/components/analytic/tabs/AllQuestionsTab.vue";
 
 definePageMeta({
     middleware: 'auth'
@@ -32,9 +30,9 @@ const router = useRouter()
 
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch<BaseResponse<CritiqueFull>>(`/api/file/${critiqueUuid}`)
-const critique = ref<CritiqueFull | null>(critiqueResp?.data.value?.data as CritiqueFull | null)
+const critique = ref<CritiqueFull | null>(critiqueResp?.data.value?.data as CritiqueFull || null)
 const critiqueStorage = ref("")
-const critiqueHandler = ref(critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined)
+const critiqueHandler = critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
@@ -61,7 +59,7 @@ function favorite() {
         return;
     }
 
-    critiqueHandler.value?.updateFileProperties((resp) => {
+    critiqueHandler?.updateFileProperties((resp) => {
         ElMessage.success({
             message: `Added "${resp.fileName}" to favorite`,
             grouping: true
@@ -75,7 +73,7 @@ function unfavorite() {
         return;
     }
 
-    critiqueHandler.value?.updateFileProperties((resp) => {
+    critiqueHandler?.updateFileProperties((resp) => {
         ElMessage.success({
             message: `Removed "${resp.fileName}" to favorite`,
             grouping: true
@@ -128,7 +126,7 @@ function renameFile() {
         return;
     }
 
-    critiqueHandler.value?.updateFileProperties(() => {
+    critiqueHandler?.updateFileProperties(() => {
         ElMessage.success({
             message: `Renamed to "${renamingTo.value}`,
             grouping: true
@@ -278,7 +276,7 @@ function chat(message: Message, postChat?: () => void): Promise<Message> {
 // summary view tabs
 // TODO
 
-const tabHandler = computed(() => critiqueHandler.value!.tabHandler)
+const tabHandler = ref(critiqueHandler!.tabHandler)
 
 function mapComponent(tab: Tab) {
     switch (tab.type) {
@@ -289,13 +287,13 @@ function mapComponent(tab: Tab) {
         case "generic":
             switch (tab.uuid) {
                 case "summary":
-                    return AllSummaryTab
+                    return AllTagsTab
                 case "analysis":
-                    return AllAnalysisTab
+                    return AllTagsTab
                 case "cards":
                     return AllCardsTab
                 case "questions":
-                    return AllQuestionsTab
+                    return AllTagsTab
                 default:
                     // @ts-ignore
                     throw Error(`Unknown generic tab ${tab.uuid}`)
@@ -414,28 +412,34 @@ function viewTag(tag: CritiqueTagFull) {
                 <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'"></CritiqueViewer>
 <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
-                <CritiqueAnalysis :file="critique"
-                                  v-else-if="critique && viewMode === 'summary' && tabHandler.on === -1"
-                                  @all-cards="allCards"
-                                  @all-analysis="allAnalysis"
-                                  @all-summary="allSummary"
-                                  @all-questions="allQuestions"
-                                  @view-card="viewCard"
-                                  @view-tag="viewTag"></CritiqueAnalysis>
-
+                <KeepAlive>
+                    <CritiqueAnalysis :file="critique"
+                                      v-if="critique && viewMode === 'summary' && tabHandler.on === -1"
+                                      @all-cards="allCards"
+                                      @all-analysis="allAnalysis"
+                                      @all-summary="allSummary"
+                                      @all-questions="allQuestions"
+                                      @view-card="viewCard"
+                                      @view-tag="viewTag"></CritiqueAnalysis>
+                </KeepAlive>
                 <template v-for="[i, tab] in tabHandler.tabs.entries()" :key="i">
                     <component v-if="tabHandler.on === i"
+                               @close="() => tabHandler.removeByIndex(i)"
+                               @view-card="viewCard"
+                               @view-tag="viewTag"
                                :tab="tab"
                                :is="mapComponent(tab)" />
                 </template>
 
             </ContentWrapper>
             <PanelWrapper :quick-actions="quickActions"
+                          :disabled="viewMode !== 'document'"
                           :post-drag="textareaReflow" v-slot="slotProps">
                 <div class="panel-message-wrapper">
                     <MessageEntry v-for="message in conversation" :message="message"></MessageEntry>
                 </div>
                 <ChatBox :dragging-panel="slotProps.draggingPanel"
+                         :disabled="viewMode === 'edit'"
                          :textarea-reflow="textareaReflow"
                          :chat="chat"
                          v-model:dom="promptDom"></ChatBox>

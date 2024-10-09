@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {throttle} from "lodash-es";
 import {v4 as uuid} from 'uuid';
-import type {Message} from "~/types/critique";
 
 const props = defineProps<{
-  draggingPanel: boolean,
-  textareaReflow: () => void,
-  chat: (message: Message, postChat?: () => void) => Promise<Message>
+    draggingPanel: boolean,
+    disabled: boolean,
+    textareaReflow: () => void,
+    chat: (message: Message, postChat?: () => void) => Promise<Message>
 }>()
 
 const promptDom = defineModel<HTMLTextAreaElement>("dom");
@@ -16,139 +16,142 @@ const generating = ref(false)
 const multiline = ref(false)
 
 watchEffect(() => {
-  prompt.value;
-  props.textareaReflow()
+    prompt.value;
+    props.textareaReflow()
 })
 
 function registerListener() {
-  if (promptDom.value) {
-    promptDom.value.addEventListener("keypress", multilineGuard)
-  }
-  setTimeout(registerListener, 0)
+    if (promptDom.value) {
+        promptDom.value.addEventListener("keypress", multilineGuard)
+    }
+    setTimeout(registerListener, 0)
 }
 
 
 onMounted(registerListener)
 onBeforeUnmount(() => {
-  promptDom.value!.removeEventListener("keypress", multilineGuard)
+    promptDom.value!.removeEventListener("keypress", multilineGuard)
 })
 
 function multilineGuard(e: KeyboardEvent) {
-  if (e.key !== "Enter"
-      || multiline.value
-      || e.shiftKey
-      || !prompt.value.trim().length
-      || generating.value) {
-    return;
-  }
+    if (e.key !== "Enter"
+        || multiline.value
+        || e.shiftKey
+        || !prompt.value.trim().length
+        || generating.value) {
+        return;
+    }
 
-  // hitting enter on the first line with non-white space character
-  // send the message
-  e.preventDefault()
-  sendMessage()
+    // hitting enter on the first line with non-white space character
+    // send the message
+    e.preventDefault()
+    sendMessage()
 }
 
 function promptToHTML() {
-  const segments = prompt.value.split("\n").map(
-      s => `<p class="wrap no-margin">${s}</p>`
-  );
-  const joined = segments.join("<br>")
+    const segments = prompt.value.split("\n").map(
+        s => `<p class="wrap no-margin">${s}</p>`
+    );
+    const joined = segments.join("<br>")
 
-  return `${joined}`
+    return `${joined}`
 }
 
 function postChat() {
-  generating.value = false
+    generating.value = false
 }
 
 // TODO: call backend api
 function sendMessageRaw() {
-  if (!prompt.value.trim().length) {
-    ElMessage.error("Empty prompt")
-    return;
-  }
+    if (!prompt.value.trim().length) {
+        ElMessage.error("Empty prompt")
+        return;
+    }
 
-  // let the promise resolve itself, initiate here
-  props.chat({
-    uuid: uuid(),
-    from: "user",
-    content: promptToHTML()
-  }, postChat)
+    // let the promise resolve itself, initiate here
+    props.chat({
+        uuid: uuid(),
+        from: "user",
+        content: promptToHTML()
+    }, postChat)
 
-  prompt.value = ""
-  generating.value = true
-  multiline.value = false
-  setTimeout(props.textareaReflow, 0)
+    prompt.value = ""
+    generating.value = true
+    multiline.value = false
+    setTimeout(props.textareaReflow, 0)
 
-  // finish the promise
+    // finish the promise
 }
 
 const sendMessage = throttle(sendMessageRaw, 3000)
 </script>
 
 <template>
-  <div class="panel-message-box">
-    <el-icon size="1.2rem">
-      <el-icon-circle-plus></el-icon-circle-plus>
-    </el-icon>
-    <textarea class="panel-message-input"
-              placeholder="Chat to the critique bot"
-              :class="{ 'no-select': draggingPanel }"
-              :readonly="draggingPanel"
-              v-model="prompt"
-              ref="promptDom"
-              maxlength="2000" />
-    <el-icon size="1.2rem" @click="sendMessage" v-if="!generating">
-      <el-icon-promotion></el-icon-promotion>
-    </el-icon>
-    <el-icon size="1.2rem" v-else>
-      <el-icon-loading class="spin"></el-icon-loading>
-    </el-icon>
-  </div>
+    <div class="panel-message-box">
+        <el-icon size="1.2rem">
+            <el-icon-circle-plus></el-icon-circle-plus>
+        </el-icon>
+        <textarea class="panel-message-input"
+                  placeholder="Chat to the critique bot"
+                  :class="{ 'no-select': draggingPanel, 'disabled': disabled }"
+                  :readonly="draggingPanel || disabled"
+                  v-model="prompt"
+                  ref="promptDom"
+                  maxlength="2000"/>
+        <el-icon size="1.2rem" @click="() => !disabled && sendMessage()" v-if="!generating">
+            <el-icon-promotion></el-icon-promotion>
+        </el-icon>
+        <el-icon size="1.2rem" v-else>
+            <el-icon-loading class="spin"></el-icon-loading>
+        </el-icon>
+    </div>
 </template>
 
 <style scoped>
 .panel-message-input {
-  font-family: var(--el-font-family), sans-serif;
-  border: none;
-  flex-grow: 999;
-  resize: none;
-  height: 1rem;
-  max-height: 200px;
-  overflow-y: hidden;
-  word-break: break-word;
+    font-family: var(--el-font-family), sans-serif;
+    border: none;
+    flex-grow: 999;
+    resize: none;
+    height: 1rem;
+    max-height: 200px;
+    overflow-y: hidden;
+    word-break: break-word;
 }
 
 .panel-message-input:focus {
-  outline: none;
+    outline: none;
 }
 
-.panel-message-box:has(.panel-message-input:focus) {
-  border: 1px solid var(--el-color-primary);
+/*noinspection ALL*/
+.panel-message-box:has(.panel-message-input:not(.disabled):focus) {
+    border: 1px solid var(--el-color-primary);
 }
 
 .panel-message-box {
-  margin: 10px;
-  flex-shrink: 0;
-  border-radius: var(--el-border-radius-round);
-  border: var(--el-border);
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  padding: 15px;
-  transition: border 0.2s ease-in-out;
+    margin: 10px;
+    flex-shrink: 0;
+    border-radius: var(--el-border-radius-round);
+    border: var(--el-border);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 15px;
+    transition: border 0.2s ease-in-out;
 }
 
 .panel-message-box i {
-  color: var(--el-text-color-secondary);
-  transition: color 0.2s ease-in-out;
+    color: var(--el-text-color-secondary);
+    transition: color 0.2s ease-in-out;
 }
 
-.panel-message-box:has(.panel-message-input:focus) i {
-  color: var(--el-text-color);
+/*noinspection ALL*/
+.panel-message-box:has(.panel-message-input:not(.disabled):focus) i {
+    color: var(--el-text-color);
 }
 
-.panel-message-box i:hover {
-  color: var(--el-color-primary) !important;
+/*noinspection ALL*/
+.panel-message-box:not(:has(.disabled)) i:hover {
+    color: var(--el-color-primary) !important;
 }
 </style>
