@@ -2,7 +2,7 @@ import Tesseract, {createWorker, OEM, PSM} from "tesseract.js";
 import { Buffer } from "buffer";
 import type {BaseResponse, RotateImageRequest} from "~/types/requests";
 
-class Workers {
+export class Workers {
     workers: WorkerWrapper[]
     pointer: number
 
