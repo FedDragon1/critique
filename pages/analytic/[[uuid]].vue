@@ -161,6 +161,16 @@ function paste() {
     editor.value!.editor.commands.paste()
 }
 
+function save() {
+    ElMessage.info("saving file")
+    // TODO
+}
+
+function discard() {
+    ElMessage.info("discard change")
+    // TODO
+}
+
 // Panel data models / functions
 
 function annotateSelection() {
@@ -211,6 +221,7 @@ function pasteText() {
 }
 
 // Conversations
+
 const promptDom = ref<HTMLTextAreaElement>();
 const chatUuid = ref<string>()
 const chatStream = ref<string[]>([])
@@ -478,6 +489,8 @@ function viewTag(tag: CritiqueTagFull) {
             <ContentWrapper ref="frame">
                 <template #header>
                     <DocumentNav v-model:view-mode="viewMode"
+                                 @save="save"
+                                 @discard="discard"
                                  :tab-handler="tabHandler as TabHandler"
                                  v-model:doc-active-tool="documentActiveTool"></DocumentNav>
                 </template>

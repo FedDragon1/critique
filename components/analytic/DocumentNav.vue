@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Position} from "@element-plus/icons-vue";
+import {DocumentChecked, DocumentDelete, Position} from "@element-plus/icons-vue";
 import type {TabHandler} from "~/composibles/useCritique";
 import TabButton from "~/components/analytic/tabs/TabButton.vue";
 
@@ -34,6 +34,16 @@ const documentTools = {
         display: 'Selector'
     }
 } as const
+const editorTools = {
+    save: {
+        icon: DocumentChecked,
+        display: 'Save'
+    },
+    discard: {
+        icon: DocumentDelete,
+        display: 'Discard'
+    }
+}
 
 const viewMode = defineModel<keyof typeof viewModeDisplay>("viewMode")
 const documentActiveTool = defineModel<string>("docActiveTool")
@@ -91,8 +101,17 @@ const documentActiveTool = defineModel<string>("docActiveTool")
             </div>
         </div>
         <div v-else-if="viewMode === 'edit'">
-            edit
-<!--            TODO: save-->
+            <div class="document-tool">
+                <div class="document-tool-item edit"
+                     v-for="(value, key) in editorTools"
+                     :key="key"
+                     @click="$emit(key)">
+                    <el-icon size="1.5rem">
+                        <component :is="value.icon"></component>
+                    </el-icon>
+                    <span class="nowrap">{{ value.display }}</span>
+                </div>
+            </div>
         </div>
         <div v-else class="summary-tabs">
             <TabButton v-for="[index, tab] in tabHandler.tabs.entries()"
@@ -107,6 +126,19 @@ const documentActiveTool = defineModel<string>("docActiveTool")
 </template>
 
 <style scoped>
+.document-tool-item.edit {
+    border-right: var(--el-border);
+    padding-left: 20px;
+    padding-right: 20px;
+    gap: 10px;
+    transition: all 0.2s ease-in-out;
+}
+
+.document-tool-item.edit:hover {
+    color: var(--el-color-white);
+    background-color: var(--el-color-danger);
+}
+
 .summary-tabs {
     display: flex;
     overflow-x: auto;
@@ -140,6 +172,7 @@ const documentActiveTool = defineModel<string>("docActiveTool")
 }
 
 .document-tool-item {
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 5px;
