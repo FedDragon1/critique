@@ -1,4 +1,5 @@
 import type {FourPoints} from "~/types/cvtypes";
+import OpenAI from "openai";
 
 interface BaseResponse<T> {
     success: boolean,
@@ -124,4 +125,8 @@ interface NewCardTagRequest {
     tagUuid: string,
     cardType: CardType,
     tagType: CardType
+}
+
+interface ChatRequest {
+    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
 }

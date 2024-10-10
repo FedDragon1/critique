@@ -7,8 +7,8 @@ interface QuickActions {
 }
 
 interface Message {
-    from: "user" | "critique",
     content: string,
+    role: "assistant" | "user"
     uuid: string
 }
 

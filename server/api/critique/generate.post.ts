@@ -1,43 +1,34 @@
 // POST /api/critique/generate
 
-// TODO: might not needed
+import {ChatRequest} from "~/types/requests";
+import { createStream } from "~/server/utils/aiutils";
+import OpenAI from "openai";
+import {useSSE} from "~/server/utils/sseutils";
 
-import OpenAI from 'openai'
-import { OpenAIStream } from "ai"
+const systemPrompt = `Just chat with the user. 
+No not use markdown format. use '\\n' to break line`
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-})
+export default defineEventHandler(async (event): Promise<void> => {
+    const request = await readBody(event) as ChatRequest
 
-function getMessages(userPrompt: string): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
-    return [
+    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
             role: "system",
-            content: "You are an AI writing assistant that improves existing text. " +
-                "Limit your response to no more than 200 characters, but make sure to construct complete sentences." +
-                "Use Markdown formatting when appropriate."
+            content: systemPrompt
         },
-        {
-            role: "user",
-            content: userPrompt
-        }
+        ...request.messages
     ]
-}
 
-export default defineEventHandler(async (event) => {
+    const { send, close } = useSSE(event, "sse:event")
 
-    const request = JSON.parse(await readBody(event))
+    try {
+        const response = await createStream(messages)
 
-    const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        stream: true,
-        messages: getMessages(request.prompt),
-        temperature: 0.7,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        n: 1,
-    });
-
-    return OpenAIStream(response)
+        for await (const resp of response) {
+            const choice = resp.choices[0];
+            send(() => choice)
+        }
+    } finally {
+        close()
+    }
 })

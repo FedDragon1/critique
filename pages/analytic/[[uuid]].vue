@@ -7,7 +7,7 @@ import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
-import type {BaseResponse, DeleteFileRequest} from "~/types/requests";
+import type {BaseResponse, ChatRequest, DeleteFileRequest} from "~/types/requests";
 import CritiqueViewer from "~/components/editor/CritiqueViewer.vue";
 import DocumentNav from "~/components/analytic/DocumentNav.vue";
 import CritiqueEditor from "~/components/editor/CritiqueEditor.vue";
@@ -20,6 +20,8 @@ import TagTab from "~/components/analytic/tabs/TagTab.vue";
 import CardTab from "~/components/analytic/tabs/CardTab.vue";
 import AllTagsTab from "~/components/analytic/tabs/AllTagsTab.vue";
 import AllCardsTab from "~/components/analytic/tabs/AllCardsTab.vue";
+import {useFetchStream} from "~/composibles/useFetchStream";
+import OpenAI from "openai";
 
 definePageMeta({
     middleware: 'auth'
@@ -27,6 +29,7 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const fetchStream = useFetchStream()
 
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch<BaseResponse<CritiqueFull>>(`/api/file/${critiqueUuid}`)
@@ -209,12 +212,39 @@ function pasteText() {
 
 // Conversations
 const promptDom = ref<HTMLTextAreaElement>();
+const chatUuid = ref<string>()
+const chatStream = ref<string[]>([])
+const chatContent = computed(() => chatStream.value.join(''))
+const panel = useTemplateRef<HTMLDivElement>('panel')
 
 const conversation = ref<Message[]>([{
     uuid: uuid(),
-    from: "critique",
+    role: "assistant",
     content: "Hi, I'm Critique, an AI tool designed to enhance your critical reading skills. I don't have personal experiences or emotions, but I can help you analyze and evaluate texts, generate questions, and provide explanations based on what you’re reading. My goal is to assist you with understanding complex materials, improving your analytical skills, and making your reading experience more interactive and insightful. How can I help you today?"
 }])
+
+const reactiveConversation = computed<Message[]>(() => {
+    if (!chatUuid.value) {
+        return conversation.value
+    }
+    const newConversation: Message = {
+        uuid: chatUuid.value,
+        role: "assistant",
+        content: chatContent.value
+    }
+    return [
+        ...conversation.value,
+        newConversation
+    ]
+})
+
+function startScrolling() {
+    if (!panel.value || !chatUuid.value) {
+        return
+    }
+    panel.value.scrollTo(0, panel.value.scrollHeight)
+    setTimeout(startScrolling, 100)
+}
 
 function textareaReflow() {
     if (!promptDom.value) {
@@ -252,29 +282,71 @@ function reflowDuring(ms: number, per: number = 50) {
     }
 }
 
-function chat(message: Message, postChat?: () => void): Promise<Message> {
-    conversation.value.push(message)
-
-    return new Promise((resolve) => {
-        // TODO
-
-        setTimeout(() => {
-            const newMessage: Message = {
-                uuid: uuid(),
-                from: "critique",
-                content: `This is an auto-response for ${message.content}`
-            }
-
-            conversation.value.push(newMessage)
-
-            postChat && postChat()
-            resolve(newMessage)
-        }, 2000)
-    })
+function messagesRequest(): ChatRequest {
+    const messages = conversation.value.map(message => ({
+        role: message.role,
+        content: message.content
+    }))
+    return {
+        messages
+    }
 }
 
+function stopChat(chunk: OpenAI.Chat.Completions.ChatCompletionChunk.Choice) {
+    if (chunk.finish_reason === 'stop') {
+        return true
+    }
+    if (chunk.finish_reason === 'length') {
+        ElMessage.error("Critique reached its length limit")
+        return true
+    }
+    if (chunk.finish_reason === 'content_filter') {
+        ElMessage.error("Critique generated something bad")
+        return true
+    }
+    if (chunk.finish_reason) {
+        ElMessage.error(`Error while generating: '${chunk.finish_reason}'`)
+        return true
+    }
+    if (chunk.delta.content === null) {
+        ElMessage.error("Received no content")
+        return true
+    }
+    return false
+}
+
+async function chat(message: Message, postChat?: () => void): Promise<void> {
+    conversation.value.push(message)
+
+    chatUuid.value = uuid()
+
+    const stream = await fetchStream<OpenAI.Chat.Completions.ChatCompletionChunk.Choice>("/api/critique/generate", {
+        method: "POST",
+        body: messagesRequest()
+    })
+
+    for await (const chunk of stream) {
+        if (stopChat(chunk)) {
+            break
+        }
+        chatStream.value.push(chunk.delta.content!)
+    }
+
+    const newChat: Message = {
+        uuid: chatUuid.value,
+        role: "assistant",
+        content: chatContent.value
+    }
+    conversation.value.push(newChat)
+
+    chatUuid.value = undefined
+    chatStream.value = []
+    postChat && postChat()
+}
+
+watch([chatUuid], startScrolling)
+
 // summary view tabs
-// TODO
 
 const tabHandler = ref(critiqueHandler!.tabHandler)
 
@@ -435,8 +507,8 @@ function viewTag(tag: CritiqueTagFull) {
             <PanelWrapper :quick-actions="quickActions"
                           :disabled="viewMode !== 'document'"
                           :post-drag="textareaReflow" v-slot="slotProps">
-                <div class="panel-message-wrapper">
-                    <MessageEntry v-for="message in conversation" :message="message"></MessageEntry>
+                <div class="panel-message-wrapper" ref="panel">
+                    <MessageEntry v-for="message in reactiveConversation" :key="message.uuid" :message="message"></MessageEntry>
                 </div>
                 <ChatBox :dragging-panel="slotProps.draggingPanel"
                          :disabled="viewMode === 'edit'"

@@ -36,3 +36,13 @@ export function createCompletion(messages: OpenAI.Chat.Completions.ChatCompletio
         messages
     })
 }
+
+export function createStream(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+                                 options?: Partial<Omit<OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming, "messages">>) {
+    return openai.chat.completions.create({
+        ...defaultParams,
+        stream: true,
+        ...options,
+        messages
+    })
+}

@@ -6,7 +6,7 @@ const props = defineProps<{
     draggingPanel: boolean,
     disabled: boolean,
     textareaReflow: () => void,
-    chat: (message: Message, postChat?: () => void) => Promise<Message>
+    chat: (message: Message, postChat?: () => void) => Promise<void>
 }>()
 
 const promptDom = defineModel<HTMLTextAreaElement>("dom");
@@ -61,7 +61,6 @@ function postChat() {
     generating.value = false
 }
 
-// TODO: call backend api
 function sendMessageRaw() {
     if (!prompt.value.trim().length) {
         ElMessage.error("Empty prompt")
@@ -71,8 +70,9 @@ function sendMessageRaw() {
     // let the promise resolve itself, initiate here
     props.chat({
         uuid: uuid(),
-        from: "user",
-        content: promptToHTML()
+        role: "user",
+        // content: promptToHTML()
+        content: prompt.value
     }, postChat)
 
     prompt.value = ""
