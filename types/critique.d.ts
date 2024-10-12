@@ -59,6 +59,7 @@ interface CritiqueCard {
     uuid: string,
     title: string,
     type: "analysis" | "summary" | "question",
+    reference?: string,
     createdAt: string,
     contentLink: string,
     fileUuid: string,
@@ -78,6 +79,7 @@ interface CritiqueCardFull {
     uuid: string,
     title: string,
     type: "analysis" | "summary" | "question",
+    reference?: string,
     createdAt: string,
     contentLink: string,
     fileUuid: string,
@@ -110,7 +112,7 @@ interface CritiqueFull {
 
 interface CritiqueCardStorage {
     originalText: string,
-    critique: string
+    critique: string,
 }
 
 type GenericTabTypes = "cards" | "analysis" | "summary" | "questions"

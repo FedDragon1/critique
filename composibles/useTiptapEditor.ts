@@ -17,7 +17,7 @@ import History from "@tiptap/extension-history";
 import Placeholder from "@tiptap/extension-placeholder";
 import NodeRange from "@tiptap-pro/extension-node-range";
 import DragHandle from "@tiptap-pro/extension-drag-handle";
-import {Editor, Extension} from "@tiptap/core";
+import {Editor, Extension, mergeAttributes, Node as TiptapNode} from "@tiptap/core";
 import {Node} from '@tiptap/pm/model';
 import {Decoration, DecorationSet} from '@tiptap/pm/view';
 import {Plugin, PluginKey} from "@tiptap/pm/state";
@@ -25,6 +25,10 @@ import type {NodeTypeRepr, ParagraphCache, PromiseCache} from "~/types/tiptap";
 import {LRUCache} from 'lru-cache'
 import {$fetch} from "ofetch";
 import type {BaseResponse, FixRequest} from "~/types/requests";
+import {hash} from "~/utils/hashUtil";
+import {VueNodeViewRenderer} from "@tiptap/vue-3";
+import CritiqueText from "~/components/editor/CritiqueText.vue";
+import CritiqueHeadingVue from "~/components/editor/CritiqueHeading.vue";
 
 const cacheOptions = {
     max: 200
@@ -37,22 +41,6 @@ export function forceRender() {
 
 export const cacheOfPromises: PromiseCache = new LRUCache(cacheOptions)
 const cacheOfStrings: ParagraphCache = new LRUCache(cacheOptions)
-
-// https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js
-const hash = (str: string, seed = 0) => {
-    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-    for (let i = 0, ch; i < str.length; i++) {
-        ch = str.charCodeAt(i);
-        h1 = Math.imul(h1 ^ ch, 2654435761);
-        h2 = Math.imul(h2 ^ ch, 1597334677);
-    }
-    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-
-    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString();
-};
 
 // noinspection JSUnusedGlobalSymbols
 class ThrottleRegistry {
@@ -267,6 +255,40 @@ function findLowConfidenceSegments(doc: Node): DecorationSet {
     return DecorationSet.create(doc, decorations)
 }
 
+function createCritiqueHeading(level: number) {
+    return TiptapNode.create({
+        name: `critique-heading-${level}`,
+        group: 'block',
+        atom: true,
+        content: 'critique+',
+
+        addAttributes() {
+            return {
+                level: {
+                    default: `${level}`
+                }
+            }
+        },
+
+        parseHTML() {
+            return [
+                {
+                    tag: `h${level}`
+                },
+            ]
+        },
+
+        renderHTML(props) {
+            return [`h${level}`, mergeAttributes(props.HTMLAttributes), 0]
+        },
+
+        addNodeView() {
+            // @ts-ignore
+            return VueNodeViewRenderer(CritiqueHeadingVue)
+        },
+    })
+}
+
 const SelectText = Extension.create({
     // @ts-ignore
     addCommands() {
@@ -359,6 +381,67 @@ const LowConfidenceMarker = Extension.create({
     ]
 })
 
+const CritiqueHeading1 = createCritiqueHeading(1)
+const CritiqueHeading2 = createCritiqueHeading(2)
+const CritiqueHeading3 = createCritiqueHeading(3)
+
+const CritiqueParagraph = TiptapNode.create({
+    name: 'critique-paragraph',
+    group: 'block',
+    atom: true,
+    content: 'critique+',
+
+    parseHTML() {
+        return [
+            {
+                tag: 'critique-paragraph',
+            }
+        ]
+    },
+
+    renderHTML(props) {
+        return ['critique-paragraph', mergeAttributes(props.HTMLAttributes), 0]
+    },
+
+    addNodeView() {
+        // @ts-ignore
+        return VueNodeViewRenderer(CritiqueText)
+    }
+})
+
+const CritiqueNode = TiptapNode.create({
+    name: 'critique',
+    group: 'block',
+    content: 'inline',
+
+    addAttributes() {
+        return {
+            hash: {
+                default: ""
+            },
+            uuid: {
+                default: ""
+            }
+        }
+    },
+
+    parseHTML() {
+        return [
+            {
+                tag: 'critique',
+            }
+        ]
+    },
+
+    renderHTML(props) {
+        return ['critique', mergeAttributes(props.HTMLAttributes), 0]
+    }
+})
+
+const CritiqueListItem = ListItem.extend({
+    content: 'block*'
+})
+
 export function useTiptapViewer(html?: string | null) {
     const marks = [Bold, Italic, Strike, Underline]
     const nodes = [
@@ -368,8 +451,13 @@ export function useTiptapViewer(html?: string | null) {
         Blockquote,
         BulletList,
         HardBreak,
-        ListItem,
         OrderedList,
+        CritiqueHeading1,
+        CritiqueHeading2,
+        CritiqueHeading3,
+        CritiqueListItem,
+        CritiqueNode,
+        CritiqueParagraph,
         Heading.configure({
                 levels: [1, 2, 3]
             }

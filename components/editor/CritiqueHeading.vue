@@ -1,0 +1,58 @@
+<script setup lang="ts">
+import {nodeViewProps, NodeViewWrapper} from "@tiptap/vue-3";
+
+interface CritiqueHeadingNode {
+    attrs: {
+        level: number
+    },
+    content: Fragment<CritiqueNode>,
+    type: {
+        name: string
+    }
+}
+
+interface CritiqueNode {
+    attrs: {
+        hash: string,
+        uuid: string
+    },
+    content: Fragment<TextNode>,
+    type: {
+        name: string
+    }
+}
+
+interface TextNode {
+    attrs: {
+        hash: string,
+        uuid: string
+    },
+    content: [],
+    text: string,
+    type: {
+        name: string
+    }
+}
+
+interface Fragment<T> {
+    content: T[]
+}
+
+const p = defineProps(nodeViewProps);
+const node = (p.node as unknown as CritiqueHeadingNode)
+const content = computed(() => node.content.content)
+const tag = computed(() => `h${node.attrs.level}`)
+console.log(p.node)
+</script>
+
+<template>
+    <node-view-wrapper :as="tag">
+        <critique v-for="critique in content" :key="critique.attrs.uuid" v-bind="critique.attrs">
+            {{ critique.content.content[0].text }}
+        </critique>
+    </node-view-wrapper>
+</template>
+
+<style scoped>
+
+</style>

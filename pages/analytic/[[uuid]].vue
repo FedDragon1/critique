@@ -35,6 +35,7 @@ const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch<BaseResponse<CritiqueFull>>(`/api/file/${critiqueUuid}`)
 const critique = ref<CritiqueFull | null>(critiqueResp?.data.value?.data as CritiqueFull || null)
 const critiqueStorage = ref("")
+const critiqueSummary = ref("")
 const critiqueHandler = critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
@@ -43,10 +44,14 @@ if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.va
 }
 
 const client = useSupabaseClient()
+const user = useSupabaseUser()
 if (critiqueUuid){
     client.storage.from("file").download(critique.value!.fileLink)
         .then((resp) => resp.data?.text())
         .then((text) => critiqueStorage.value = text!)
+    client.storage.from("summary").download(`${user.value?.id}/${critiqueUuid}`)
+        .then((resp) => resp.data?.text())
+        .then((text) => critiqueSummary.value = text!)
 }
 
 const isDeletingFile = ref(false)

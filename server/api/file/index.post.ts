@@ -29,6 +29,18 @@ export default defineEventHandler(async (event): Promise<BaseResponse<Critique>>
         }
     }
 
+    const { error: summaryError } = await client.storage
+        .from("summary")
+        .upload(`${user.id}/${fileUuid}`, request.summary)
+
+    if (summaryError) {
+        console.error(summaryError.message)
+        return {
+            success: false,
+            errorMessage: summaryError.message
+        }
+    }
+
     let preview = undefined;
     if (request.previewBase64) {
         // base64 encoded

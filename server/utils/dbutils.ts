@@ -3,6 +3,7 @@ export function transformCard(card: any): CritiqueCard {
         uuid: card.uuid,
         title: card.title,
         type: card.type,
+        reference: card.reference,
         createdAt: card.created_at,
         contentLink: card.content_link,
         fileUuid: card.file_uuid,

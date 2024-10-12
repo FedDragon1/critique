@@ -61,6 +61,7 @@ type CardType = "analysis" | "summary" | "question";
 interface NewCardRequest {
     uuid?: string,
     createdAt?: string,
+    reference?: string,
     type: CardType,
     title: string,
     fileUuid: string,
@@ -70,6 +71,7 @@ interface NewCardRequest {
 interface UpdateCardRequest {
     uuid: string,
     title?: string,
+    reference?: string,
     data?: CritiqueCardStorage
 }
 
@@ -103,7 +105,8 @@ interface NewFileRequest {
     favorite?: boolean,
     fileName: string,
     dataMarkUp: string,
-    previewBase64?: string
+    previewBase64?: string,
+    summary: string
 }
 
 interface UpdateFileRequest {
@@ -129,4 +132,8 @@ interface NewCardTagRequest {
 
 interface ChatRequest {
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
+}
+
+interface SummaryRequest {
+    chunk: string
 }

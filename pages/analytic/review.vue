@@ -6,7 +6,8 @@ import ForfeitDialog from "~/components/uploading/ForfeitDialog.vue";
 import DashboardFrame from "~/components/dashboard/DashboardFrame.vue";
 import ContextMenu from "~/components/editor/ContextMenu.vue";
 import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
-import type {BaseResponse, NewFileRequest} from "~/types/requests";
+import type {BaseResponse, NewFileRequest, SummaryRequest} from "~/types/requests";
+import {useEnglish} from "~/composibles/useEnglish";
 
 definePageMeta({
     middleware: 'auth'
@@ -15,6 +16,7 @@ definePageMeta({
 const fileStore = useFileStore()
 const router = useRouter()
 const route = useRoute()
+const { chunkBySentences, htmlToCritiqueChunks } = useEnglish()
 
 const timeout = ref(false)
 const returning = ref(false)
@@ -43,6 +45,62 @@ function validateFileName() {
     return true;
 }
 
+async function makeSummary(content: string) {
+    const message = ElMessage.info({
+        message: "Summarizing file",
+        duration: 0
+    })
+
+    const MAX_LENGTH = 2000
+
+    const sentences = chunkBySentences(content)
+
+    const chunks = []
+    let chunkTemp = []
+    let tempLength = 0
+    for (const sentence of sentences) {
+        tempLength += sentence.length
+        chunkTemp.push(sentence)
+
+        if (tempLength > MAX_LENGTH) {
+            chunks.push(chunkTemp.join(" "))
+            chunkTemp = []
+            tempLength = 0
+        }
+    }
+    if (tempLength) {
+        chunks.push(chunkTemp.join(" "))
+    }
+
+    const promises = chunks.map(chunk => {
+        const request: SummaryRequest = {
+            chunk
+        }
+        return $fetch<BaseResponse<string>>("/api/critique/summary", {
+            method: "POST",
+            body: request
+        })
+    })
+
+    const summaryChunks = await Promise.all(promises)
+    message.close()
+    summaryChunks.forEach(chunk => {
+        if (!chunk.success) {
+            ElMessage.error(chunk.errorMessage)
+            throw Error(chunk.errorMessage)
+        }
+    })
+    const ret = summaryChunks.map(chunk => chunk.data!).join("\n");
+    console.log(ret)
+    return ret
+}
+
+function htmlToText(html: string) {
+    const temp = document.createElement("div");
+    temp.innerHTML = html
+    return temp.innerText
+}
+
 /**
  * Ask the user of file name, then upload the file to database
  */
@@ -55,29 +113,33 @@ function uploadCritique() {
     ignoreAll()
 
     const content = editor.value!.editor.getHTML()
-    console.log("create critique")
+    const rawContent = htmlToText(content)
+    const contentMarkup = htmlToCritiqueChunks(content)
 
-    const message = ElMessage.info({
-        message: "Uploading file",
-        duration: 0
-    })
+    makeSummary(rawContent).then((summary) => {
+        const message = ElMessage.info({
+            message: "Uploading file",
+            duration: 0
+        })
 
-    // TODO preview for the file
-    const request: NewFileRequest = {
-        fileName: fileName.value,
-        dataMarkUp: content,
-    }
-    $fetch<BaseResponse<Critique>>("/api/file", {
-        method: "POST",
-        body: request
-    }).then(resp => {
-        if (!resp.success) {
-            ElMessage.error(resp.errorMessage)
-            return;
+        // TODO preview for the file
+        const request: NewFileRequest = {
+            fileName: fileName.value,
+            dataMarkUp: contentMarkup,
+            summary
         }
-        ElMessage.success("File created")
-        router.push(`/analytic/${resp.data?.uuid}`)
-    }).finally(() => message.close())
+        $fetch<BaseResponse<Critique>>("/api/file", {
+            method: "POST",
+            body: request
+        }).then(resp => {
+            if (!resp.success) {
+                ElMessage.error(resp.errorMessage)
+                return;
+            }
+            ElMessage.success("File created")
+            router.push(`/analytic/${resp.data?.uuid}`)
+        }).finally(() => message.close())
+    })
 }
 
 function fixSelected() {
