@@ -227,6 +227,7 @@ function pasteText() {
 
 // Conversations
 
+const analysis = useTemplateRef<typeof CritiqueViewer>("analysis")
 const promptDom = ref<HTMLTextAreaElement>();
 const chatUuid = ref<string>()
 const chatStream = ref<string[]>([])
@@ -333,6 +334,14 @@ function stopChat(chunk: OpenAI.Chat.Completions.ChatCompletionChunk.Choice) {
 }
 
 async function chat(message: Message, postChat?: () => void): Promise<void> {
+    if (analysis.value?.selectedText) {
+        message.content = `Referring to the context: \n > ${analysis.value?.selectedText}\n\n${message.content}`
+    }
+
+    if (message.content.length > 1500) {
+        ElMessage.error(`The message is too long (${message.content.length}/1500)`)
+    }
+
     conversation.value.push(message)
 
     chatUuid.value = uuid()
@@ -500,7 +509,7 @@ function viewTag(tag: CritiqueTagFull) {
                                  :tab-handler="tabHandler as TabHandler"
                                  v-model:doc-active-tool="documentActiveTool"></DocumentNav>
                 </template>
-                <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'"></CritiqueViewer>
+                <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'" ref="analysis"></CritiqueViewer>
 <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
                 <KeepAlive>

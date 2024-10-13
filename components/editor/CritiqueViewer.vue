@@ -2,6 +2,8 @@
 import {useTiptapViewer} from "~/composibles/useTiptapEditor";
 import useEventBus from "~/composibles/useEventBus";
 
+// Selection Logic
+
 const props = defineProps<{
     html: string | null,
 }>()
@@ -9,6 +11,10 @@ const props = defineProps<{
 const emitter = useEventBus()
 const editor = useTiptapViewer(props.html)
 const selectionRegistry = ref<SelectionRegistry>({})
+
+function sortByIndex(a: CritiqueSelect, b: CritiqueSelect) {
+    return a.index - b.index
+}
 
 /**
  * Must be bordering existing selection in the same node
@@ -36,9 +42,7 @@ function validSelection(selection: CritiqueSelect): boolean {
  * Keep the first chunk of selection when unselect from the middle
  */
 function removeInvalidSelection() {
-    const sortedSelections = Object.values(selectionRegistry.value).toSorted((a, b) => a.index - b.index);
-
-    debugger;
+    const sortedSelections = Object.values(selectionRegistry.value).toSorted(sortByIndex);
 
     let deleting = false
     let lastIndex = -1
@@ -76,12 +80,26 @@ emitter.on('critique-unselect', ({ uuid }) => {
     removeInvalidSelection()
 })
 
+// Hooks
+
 watch(() => props.html, () => {
     editor.value?.commands.setContent(props.html)
 })
-
 onBeforeUnmount(() => {
     unref(editor)?.destroy()
+})
+
+// Exposes
+
+const selectedText = computed(() =>
+    Object.values(selectionRegistry.value)
+        .toSorted(sortByIndex)
+        .map(s => s.content)
+        .join(" ")
+)
+
+defineExpose({
+    selectedText
 })
 </script>
 

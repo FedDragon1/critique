@@ -100,3 +100,10 @@ critique-paragraph {
     margin-block-start: 1em;
     margin-block-end: 1em;
 }
+
+.panel-message-entry-data blockquote {
+    margin: 0;
+    background: #8b201808;
+    padding: 2px 20px 2px 20px;
+    border-left: 5px solid var(--el-color-primary);
+}
