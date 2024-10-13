@@ -304,7 +304,8 @@ function messagesRequest(): ChatRequest {
         content: message.content
     }))
     return {
-        messages
+        messages,
+        summary: critiqueSummary.value
     }
 }
 

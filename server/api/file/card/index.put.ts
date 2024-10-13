@@ -36,6 +36,9 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCa
     // the storage link is never changed during an update
     const updateData = {
         title: request.title,
+        node: request.node,
+        from: request.from,
+        to: request.to
     }
 
     const { data, error } = await client

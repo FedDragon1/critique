@@ -3,7 +3,6 @@ import { computedAsync } from '@vueuse/core'
 import CritiqueCard from "~/components/analytic/CritiqueCard.vue";
 import CritiqueTag from "~/components/analytic/CritiqueTag.vue";
 import NoContent from "~/components/analytic/NoContent.vue";
-
 const props = defineProps<{
     file: CritiqueFull
 }>();

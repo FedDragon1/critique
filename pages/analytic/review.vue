@@ -91,7 +91,6 @@ async function makeSummary(content: string) {
         }
     })
     const ret = summaryChunks.map(chunk => chunk.data!).join("\n");
-    console.log(ret)
     return ret
 }
 

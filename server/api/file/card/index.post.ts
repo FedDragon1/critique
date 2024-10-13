@@ -38,6 +38,9 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCa
         title: request.title,
         file_uuid: request.fileUuid,
         user_uuid: user.id,
+        node: request.node,
+        from: request.from,
+        to: request.to,
         content_link: storageLink.path
     }
 

@@ -59,7 +59,9 @@ interface CritiqueCard {
     uuid: string,
     title: string,
     type: "analysis" | "summary" | "question",
-    reference?: string,
+    node: string,
+    from: number | null,
+    to: number | null,
     createdAt: string,
     contentLink: string,
     fileUuid: string,
@@ -79,7 +81,9 @@ interface CritiqueCardFull {
     uuid: string,
     title: string,
     type: "analysis" | "summary" | "question",
-    reference?: string,
+    node: string,
+    from: number | null,
+    to: number | null,
     createdAt: string,
     contentLink: string,
     fileUuid: string,
@@ -162,3 +166,27 @@ interface TagTab {
 }
 
 type Tab = GenericTabs | CardTab | TagTab
+
+interface CritiqueSelect {
+    uuid: string,
+    hash: string,
+    content: string,
+    node: string,
+    index: number,
+    dom: HTMLElement | null,
+    unselect: () => void
+}
+
+interface SelectionRegistry {
+    [uuid: string]: CritiqueSelect
+}
+
+interface CritiqueUnselect {
+    uuid: string,
+    hash: string,
+}
+
+type CritiqueEvents = {
+    "critique-select": CritiqueSelect,
+    "critique-unselect": CritiqueUnselect
+}

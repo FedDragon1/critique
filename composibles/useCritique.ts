@@ -212,11 +212,18 @@ export class CritiqueHandler {
     
     // EXPOSED API
 
-    newCard(title: string, type: CardType, data: CritiqueCardStorage) {
+    newCard(title: string, type: CardType, data: CritiqueCardStorage, nodeUuid?: string, fromIndex?: number, toIndex?: number) {
+        if (!nodeUuid && (fromIndex || toIndex)) {
+            throw Error("indices provided without a node uuid")
+        }
+
         const body: NewCardRequest = {
             title,
             type,
             data,
+            node: nodeUuid,
+            from: fromIndex,
+            to: toIndex,
             fileUuid: this.file.value.uuid,
         }
         return $fetch<BaseResponse<CritiqueCard>>("/api/file/card", {
@@ -231,11 +238,10 @@ export class CritiqueHandler {
         }))
     }
 
-    updateCard(uuid: string, title?: string, data?: CritiqueCardStorage) {
+    updateCard(uuid: string, to: Omit<UpdateCardRequest, 'uuid'>) {
         const body: UpdateCardRequest = {
             uuid,
-            title,
-            data
+            ...to
         }
         return $fetch<BaseResponse<CritiqueCard>>("/api/file/card", {
             method: "PUT",
@@ -489,25 +495,6 @@ export class TabHandler {
 
     pushAllQuestionsTab() {
         this.checkPush(this.questions)
-    }
-
-    pushGenericTabs(type: GenericTabTypes) {
-        switch (type) {
-            case "analysis":
-                this.pushAllAnalysisTab()
-                break
-            case "cards":
-                this.pushAllCardsTab()
-                break
-            case "questions":
-                this.pushAllQuestionsTab()
-                break
-            case "summary":
-                this.pushAllSummaryTab()
-                break
-            default:
-                throw Error(`Unknown tab type ${type}`)
-        }
     }
 
     blur() {

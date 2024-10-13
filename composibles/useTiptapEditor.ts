@@ -29,6 +29,7 @@ import {hash} from "~/utils/hashUtil";
 import {VueNodeViewRenderer} from "@tiptap/vue-3";
 import CritiqueText from "~/components/editor/CritiqueText.vue";
 import CritiqueHeadingVue from "~/components/editor/CritiqueHeading.vue";
+import CritiqueNodeWrapper from "~/components/editor/CritiqueNodeWrapper.vue";
 
 const cacheOptions = {
     max: 200
@@ -421,6 +422,12 @@ const CritiqueNode = TiptapNode.create({
             },
             uuid: {
                 default: ""
+            },
+            node: {
+                default: ""
+            },
+            index: {
+                default: ""
             }
         }
     },
@@ -435,7 +442,12 @@ const CritiqueNode = TiptapNode.create({
 
     renderHTML(props) {
         return ['critique', mergeAttributes(props.HTMLAttributes), 0]
-    }
+    },
+
+    addNodeView() {
+        // @ts-ignore
+        return new VueNodeViewRenderer(CritiqueNodeWrapper)
+    },
 })
 
 const CritiqueListItem = ListItem.extend({

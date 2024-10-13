@@ -10,7 +10,6 @@ class Uploader {
     fileStore
 
     constructor(uploadingStatus: Ref<string>, tesseract: Workers) {
-        console.log(uploadingStatus)
         this.uploadingStatus = uploadingStatus
         this.tesseract = tesseract
         this.fileStore = useFileStore()

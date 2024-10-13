@@ -9,7 +9,8 @@
     --dashboard-main-margin: 5px;
     --dashboard-main-padding: 20px;
     --editor-selection-color: #fff0ed;
-    --critique-hover-color: #ffd9de;
+    --critique-hover-color: #fae4e7;
+    --critique-selected-color: #ffd9de;
     --tag-decoration-color: #E66465;
     --tag-box-shadow: 0px 6px 16px 2px rgba(0,0,0,0.04),0px 4px 10px rgba(0,0,0,0.08)
 }
@@ -96,4 +97,6 @@ critique:hover {
 critique-paragraph {
     display: block;
     user-select: none;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
 }

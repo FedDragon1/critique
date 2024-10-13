@@ -5,8 +5,14 @@ import { createStream } from "~/server/utils/aiutils";
 import OpenAI from "openai";
 import {useSSE} from "~/server/utils/sseutils";
 
-const systemPrompt = `Just chat with the user. 
-No not use markdown format. use '\\n' to break line`
+function getSystemPrompt(summary: string) {
+    return `You are a critical reading chat bot. Your name is Critique.
+    Your objective is to answer the user's question on a document concisely.
+    You will only have 200 tokens to answer the question throughout.
+    
+    The summary of the document you are questioned upon is the following enclosed within $$:
+    $$${summary}$$`
+}
 
 export default defineEventHandler(async (event): Promise<void> => {
     const request = await readBody(event) as ChatRequest
@@ -14,7 +20,7 @@ export default defineEventHandler(async (event): Promise<void> => {
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
             role: "system",
-            content: systemPrompt
+            content: getSystemPrompt(request.summary)
         },
         ...request.messages
     ]

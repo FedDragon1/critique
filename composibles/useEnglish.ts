@@ -50,8 +50,6 @@ function aggregateLength(arr: string[]) {
 function mergeShortSentences(matches: string[]) {
     const SENTENCE_MIN_LENGTH = 50;
 
-    debugger;
-
     const matchesTransformed: string[] = [];
 
     for (let i = 0; i < matches.length;) {
@@ -81,6 +79,7 @@ function chunkBySentences(paragraph: string) {
 }
 
 function transformNode(node: Element) {
+    const nodeUuid = uuid()
     const nodeName = node.nodeName === "P" ? "critique-paragraph" : node.nodeName
     const transformedNode = document.createElement(nodeName)
 
@@ -91,9 +90,11 @@ function transformNode(node: Element) {
         }
 
         const sentences = chunkBySentences(node.textContent)
-        for (const sentence of sentences) {
+        for (const [index, sentence] of sentences.entries()) {
             const critique = document.createElement("critique");
             critique.innerText = sentence
+            critique.setAttribute("index", `${index}`)
+            critique.setAttribute("node", nodeUuid)
             critique.setAttribute("hash", hash(sentence))
             critique.setAttribute("uuid", uuid())
             transformedNode.appendChild(critique)

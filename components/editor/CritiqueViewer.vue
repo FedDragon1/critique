@@ -1,57 +1,84 @@
 <script setup lang="ts">
 import {useTiptapViewer} from "~/composibles/useTiptapEditor";
+import useEventBus from "~/composibles/useEventBus";
 
 const props = defineProps<{
     html: string | null,
 }>()
 
-// const html = `
-// <critique-paragraph>
-//     <critique uuid="123123" hash="168678">test content</critique>
-//     <critique uuid="123123" hash="168678">test content</critique>
-// </critique-paragraph>
-//
-// <blockquote>
-// <critique uuid="123123" hash="168678">test content</critique>
-//     <critique uuid="123123" hash="168678">test content</critique>
-// </blockquote>
-//
-// <!--<critique-heading><critique uuid="123123" hash="168678">test content</critique></critique-heading>-->
-// <h2><critique uuid="123123" hash="168678">test content</critique></h2>
-// <h1><critique uuid="123123" hash="168678">test content</critique></h1>
-// <h3><critique uuid="123123" hash="168678">test content</critique></h3>
-//
-// <ol>
-//     <li>
-//         <critique uuid="123123" hash="168678">test content</critique>
-//         <critique uuid="123123" hash="168678">test content</critique>
-//         <critique uuid="123123" hash="168678">test content</critique>
-//     </li>
-//     <li>
-//         <critique uuid="123123" hash="168678">test content</critique>
-//         <critique uuid="123123" hash="168678">test content</critique>
-//         <critique uuid="123123" hash="168678">test content</critique>
-//     </li>
-// </ol>
-//
-//
-// <blockquote>
-// <p>Normal content</p>
-// <p>Normal content</p>
-// <p>Normal content</p>
-// <p>Normal content</p>
-//
-// </blockquote>
-// `
-
+const emitter = useEventBus()
 const editor = useTiptapViewer(props.html)
-// const editor = useTiptapViewer(html)
-console.log(editor)
-watch(() => props.html, () => {
-    editor.value?.commands.setContent(props.html)
-    console.log(props.html)
+const selectionRegistry = ref<SelectionRegistry>({})
+
+/**
+ * Must be bordering existing selection in the same node
+ */
+function validSelection(selection: CritiqueSelect): boolean {
+    // empty
+    if (!Object.keys(selectionRegistry.value).length) {
+        return true
+    }
+
+    let bordering = false
+    for (const existing of Object.values(selectionRegistry.value)) {
+        if (existing.node !== selection.node) {
+            return false
+        }
+        if (Math.abs(existing.index - selection.index) === 1) {
+            bordering = true
+        }
+    }
+
+    return bordering
+}
+
+/**
+ * Keep the first chunk of selection when unselect from the middle
+ */
+function removeInvalidSelection() {
+    const sortedSelections = Object.values(selectionRegistry.value).toSorted((a, b) => a.index - b.index);
+
+    debugger;
+
+    let deleting = false
+    let lastIndex = -1
+    for (const selection of sortedSelections) {
+        if (lastIndex === -1) {
+            lastIndex = selection.index
+            continue
+        }
+
+        if (selection.index - lastIndex !== 1) {
+            deleting = true
+        }
+
+        if (deleting) {
+            delete selectionRegistry.value[selection.uuid]
+            selection.unselect()
+        } else {
+            lastIndex = selection.index
+        }
+    }
+}
+
+emitter.on('critique-select', (selection) => {
+    if (!validSelection(selection)) {
+        for (const existing of Object.values(selectionRegistry.value)) {
+            existing.unselect()
+            delete selectionRegistry.value[existing.uuid]
+        }
+    }
+
+    selectionRegistry.value[selection.uuid] = selection
+})
+emitter.on('critique-unselect', ({ uuid }) => {
+    delete selectionRegistry.value[uuid]
+    removeInvalidSelection()
 })
 
+watch(() => props.html, () => {
+    editor.value?.commands.setContent(props.html)
+})
 
 onBeforeUnmount(() => {
     unref(editor)?.destroy()

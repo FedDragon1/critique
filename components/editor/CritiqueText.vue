@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
+import CritiqueNode from "~/components/editor/CritiqueNode.vue";
 
 interface CritiqueParagraphNode {
     attrs: {
@@ -44,15 +45,10 @@ const content = computed(() => (p.node as unknown as CritiqueParagraphNode).cont
 </script>
 
 <template>
-<!--    <critique-paragraph>-->
-<!--        <critique v-for="node in content" v-bind="node.attrs">-->
-<!--            {{ node.content.content[0].text }}-->
-<!--        </critique>-->
-<!--    </critique-paragraph>-->
     <node-view-wrapper as="critique-paragraph">
-        <critique v-for="node in content" v-bind="node.attrs">
+        <CritiqueNode v-for="node in content" v-bind="node.attrs">
             {{ node.content.content[0].text }}
-        </critique>
+        </CritiqueNode>
     </node-view-wrapper>
 </template>
 

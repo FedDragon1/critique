@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {nodeViewProps, NodeViewWrapper} from "@tiptap/vue-3";
+import CritiqueNode from "~/components/editor/CritiqueNode.vue";
 
 interface CritiqueHeadingNode {
     attrs: {
@@ -14,7 +15,9 @@ interface CritiqueHeadingNode {
 interface CritiqueNode {
     attrs: {
         hash: string,
-        uuid: string
+        uuid: string,
+        index: string,
+        node: string,
     },
     content: Fragment<TextNode>,
     type: {
@@ -42,14 +45,13 @@ const p = defineProps(nodeViewProps);
 const node = (p.node as unknown as CritiqueHeadingNode)
 const content = computed(() => node.content.content)
 const tag = computed(() => `h${node.attrs.level}`)
-console.log(p.node)
 </script>
 
 <template>
     <node-view-wrapper :as="tag">
-        <critique v-for="critique in content" :key="critique.attrs.uuid" v-bind="critique.attrs">
+        <CritiqueNode v-for="critique in content" :key="critique.attrs.uuid" v-bind="critique.attrs">
             {{ critique.content.content[0].text }}
-        </critique>
+        </CritiqueNode>
     </node-view-wrapper>
 </template>
 
