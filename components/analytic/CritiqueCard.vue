@@ -16,7 +16,7 @@ const tagsStripped = computed(() => ellipses(tagsJoined.value, 20))
 
 <template>
 <div class="card-wrapper pad">
-    <h2>{{ title }}</h2>
+    <h2 :title="title">{{ title }}</h2>
     <span class="content" :title="content">{{ contentStripped }}</span>
     <span class="tag" :title="tagsJoined">{{ tagsStripped }}</span>
     <div class="detail pad">

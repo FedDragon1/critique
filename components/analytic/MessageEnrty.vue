@@ -21,9 +21,6 @@ const messageHtml = computed(() => {
         ALLOWED_TAGS: ['p', 'b', 'strong', 'em', 'i', 'u', 's', 'del', 'blockquote', 'h1', 'h2', 'h3', 'br']
     }))
 
-    console.log("content", content)
-    console.log("purified", purified)
-
     if (content.length - purified.length) {
         ElMessage.warning("Do not use HTML tags in the chat")
         return

@@ -12,6 +12,11 @@ interface Message {
     uuid: string
 }
 
+interface AnalysisCard {
+    content: string
+    title: string
+}
+
 interface ViewModes {
     [mode: string]: {
         display: string,
@@ -184,6 +189,7 @@ interface SelectionRegistry {
 interface CritiqueUnselect {
     uuid: string,
     hash: string,
+    select: () => void
 }
 
 type CritiqueEvents = {

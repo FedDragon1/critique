@@ -43,6 +43,7 @@ function onClick(toggle?: boolean) {
         emitter.emit("critique-unselect", {
             uuid: uuid.value,
             hash: hash.value.toString(),
+            select: () => _selected.value = true
         })
     }
 }

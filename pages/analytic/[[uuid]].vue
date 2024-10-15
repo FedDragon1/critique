@@ -7,7 +7,7 @@ import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
-import type {BaseResponse, ChatRequest, DeleteFileRequest} from "~/types/requests";
+import type {BaseResponse, CardType, ChatRequest, DeleteFileRequest, TitleRequest} from "~/types/requests";
 import CritiqueViewer from "~/components/editor/CritiqueViewer.vue";
 import DocumentNav from "~/components/analytic/DocumentNav.vue";
 import CritiqueEditor from "~/components/editor/CritiqueEditor.vue";
@@ -37,6 +37,7 @@ const critique = ref<CritiqueFull | null>(critiqueResp?.data.value?.data as Crit
 const critiqueStorage = ref("")
 const critiqueSummary = ref("")
 const critiqueHandler = critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined
+const analysis = useTemplateRef<typeof CritiqueViewer>("analysis")
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
@@ -178,16 +179,76 @@ function discard() {
 
 // Panel data models / functions
 
+async function makeTitle(message: Message): Promise<AnalysisCard> {
+    const body: TitleRequest = {
+        content: message.content
+    }
+
+    const resp = await $fetch("/api/critique/title", {
+        method: "POST",
+        body
+    })
+
+    if (!resp.success) {
+        ElMessage.error(resp.errorMessage)
+    }
+
+    return {
+        content: message.content,
+        title: resp.data!
+    }
+}
+
+function makeCard(type: CardType): (card: AnalysisCard) => AnalysisCard {
+    const originalText = analysis.value!.selectedText
+    const { node, from, to } = analysis.value!.selectedInfo
+
+    return (card: AnalysisCard) => {
+        if (!critiqueHandler) {
+            ElMessage.error("Handler not initialized properly. Please refresh")
+            return card
+        }
+        const cardData: CritiqueCardStorage = {
+            originalText,
+            critique: card.content
+        }
+        critiqueHandler.newCard(card.title, type, cardData, node, from, to)
+            .then(() => ElMessage.success(`Created card "${card.title}"`))
+        return card
+    }
+}
+
 function annotateSelection() {
-    // TODO
+    if (!analysis.value || !analysis.value.selectedText || !chatBox.value) {
+        ElMessage.error("No selection")
+        return
+    }
+
+    chatBox.value.sendMessage("annotate")
+        .then(makeTitle)
+        .then(makeCard("analysis"))
 }
 
 function summarizeSelection() {
-    // TODO
+    if (!analysis.value || !analysis.value.selectedText || !chatBox.value) {
+        ElMessage.error("No selection")
+        return
+    }
+
+    chatBox.value.sendMessage("summarize")
+        .then(makeTitle)
+        .then(makeCard("summary"))
 }
 
 function generateQuestions() {
-    // TODO
+    if (!analysis.value || !analysis.value.selectedText || !chatBox.value) {
+        ElMessage.error("No selection")
+        return
+    }
+
+    chatBox.value.sendMessage("question")
+        .then(makeTitle)
+        .then(makeCard("question"))
 }
 
 function generateTags() {
@@ -227,12 +288,12 @@ function pasteText() {
 
 // Conversations
 
-const analysis = useTemplateRef<typeof CritiqueViewer>("analysis")
 const promptDom = ref<HTMLTextAreaElement>();
 const chatUuid = ref<string>()
 const chatStream = ref<string[]>([])
 const chatContent = computed(() => chatStream.value.join(''))
 const panel = useTemplateRef<HTMLDivElement>('panel')
+const chatBox = useTemplateRef<typeof ChatBox>('chatBox')
 
 const conversation = ref<Message[]>([{
     uuid: uuid(),
@@ -306,8 +367,21 @@ function messagesRequest(): ChatRequest {
     }))
     return {
         messages,
+        context: analysis.value?.selectedText,
         summary: critiqueSummary.value
     }
+}
+
+function pushMessage(message: Message) {
+    if (analysis.value?.selectedText) {
+        message.content = `Referring to the context: \n > ${analysis.value?.selectedText}\n\n${message.content}`
+    }
+
+    if (message.content.length > 1500) {
+        ElMessage.error(`The message is too long (${message.content.length}/1500)`)
+    }
+
+    conversation.value.push(message)
 }
 
 function stopChat(chunk: OpenAI.Chat.Completions.ChatCompletionChunk.Choice) {
@@ -333,20 +407,11 @@ function stopChat(chunk: OpenAI.Chat.Completions.ChatCompletionChunk.Choice) {
     return false
 }
 
-async function chat(message: Message, postChat?: () => void): Promise<void> {
-    if (analysis.value?.selectedText) {
-        message.content = `Referring to the context: \n > ${analysis.value?.selectedText}\n\n${message.content}`
-    }
-
-    if (message.content.length > 1500) {
-        ElMessage.error(`The message is too long (${message.content.length}/1500)`)
-    }
-
-    conversation.value.push(message)
-
+async function chat(message: Message, endpoint: string = 'generate'): Promise<Message> {
+    pushMessage(message)
     chatUuid.value = uuid()
 
-    const stream = await fetchStream<OpenAI.Chat.Completions.ChatCompletionChunk.Choice>("/api/critique/generate", {
+    const stream = await fetchStream<OpenAI.Chat.Completions.ChatCompletionChunk.Choice>(`/api/critique/${endpoint}`, {
         method: "POST",
         body: messagesRequest()
     })
@@ -367,7 +432,7 @@ async function chat(message: Message, postChat?: () => void): Promise<void> {
 
     chatUuid.value = undefined
     chatStream.value = []
-    postChat && postChat()
+    return newChat
 }
 
 watch([chatUuid], startScrolling)
@@ -509,7 +574,10 @@ function viewTag(tag: CritiqueTagFull) {
                                  :tab-handler="tabHandler as TabHandler"
                                  v-model:doc-active-tool="documentActiveTool"></DocumentNav>
                 </template>
-                <CritiqueViewer :html="critiqueStorage" v-if="viewMode === 'document'" ref="analysis"></CritiqueViewer>
+                <CritiqueViewer :html="critiqueStorage"
+                                :disable-selection="!!chatUuid"
+                                v-if="viewMode === 'document'"
+                                ref="analysis"></CritiqueViewer>
 <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
                 <KeepAlive>
@@ -542,6 +610,7 @@ function viewTag(tag: CritiqueTagFull) {
                          :disabled="viewMode === 'edit'"
                          :textarea-reflow="textareaReflow"
                          :chat="chat"
+                         ref="chatBox"
                          v-model:dom="promptDom"></ChatBox>
             </PanelWrapper>
         </main>

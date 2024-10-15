@@ -14,7 +14,7 @@ const display = computed(() => props.count < 1 ? "Critique" : "Critiques")
 <template>
     <div class="tag-wrapper">
         <div class="content">
-            <h3>#{{ ellipses(name, 20) }}</h3>
+            <h3 :title="name">#{{ ellipses(name, 20) }}</h3>
             <span class="count">{{count}} {{ display }}</span>
             <el-button type="primary" title="see all" class="button" @click="$emit('detail')">
                 <el-icon size="1rem"><el-icon-right></el-icon-right></el-icon>

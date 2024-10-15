@@ -6,6 +6,7 @@ import useEventBus from "~/composibles/useEventBus";
 
 const props = defineProps<{
     html: string | null,
+    disableSelection: boolean
 }>()
 
 const emitter = useEventBus()
@@ -14,6 +15,10 @@ const selectionRegistry = ref<SelectionRegistry>({})
 
 function sortByIndex(a: CritiqueSelect, b: CritiqueSelect) {
     return a.index - b.index
+}
+
+function sortedSelection() {
+    return Object.values(selectionRegistry.value).toSorted(sortByIndex);
 }
 
 /**
@@ -42,7 +47,7 @@ function validSelection(selection: CritiqueSelect): boolean {
  * Keep the first chunk of selection when unselect from the middle
  */
 function removeInvalidSelection() {
-    const sortedSelections = Object.values(selectionRegistry.value).toSorted(sortByIndex);
+    const sortedSelections = sortedSelection();
 
     let deleting = false
     let lastIndex = -1
@@ -66,6 +71,11 @@ function removeInvalidSelection() {
 }
 
 emitter.on('critique-select', (selection) => {
+    if (props.disableSelection) {
+        selection.unselect()
+        return
+    }
+
     if (!validSelection(selection)) {
         for (const existing of Object.values(selectionRegistry.value)) {
             existing.unselect()
@@ -75,7 +85,12 @@ emitter.on('critique-select', (selection) => {
 
     selectionRegistry.value[selection.uuid] = selection
 })
-emitter.on('critique-unselect', ({ uuid }) => {
+emitter.on('critique-unselect', ({ uuid, select }) => {
+    if (props.disableSelection) {
+        select()
+        return
+    }
+
     delete selectionRegistry.value[uuid]
     removeInvalidSelection()
 })
@@ -98,8 +113,22 @@ const selectedText = computed(() =>
         .join(" ")
 )
 
+const selectedInfo = computed(() => {
+    if (!Object.keys(selectionRegistry.value).length) {
+        return null
+    }
+    const sorted = sortedSelection()
+
+    return {
+        node: sorted[0].node,
+        from: sorted[0].index,
+        to: sorted[sorted.length - 1].index
+    }
+})
+
 defineExpose({
-    selectedText
+    selectedText,
+    selectedInfo
 })
 </script>
 

@@ -134,12 +134,32 @@ interface NewCardTagRequest {
     tagType: CardType
 }
 
+type Messages = OpenAI.Chat.Completions.ChatCompletionMessageParam[]
+
 interface ChatRequest {
     summary: string
     context?: string
-    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
+    messages: Messages
 }
 
 interface SummaryRequest {
     chunk: string
+}
+
+interface CritiqueRequest {
+    summary: string,
+    context: string,
+    messages: Messages
+}
+
+type AnnotateRequest = CritiqueRequest
+type SummarizeRequest = CritiqueRequest
+type QuestionRequest = CritiqueRequest
+
+interface TaggingRequest {
+    // TODO
+}
+
+interface TitleRequest {
+    content: string
 }

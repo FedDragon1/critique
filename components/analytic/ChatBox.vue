@@ -6,7 +6,7 @@ const props = defineProps<{
     draggingPanel: boolean,
     disabled: boolean,
     textareaReflow: () => void,
-    chat: (message: Message, postChat?: () => void) => Promise<void>
+    chat: (message: Message, endpoint?: string) => Promise<Message>
 }>()
 
 const promptDom = defineModel<HTMLTextAreaElement>("dom");
@@ -48,32 +48,24 @@ function multilineGuard(e: KeyboardEvent) {
     sendMessage()
 }
 
-function promptToHTML() {
-    const segments = prompt.value.split("\n").map(
-        s => `<p class="wrap no-margin">${s}</p>`
-    );
-    const joined = segments.join("<br>")
-
-    return `${joined}`
-}
-
-function postChat() {
+function postChat(message: Message) {
     generating.value = false
+    return message
 }
 
-function sendMessageRaw() {
+function sendMessageRaw(endpoint?: string): Promise<Message> {
     if (!prompt.value.trim().length) {
         ElMessage.error("Empty prompt")
-        return;
+        return Promise.reject("Empty prompt");
     }
 
     // let the promise resolve itself, initiate here
-    props.chat({
+    const promise = props.chat({
         uuid: uuid(),
         role: "user",
         // content: promptToHTML()
         content: prompt.value
-    }, postChat)
+    }, endpoint).then(postChat)
 
     prompt.value = ""
     generating.value = true
@@ -81,9 +73,14 @@ function sendMessageRaw() {
     setTimeout(props.textareaReflow, 0)
 
     // finish the promise
+    return promise
 }
 
 const sendMessage = throttle(sendMessageRaw, 3000)
+
+defineExpose({
+    sendMessage
+})
 </script>
 
 <template>
