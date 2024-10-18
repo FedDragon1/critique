@@ -368,8 +368,6 @@ function renameFile() {
 }
 
 watch(() => cards.value, (newCards, oldCards) => {
-    debugger;
-
     const olds = (oldCards as CritiqueCardFull[]).map((c) => c.uuid);
     const news = (newCards as CritiqueCardFull[]).map((c) => c.uuid);
     const created = [];

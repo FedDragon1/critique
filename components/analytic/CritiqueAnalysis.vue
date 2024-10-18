@@ -80,7 +80,8 @@ const recentCards = computed(() => {
         new Date(card2.createdAt).getTime() - new Date(card1.createdAt).getTime())
     return sorted.slice(0, RECENT_LIMIT)
 })
-const uncategorizedCards = computed(() => Object.values(props.file.cards).filter(c => !c.tags.length))
+const uncategorizedCards = computed(() => Object.values(props.file.cards).filter(c => !Object.keys(c.tags).length))
+// const uncategorizedCards = ref((Object.values(props.file.cards).filter(c => !c.tags.length)))
 const cardContents = computedAsync(
     async () => {
         const contentPromises = Object.values(props.file.cards)
@@ -100,6 +101,10 @@ const cardContents = computedAsync(
     },
     undefined
 )
+
+// watch(() => props.file.cards, (newCards) => {
+//     uncategorizedCards.value = Object.values(newCards).filter(c => !c.tags.length)
+// })
 </script>
 
 <template>

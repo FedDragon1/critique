@@ -7,7 +7,14 @@ import ContentWrapper from "~/components/analytic/ContentWrapper.vue";
 import {v4 as uuid} from 'uuid';
 import ChatBox from "~/components/analytic/ChatBox.vue";
 import MessageEntry from "~/components/analytic/MessageEnrty.vue";
-import type {BaseResponse, CardType, ChatRequest, DeleteFileRequest, TitleRequest} from "~/types/requests";
+import type {
+    BaseResponse,
+    CardType,
+    ChatRequest,
+    DeleteFileRequest,
+    TaggingRequest, TaggingResponse,
+    TitleRequest
+} from "~/types/requests";
 import CritiqueViewer from "~/components/editor/CritiqueViewer.vue";
 import DocumentNav from "~/components/analytic/DocumentNav.vue";
 import CritiqueEditor from "~/components/editor/CritiqueEditor.vue";
@@ -47,7 +54,7 @@ if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.va
 
 const client = useSupabaseClient()
 const user = useSupabaseUser()
-if (critiqueUuid){
+if (critiqueUuid) {
     client.storage.from("file").download(critique.value!.fileLink)
         .then((resp) => resp.data?.text())
         .then((text) => critiqueStorage.value = text!)
@@ -74,7 +81,7 @@ function favorite() {
             message: `Added "${resp.fileName}" to favorite`,
             grouping: true
         })
-    }, { favorite: true })
+    }, {favorite: true})
 }
 
 function unfavorite() {
@@ -88,7 +95,7 @@ function unfavorite() {
             message: `Removed "${resp.fileName}" to favorite`,
             grouping: true
         })
-    }, { favorite: false })
+    }, {favorite: false})
 }
 
 function deleteFile() {
@@ -180,6 +187,16 @@ function discard() {
 
 // Panel data models / functions
 
+const unsortedCards = computed(() => Object.values(critique.value.cards).filter(c => !Object.keys(c.tags).length))
+const taggingTags = computed<{ [key in CardType]: TaggingTag[] }>(() => {
+    const tags = Object.values(critique.value.tags).map(t => ({
+        uuid: t.uuid,
+        type: t.type as CardType,
+        name: t.name
+    }))
+    return Object.groupBy(tags, ({ type }) => type) as { [key in CardType]: TaggingTag[] }
+})
+
 async function makeTitle(message: Message): Promise<AnalysisCard> {
     const body: TitleRequest = {
         content: message.content
@@ -202,7 +219,7 @@ async function makeTitle(message: Message): Promise<AnalysisCard> {
 
 function makeCard(type: CardType): (card: AnalysisCard) => AnalysisCard {
     const originalText = analysis.value!.selectedText
-    const { node, from, to } = analysis.value!.selectedInfo
+    const {node, from, to} = analysis.value!.selectedInfo
 
     return (card: AnalysisCard) => {
         if (!critiqueHandler) {
@@ -253,7 +270,92 @@ function generateQuestions() {
 }
 
 function generateTags() {
-    // TODO
+    if (!unsortedCards.value.length) {
+        ElMessage.error("All cards are sorted")
+        return
+    }
+
+    const taggingCardsPromise = unsortedCards.value.map(c => new Promise<TaggingCard>((resolve, reject) => {
+            client.storage.from("card").download(c.contentLink)
+                .then((data) => data.data?.text())
+                .then((text) => {
+                    if (!text) {
+                        throw Error("Card has no content")
+                    }
+                    return JSON.parse(text)
+                })
+                .then((text) => resolve({
+                    uuid: c.uuid,
+                    type: c.type,
+                    title: c.title,
+                    content: text
+                }))
+                .catch(e => {
+                    ElMessage.error((e as unknown as Error).message)
+                    reject(e)
+                })
+        }))
+
+    Promise.all(taggingCardsPromise).then((taggingCards) => {
+        const body: TaggingRequest = {
+            cards: taggingCards,
+            tags: taggingTags.value
+        }
+        return $fetch<BaseResponse<TaggingResponse>>("/api/critique/sort", {
+            method: "POST",
+            body
+        })
+    }).then((resp) => {
+        if (!resp.success || !resp.data) {
+            throw Error(resp.errorMessage)
+        }
+        handleTagging(resp.data)
+    }).catch(e => {
+        console.dir(e)
+        ElMessage.error(e.message)
+    })
+}
+
+function handleTagging(resp: TaggingResponse) {
+    if (!critiqueHandler) {
+        ElMessage.error("Error while loading the page. Please refresh")
+        throw Error("Handler not defined")
+    }
+
+    const tagPromises = resp.new.map((t) => new Promise<void>((resolve, reject) => {
+        critiqueHandler.newTag(t.name, t.type)
+            .then((data) => {
+                if (!data) {
+                    reject(`Error creating tag with name ${t.name}`)
+                    return
+                }
+                return Promise.all(t.cards.map(cardUuid => critiqueHandler.link(
+                    { uuid: cardUuid, type: t.type },
+                    { uuid: data.uuid, type: t.type }
+                    )
+                ))
+            })
+            .then(() => resolve())
+    }))
+
+    const linkPromises = resp.reuse.flatMap((t) =>
+        t.cards.map(c =>
+            new Promise<void>((resolve) => {
+                critiqueHandler.link(
+                    { uuid: c, type: t.type },
+                    { uuid: t.uuid, type: t.type}
+                ).then(resolve)
+            })
+        ))
+
+    Promise.all([...tagPromises, ...linkPromises])
+        .then(() => {
+            if (resp.new.length) {
+                ElMessage.success(`Created ${resp.new.length} tag${resp.new.length > 1 ? 's' : ''}`)
+            } else {
+                ElMessage.success(`Categorized ${unsortedCards.value.length} card${unsortedCards.value.length > 1 ? 's' : ''}`)
+            }
+        })
 }
 
 const quickActions: QuickActions = {
@@ -437,7 +539,7 @@ async function chat(message: Message, endpoint: string = 'generate'): Promise<Me
     return newChat
 }
 
-function cardChat({ prompt, context, type }: { prompt: string, context: string, type: CardType}) {
+function cardChat({prompt, context, type}: { prompt: string, context: string, type: CardType }) {
     chatBox.value?.chat(`Referring to the ${type}: \n> ${context}\n\n${prompt}`)
     panelWrapper.value?.openPanel()
 }
@@ -592,7 +694,7 @@ function viewTag(tag: CritiqueTagFull) {
                                 @delete="(cu) => critiqueHandler && critiqueHandler.deleteCard(cu)"
                                 v-if="viewMode === 'document' && critique"
                                 ref="analysis"></CritiqueViewer>
-<!--                TODO: save edit changes-->
+                <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
                 <KeepAlive>
                     <CritiqueAnalysis :file="critique"
@@ -610,7 +712,7 @@ function viewTag(tag: CritiqueTagFull) {
                                @view-card="viewCard"
                                @view-tag="viewTag"
                                :tab="tab"
-                               :is="mapComponent(tab)" />
+                               :is="mapComponent(tab)"/>
                 </template>
 
             </ContentWrapper>
@@ -620,7 +722,8 @@ function viewTag(tag: CritiqueTagFull) {
                           ref="panel-wrapper"
                           v-slot="slotProps">
                 <div class="panel-message-wrapper" ref="panel">
-                    <MessageEntry v-for="message in reactiveConversation" :key="message.uuid" :message="message"></MessageEntry>
+                    <MessageEntry v-for="message in reactiveConversation" :key="message.uuid"
+                                  :message="message"></MessageEntry>
                 </div>
                 <ChatBox :dragging-panel="slotProps.draggingPanel"
                          :disabled="viewMode === 'edit'"

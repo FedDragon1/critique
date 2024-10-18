@@ -157,7 +157,27 @@ type SummarizeRequest = CritiqueRequest
 type QuestionRequest = CritiqueRequest
 
 interface TaggingRequest {
-    // TODO
+    cards: TaggingCard[]
+    tags: {
+        [key in CardType]?: TaggingTag[]
+    }
+}
+
+interface NewTag {
+    name: string,
+    type: CardType,
+    cards: string[]
+}
+
+interface ReuseTag {
+    uuid: string
+    type: CardType,
+    cards: string[]
+}
+
+type TaggingResponse = {
+    new: NewTag[],
+    reuse: ReuseTag[]
 }
 
 interface TitleRequest {

@@ -61,10 +61,12 @@ interface Critique {
     userUuid: string
 }
 
+type CardType = "analysis" | "summary" | "question";
+
 interface CritiqueCard {
     uuid: string,
     title: string,
-    type: "analysis" | "summary" | "question",
+    type: CardType,
     node: string | null,
     from: number | null,
     to: number | null,
@@ -77,7 +79,7 @@ interface CritiqueCard {
 interface CritiqueTag {
     uuid: string,
     name: string,
-    type: "analysis" | "summary" | "question",
+    type: CardType,
     createdAt: string,
     fileUuid: string,
     userUuid: string,
@@ -86,7 +88,7 @@ interface CritiqueTag {
 interface CritiqueCardFull {
     uuid: string,
     title: string,
-    type: "analysis" | "summary" | "question",
+    type: CardType,
     node: string | null,
     from: number | null,
     to: number | null,
@@ -100,7 +102,7 @@ interface CritiqueCardFull {
 interface CritiqueTagFull {
     uuid: string,
     name: string,
-    type: "analysis" | "summary" | "question",
+    type: CardType,
     createdAt: string,
     fileUuid: string,
     userUuid: string,
@@ -124,8 +126,6 @@ interface CritiqueCardStorage {
     originalText: string,
     critique: string,
 }
-
-type GenericTabTypes = "cards" | "analysis" | "summary" | "questions"
 
 interface AllCardsTab {
     display: "Cards"
@@ -204,7 +204,6 @@ type CritiqueEvents = {
     "critique-focus": CritiqueUnderline,
     "critique-unselect": CritiqueUnselect,
     "critique-underline": CritiqueUnderline,
-    // "critique-underline-reset": CritiqueUnderline,
     "critique-underline-focus": CritiqueUnderline,
     "critique-remove-underline-focus": CritiqueUnderline,
     "critique-remove-underline": CritiqueUnderline,
@@ -218,9 +217,15 @@ interface CardOffset {
     offset: number,
 }
 
-interface CardDisplay {
-    position: "left" | "right",
-    node: string,
-    offset: number,
-    cards: CritiqueCardFull[]
+interface TaggingCard {
+    uuid: string,
+    type: CardType,
+    title: string,
+    content: CritiqueCardStorage
+}
+
+interface TaggingTag {
+    uuid: string,
+    type: CardType,
+    name: string
 }

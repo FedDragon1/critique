@@ -42,6 +42,7 @@ export class CritiqueHandler {
         return (resp: BaseResponse<T>) => {
             if (!resp.success) {
                 this.onError(resp.errorMessage)
+                console.error(resp)
                 return
             }
             return callback(resp.data!)
@@ -282,6 +283,7 @@ export class CritiqueHandler {
                 cards: {}
             }
             this.file.value.tags[tag.uuid] = tag
+            return tag
         }))
     }
 
@@ -317,20 +319,20 @@ export class CritiqueHandler {
         }).then(this.guard(() => this.removeTags(uuids)))
     }
     
-    link(card: CritiqueCard | CritiqueCardFull, tag: CritiqueTag | CritiqueTagFull) {
+    link(card: { uuid: string, type: CardType }, tag: { uuid: string, type: CardType }) {
         const body: NewCardTagRequest = {
             cardUuid: card.uuid,
             tagUuid: tag.uuid,
             cardType: card.type,
             tagType: tag.type
         }
-        $fetch("/api/file/group", {
+        return $fetch("/api/file/group", {
             method: "POST",
             body
         }).then(this.guard(() => this.linkCardAndTag(card.uuid, tag.uuid)))
     }
 
-    unlink(card: CritiqueCard | CritiqueCardFull, tag: CritiqueTag | CritiqueTagFull) {
+    unlink(card: { uuid: string, type: CardType }, tag: { uuid: string, type: CardType }) {
         $fetch(`/api/file/group/${card.uuid}/${tag.uuid}`, {
             method: "DELETE"
         }).then(this.guard(() => this.unlinkCardAndTag(card.uuid, tag.uuid)))

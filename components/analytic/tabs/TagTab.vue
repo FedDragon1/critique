@@ -67,6 +67,7 @@ const cardContents = computedAsync(
     position: relative;
     justify-content: center;
     flex-direction: column;
+    width: 100%;
 }
 
 header {
