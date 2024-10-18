@@ -14,7 +14,7 @@ Your output format should be a json object, specifically, the key is the card na
 { "card name 1": [ "tag1", "tag2" ], "card name 2": [ "tag1", "tag3" ] }
 
 Please do not generate too many niche tags. The tags are supposed to be generic and concise.
-The tag names are limited to 5 words.
+The tag names are limited to 5 words. No not use whitespace, attach the words like MyTagFun.
 Reuse the tags as much as possible, do not generate duplicate tags with similar meanings.
 For example, if you have Revolutionary War, then do not generate new tags like American Revolution.
 DO NOT use markdown, return the bare json object as if you are a backend api.`
@@ -33,7 +33,7 @@ Your output format should be a json object, specifically, the key is the card na
 
 If the tags provided for you is not sufficient to encapsulate the idea of some cards, you may create new tags by putting in tag names not specified above.
 Please do not abuse this feature and generate too many niche tags. The tags are supposed to be generic and concise.
-The tag names are limited to 5 words.
+The tag names are limited to 5 words. No not use whitespace, attach the words like MyTagFun.
 Reuse the tags as much as possible, do not generate duplicate tags with similar meanings.
 For example, if you have Revolutionary War, then do not generate new tags like American Revolution.
 DO NOT use markdown, return the bare json object as if you are a backend api.`

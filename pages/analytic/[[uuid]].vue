@@ -11,7 +11,7 @@ import type {
     BaseResponse,
     CardType,
     ChatRequest,
-    DeleteFileRequest,
+    DeleteFileRequest, NewCardTagRequest,
     TaggingRequest, TaggingResponse,
     TitleRequest
 } from "~/types/requests";
@@ -46,6 +46,7 @@ const critiqueSummary = ref("")
 const critiqueHandler = critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined
 const analysis = useTemplateRef<typeof CritiqueViewer>("analysis")
 const showCritiques = ref(true)
+const showCritiquesOnLeft = ref(true)
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
@@ -242,7 +243,7 @@ function annotateSelection() {
         return
     }
 
-    chatBox.value.sendMessage("annotate")
+    chatBox.value.sendMessage("annotate", "Analyze")
         .then(makeTitle)
         .then(makeCard("analysis"))
 }
@@ -253,7 +254,7 @@ function summarizeSelection() {
         return
     }
 
-    chatBox.value.sendMessage("summarize")
+    chatBox.value.sendMessage("summarize", "Summarize")
         .then(makeTitle)
         .then(makeCard("summary"))
 }
@@ -264,7 +265,7 @@ function generateQuestions() {
         return
     }
 
-    chatBox.value.sendMessage("question")
+    chatBox.value.sendMessage("question", "Make a question")
         .then(makeTitle)
         .then(makeCard("question"))
 }
@@ -295,6 +296,10 @@ function generateTags() {
                     reject(e)
                 })
         }))
+    const message = ElMessage.info({
+        message: "Sorting Cards",
+        duration: 0
+    })
 
     Promise.all(taggingCardsPromise).then((taggingCards) => {
         const body: TaggingRequest = {
@@ -311,9 +316,8 @@ function generateTags() {
         }
         handleTagging(resp.data)
     }).catch(e => {
-        console.dir(e)
         ElMessage.error(e.message)
-    })
+    }).finally(() => message.close())
 }
 
 function handleTagging(resp: TaggingResponse) {
@@ -322,38 +326,38 @@ function handleTagging(resp: TaggingResponse) {
         throw Error("Handler not defined")
     }
 
-    const tagPromises = resp.new.map((t) => new Promise<void>((resolve, reject) => {
-        critiqueHandler.newTag(t.name, t.type)
-            .then((data) => {
-                if (!data) {
-                    reject(`Error creating tag with name ${t.name}`)
-                    return
-                }
-                return Promise.all(t.cards.map(cardUuid => critiqueHandler.link(
-                    { uuid: cardUuid, type: t.type },
-                    { uuid: data.uuid, type: t.type }
-                    )
-                ))
-            })
-            .then(() => resolve())
-    }))
+    const unsorted = unsortedCards.value.length
+    critiqueHandler.newTagBatch(resp.new)
+        .then((tags) => {
+            if (!tags) {
+                throw Error("Error creating batch tags")
+            }
 
-    const linkPromises = resp.reuse.flatMap((t) =>
-        t.cards.map(c =>
-            new Promise<void>((resolve) => {
-                critiqueHandler.link(
-                    { uuid: c, type: t.type },
-                    { uuid: t.uuid, type: t.type}
-                ).then(resolve)
-            })
-        ))
+            const links: NewCardTagRequest[] = []
+            for (let i = 0; i < tags.length; i++) {
+                links.push(...resp.new[i].cards.map(cardUuid => ({
+                    cardUuid,
+                    cardType: resp.new[i].type,
+                    tagUuid: tags[i].uuid,
+                    tagType: resp.new[i].type
+                })))
+            }
 
-    Promise.all([...tagPromises, ...linkPromises])
+            links.push(...resp.reuse.flatMap((tag) => tag.cards.map(cardUuid => ({
+                    cardUuid,
+                    cardType: tag.type,
+                    tagUuid: tag.uuid,
+                    tagType: tag.type
+                })
+            )))
+
+            return critiqueHandler.linkBatch(links)
+        })
         .then(() => {
             if (resp.new.length) {
                 ElMessage.success(`Created ${resp.new.length} tag${resp.new.length > 1 ? 's' : ''}`)
             } else {
-                ElMessage.success(`Categorized ${unsortedCards.value.length} card${unsortedCards.value.length > 1 ? 's' : ''}`)
+                ElMessage.success(`Categorized ${unsorted} card${unsorted > 1 ? 's' : ''}`)
             }
         })
 }
@@ -679,6 +683,7 @@ function viewTag(tag: CritiqueTagFull) {
                 <template #header>
                     <DocumentNav v-model:view-mode="viewMode"
                                  @toggle-critiques="showCritiques = !showCritiques"
+                                 @toggle-critiques-left="showCritiquesOnLeft = !showCritiquesOnLeft"
                                  @save="save"
                                  @discard="discard"
                                  :tab-handler="tabHandler as TabHandler"
@@ -686,6 +691,7 @@ function viewTag(tag: CritiqueTagFull) {
                 </template>
                 <CritiqueViewer :html="critiqueStorage"
                                 :show-critiques="showCritiques"
+                                :show-critiques-on-left="showCritiquesOnLeft"
                                 :disable-selection="!!chatUuid"
                                 :file="critique!"
                                 :rename="(cu, title) => critiqueHandler?.updateCard(cu, { title })"

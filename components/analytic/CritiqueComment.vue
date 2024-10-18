@@ -65,7 +65,6 @@ function chat(e: Event | KeyboardEvent) {
     message.value = ""
 }
 
-watch(() => props.cards, (...args) => console.log("card changed", args), {deep: true})
 watch(currentIndex, (newIndex, oldIndex) => {
     const card = props.cards[oldIndex]
     emitter.emit("critique-remove-underline-focus", {

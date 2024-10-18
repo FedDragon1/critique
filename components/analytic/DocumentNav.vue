@@ -28,10 +28,11 @@ const controls: ShortCut = {
         hotkey: 'Ctrl+H',
         action: toggleCritique
     },
-    // toggleSummaries: {
-    //     display: 'Show/Hide all summaries',
-    //     hotkey: 'Ctrl+Shift+H',
-    // }
+    toggleLeftCritique: {
+        display: 'Show/Hide critiques on left side',
+        hotkey: 'Ctrl+Shift+H',
+        action: toggleLeftCritique
+    }
 }
 const documentTools = {
     selector: {
@@ -59,11 +60,20 @@ function toggleCritique(event?: KeyboardEvent) {
     emit('toggle-critiques')
 }
 
+function toggleLeftCritique(event?: KeyboardEvent) {
+    console.log(event)
+    event?.preventDefault()
+    emit('toggle-critiques-left')
+}
+
 onMounted(() => {
-    hotkeys("ctrl+h", (event, handler) => {
+    hotkeys("ctrl+h, ctrl+shift+h", (event, handler) => {
         switch (handler.key) {
             case "ctrl+h":
                 toggleCritique(event)
+                break
+            case "ctrl+shift+h":
+                toggleLeftCritique(event)
                 break
             default:
                 console.log(`unhandled event ${event}`)

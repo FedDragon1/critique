@@ -1,14 +1,14 @@
-// POST /api/file/tag
+// POST /api/file/tag/batch
 
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type {BaseResponse, NewTagRequest} from "~/types/requests"
 import { transformTag } from "~/server/utils/dbutils";
 import {v4 as uuid} from "uuid";
 
-export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueTag>> => {
+export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueTag[]>> => {
     const client = await serverSupabaseClient(event)
     const user = await serverSupabaseUser(event)
-    const request = await readBody(event) as NewTagRequest
+    const request = await readBody(event) as NewTagRequest[]
 
     if (!user) {
         return {
@@ -17,18 +17,18 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueTa
         }
     }
 
-    const newTag = {
-        uuid: request.uuid ?? uuid(),
-        name: request.name,
-        type: request.type,
-        created_at: request.createdAt,
-        file_uuid: request.fileUuid,
+    const newTags = request.map(r => ({
+        uuid: r.uuid ?? uuid(),
+        name: r.name,
+        type: r.type,
+        created_at: r.createdAt,
+        file_uuid: r.fileUuid,
         user_uuid: user.id
-    }
+    }))
     const { data, error } = await client
         .from("tag")
         // @ts-ignore
-        .insert(newTag)
+        .insert(newTags)
         .select()
 
     if (error) {
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueTa
         }
     }
 
-    const ret: CritiqueTag = data.map(transformTag)[0]
+    const ret: CritiqueTag[] = data.map(transformTag)
 
     return {
         success: true,

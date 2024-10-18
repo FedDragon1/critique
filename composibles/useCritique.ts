@@ -287,6 +287,26 @@ export class CritiqueHandler {
         }))
     }
 
+    newTagBatch(tags: { name: string, type: CardType }[]) {
+        const body: NewTagRequest[] = tags.map(t => ({
+            name: t.name,
+            type: t.type,
+            fileUuid: this.file.value.uuid
+        }))
+        console.log(body)
+        return $fetch<BaseResponse<CritiqueTag[]>>("/api/file/tag/batch", {
+            method: "POST",
+            body
+        }).then(this.guard((resp) => {
+            const tags: CritiqueTagFull[] = resp.map(t => ({
+                ...t,
+                cards: {}
+            }))
+            tags.forEach(tag => this.file.value.tags[tag.uuid] = tag)
+            return tags
+        }))
+    }
+
     updateTag(uuid: string, name?: string, type?: CardType) {
         const body: UpdateTagRequest = {
             uuid,
@@ -330,6 +350,15 @@ export class CritiqueHandler {
             method: "POST",
             body
         }).then(this.guard(() => this.linkCardAndTag(card.uuid, tag.uuid)))
+    }
+
+    linkBatch(body: NewCardTagRequest[]) {
+        return $fetch("/api/file/group/batch", {
+            method: "POST",
+            body
+        }).then(this.guard(() => body.forEach(
+            ({ cardUuid, tagUuid}) => this.linkCardAndTag(cardUuid, tagUuid)
+        )))
     }
 
     unlink(card: { uuid: string, type: CardType }, tag: { uuid: string, type: CardType }) {

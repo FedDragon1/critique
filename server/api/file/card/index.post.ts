@@ -24,7 +24,6 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCa
         .upload(`${user.id}/${cardUuid}.json`, cardSerialized)
 
     if (storageError || !storageLink) {
-        console.error(storageError.message)
         return {
             success: false,
             errorMessage: storageError.message

@@ -20,8 +20,6 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueCa
         .select("uuid, created_at, file_uuid, title, user_uuid, content_link, type, tag(*)")
         .eq("user_uuid", user.id)
 
-    console.log(data, error)
-
     if (error) {
         return {
             success: false,

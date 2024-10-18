@@ -11,7 +11,8 @@ const props = defineProps<{
     disableSelection: boolean,
     file: CritiqueFull,
     rename: (uuid: string, title: string) => void,
-    showCritiques: boolean
+    showCritiques: boolean,
+    showCritiquesOnLeft: boolean,
 }>()
 
 const emitter = useEventBus()
@@ -203,6 +204,10 @@ class CardRegistry {
 
     free(position: "left" | "right", offsetStart: number) {
         const entries = this.registry[position]
+
+        if (position === "left" && !props.showCritiquesOnLeft) {
+            return false
+        }
 
         if (!entries.length) {
             return true
@@ -407,6 +412,10 @@ watch(() => cards.value, (newCards, oldCards) => {
     })
     cardRegistry.value = CardRegistry.render(cards.value)
 }, {deep: true})
+
+watch(() => props.showCritiquesOnLeft, () => {
+    cardRegistry.value = CardRegistry.render(cards.value)
+})
 
 function makeKey(offset: number, cards: CritiqueCardFull[]) {
     return `${offset}-${hash(cards.map((c) => c.uuid).join())}`

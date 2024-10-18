@@ -53,8 +53,8 @@ function postChat(message: Message) {
     return message
 }
 
-function sendMessageRaw(endpoint?: string): Promise<Message> {
-    if (!prompt.value.trim().length) {
+function sendMessageRaw(endpoint?: string, forcePrompt?: string): Promise<Message> {
+    if (!prompt.value.trim().length && !forcePrompt?.length) {
         ElMessage.error("Empty prompt")
         return Promise.reject("Empty prompt");
     }
@@ -63,7 +63,7 @@ function sendMessageRaw(endpoint?: string): Promise<Message> {
     const promise = props.chat({
         uuid: uuid(),
         role: "user",
-        content: prompt.value
+        content: forcePrompt ?? prompt.value
     }, endpoint).then(postChat)
 
     prompt.value = ""
