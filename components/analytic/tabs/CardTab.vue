@@ -103,6 +103,7 @@ header {
     height: 100%;
     display: flex;
     position: relative;
+    width: 100%;
 }
 
 .content {

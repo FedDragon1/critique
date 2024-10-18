@@ -27,6 +27,7 @@ interface ShortCut {
     [shortCut: string]: {
         display: string,
         hotkey: string,
+        action: () => void
     }
 }
 
@@ -64,7 +65,7 @@ interface CritiqueCard {
     uuid: string,
     title: string,
     type: "analysis" | "summary" | "question",
-    node: string,
+    node: string | null,
     from: number | null,
     to: number | null,
     createdAt: string,
@@ -86,7 +87,7 @@ interface CritiqueCardFull {
     uuid: string,
     title: string,
     type: "analysis" | "summary" | "question",
-    node: string,
+    node: string | null,
     from: number | null,
     to: number | null,
     createdAt: string,
@@ -192,7 +193,34 @@ interface CritiqueUnselect {
     select: () => void
 }
 
+interface CritiqueUnderline {
+    node: string,
+    from: number,
+    to: number
+}
+
 type CritiqueEvents = {
     "critique-select": CritiqueSelect,
-    "critique-unselect": CritiqueUnselect
+    "critique-focus": CritiqueUnderline,
+    "critique-unselect": CritiqueUnselect,
+    "critique-underline": CritiqueUnderline,
+    // "critique-underline-reset": CritiqueUnderline,
+    "critique-underline-focus": CritiqueUnderline,
+    "critique-remove-underline-focus": CritiqueUnderline,
+    "critique-remove-underline": CritiqueUnderline,
+    "critique-hover": CritiqueUnderline,
+    "critique-remove-hover": CritiqueUnderline,
+    "critique-toggle": void,
+}
+
+interface CardOffset {
+    card: CritiqueCardFull,
+    offset: number,
+}
+
+interface CardDisplay {
+    position: "left" | "right",
+    node: string,
+    offset: number,
+    cards: CritiqueCardFull[]
 }

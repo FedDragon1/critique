@@ -2,10 +2,14 @@
 import {DocumentChecked, DocumentDelete, Position} from "@element-plus/icons-vue";
 import type {TabHandler} from "~/composibles/useCritique";
 import TabButton from "~/components/analytic/tabs/TabButton.vue";
+import hotkeys from 'hotkeys-js';
+import useEventBus from "~/composibles/useEventBus";
 
 defineProps<{
     tabHandler: TabHandler
 }>();
+const emit = defineEmits(["toggle-critiques", "save", "discard"])
+const emitter = useEventBus()
 
 const viewModeDisplay: ViewModes = {
     document: {
@@ -22,11 +26,12 @@ const controls: ShortCut = {
     toggleCritiques: {
         display: 'Show/Hide all critiques',
         hotkey: 'Ctrl+H',
+        action: toggleCritique
     },
-    toggleSummaries: {
-        display: 'Show/Hide all summaries',
-        hotkey: 'Ctrl+Shift+H',
-    }
+    // toggleSummaries: {
+    //     display: 'Show/Hide all summaries',
+    //     hotkey: 'Ctrl+Shift+H',
+    // }
 }
 const documentTools = {
     selector: {
@@ -48,6 +53,23 @@ const editorTools = {
 const viewMode = defineModel<keyof typeof viewModeDisplay>("viewMode")
 const documentActiveTool = defineModel<string>("docActiveTool")
 
+function toggleCritique(event?: KeyboardEvent) {
+    event?.preventDefault()
+    emitter.emit("critique-toggle")
+    emit('toggle-critiques')
+}
+
+onMounted(() => {
+    hotkeys("ctrl+h", (event, handler) => {
+        switch (handler.key) {
+            case "ctrl+h":
+                toggleCritique(event)
+                break
+            default:
+                console.log(`unhandled event ${event}`)
+        }
+    })
+})
 </script>
 
 <template>
@@ -89,6 +111,7 @@ const documentActiveTool = defineModel<string>("docActiveTool")
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item :key="name"
+                                              @click="shortCut.action"
                                               v-for="(shortCut, name) in controls">
                                 <div class="document-control-container">
                                     <span class="document-control-option">{{ shortCut.display }}</span>
@@ -105,7 +128,7 @@ const documentActiveTool = defineModel<string>("docActiveTool")
                 <div class="document-tool-item edit"
                      v-for="(value, key) in editorTools"
                      :key="key"
-                     @click="$emit(key)">
+                     @click="emit(key)">
                     <el-icon size="1.5rem">
                         <component :is="value.icon"></component>
                     </el-icon>

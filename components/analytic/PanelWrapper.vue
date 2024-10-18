@@ -40,6 +40,18 @@ function togglePanel() {
     setTimeout(() => panel.value!.classList.remove('ease-width'), 500)
 }
 
+function openPanel() {
+    if (!dragEnd.value) {
+        return
+    }
+
+    panel.value!.classList.add('ease-width')
+    dragEnd.value = false
+    panel.value!.style.width = "50%"
+    props.postDrag && props.postDrag()
+    setTimeout(() => panel.value!.classList.remove('ease-width'), 500)
+}
+
 function reset() {
     draggingPanel.value = false
 }
@@ -66,6 +78,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     document.removeEventListener("mouseup", reset)
+})
+
+defineExpose({
+    openPanel
 })
 </script>
 

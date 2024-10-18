@@ -63,7 +63,6 @@ function sendMessageRaw(endpoint?: string): Promise<Message> {
     const promise = props.chat({
         uuid: uuid(),
         role: "user",
-        // content: promptToHTML()
         content: prompt.value
     }, endpoint).then(postChat)
 
@@ -76,10 +75,33 @@ function sendMessageRaw(endpoint?: string): Promise<Message> {
     return promise
 }
 
+function chatRaw(prompt: string): Promise<Message> {
+    if (!prompt.trim().length) {
+        ElMessage.error("Empty prompt")
+        return Promise.reject("Empty prompt");
+    }
+
+    // let the promise resolve itself, initiate here
+    const promise = props.chat({
+        uuid: uuid(),
+        role: "user",
+        content: prompt
+    }).then(postChat)
+
+    generating.value = true
+    multiline.value = false
+    setTimeout(props.textareaReflow, 0)
+
+    // finish the promise
+    return promise
+}
+
 const sendMessage = throttle(sendMessageRaw, 3000)
+const chat = throttle(chatRaw, 3000)
 
 defineExpose({
-    sendMessage
+    sendMessage,
+    chat
 })
 </script>
 

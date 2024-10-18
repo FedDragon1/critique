@@ -10,10 +10,17 @@ const props = defineProps<{
 
 const slots = useSlots()
 const _selected = ref(false)
+const _underlined = ref(false)
+const _focused = ref(false)
+const _hovered = ref(false)
+const show = ref(true)
 const emitter = useEventBus()
 const dom = useTemplateRef<HTMLElement>("dom")
 
 const selected = computed(() => _selected.value)
+const underlined = computed(() => _underlined.value)
+const focused = computed(() => _focused.value)
+const hovered = computed(() => _hovered.value)
 const uuid = computed(() => props.uuid)
 const hash = computed(() => props.hash)
 const node = computed(() => props.node)
@@ -50,9 +57,57 @@ function onClick(toggle?: boolean) {
 
 defineExpose({
     selected,
+    underlined,
+    hovered,
+    focused,
     uuid,
     hash
 })
+
+emitter.on("critique-underline", ({ node, from, to }) => {
+    if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+        return
+    }
+    _underlined.value = true
+})
+emitter.on("critique-remove-underline", ({ node, from, to }) => {
+    if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+        return
+    }
+    _underlined.value = false
+})
+emitter.on("critique-underline-focus", ({ node, from, to }) => {
+    if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+        return
+    }
+    _focused.value = true
+})
+emitter.on("critique-remove-underline-focus", ({ node, from, to }) => {
+    if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+        return
+    }
+    _focused.value = false
+})
+// emitter.on("critique-underline-reset", ({ node, from, to }) => {
+//     if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+//         return
+//     }
+//     _focused.value = false
+//     _underlined.value = false
+// })
+emitter.on("critique-hover", ({ node, from, to }) => {
+    if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+        return
+    }
+    _hovered.value = true
+})
+emitter.on("critique-remove-hover", ({ node, from, to }) => {
+    if (props.node !== node || Number(props.index) < from || Number(props.index) > to) {
+        return
+    }
+    _hovered.value = false
+})
+emitter.on("critique-toggle", () => show.value = !show.value)
 </script>
 
 <template>
@@ -60,7 +115,7 @@ defineExpose({
               :hash="hash.toString()"
               :index="index.toString()"
               :node="node"
-              :class="{ selected: _selected }"
+              :class="{ selected: _selected, underlined: _underlined, focused: _focused, hovered: _hovered, show }"
               ref="dom"
               @click="() => onClick()">
         <slot />
@@ -70,5 +125,20 @@ defineExpose({
 <style scoped>
 critique.selected {
     background: var(--critique-selected-color);
+}
+
+critique.show.underlined {
+    text-decoration: underline;
+    text-decoration-color: var(--critique-underline-color);
+    text-decoration-thickness: 1px;
+}
+
+critique.show.underlined.focused {
+    text-decoration-color: var(--critique-underline-color-focused);
+    text-decoration-thickness: 2px;
+}
+
+critique.show.underlined.focused.hovered {
+    background-color: var(--critique-hover-color);
 }
 </style>

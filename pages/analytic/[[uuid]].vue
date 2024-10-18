@@ -33,11 +33,12 @@ const fetchStream = useFetchStream()
 
 const critiqueUuid = route.params.uuid as string
 const critiqueResp = await useFetch<BaseResponse<CritiqueFull>>(`/api/file/${critiqueUuid}`)
-const critique = ref<CritiqueFull | null>(critiqueResp?.data.value?.data as CritiqueFull || null)
+const critique = ref<CritiqueFull>(critiqueResp!.data.value!.data as CritiqueFull)
 const critiqueStorage = ref("")
 const critiqueSummary = ref("")
 const critiqueHandler = critique.value ? useCritique(critique as Ref<CritiqueFull>, ElMessage.error) : undefined
 const analysis = useTemplateRef<typeof CritiqueViewer>("analysis")
+const showCritiques = ref(true)
 
 if (critiqueUuid && (critiqueResp.error.value !== null || critiqueResp.status.value !== "success" || !critique.value)) {
     console.error(critiqueResp.error);
@@ -293,6 +294,7 @@ const chatUuid = ref<string>()
 const chatStream = ref<string[]>([])
 const chatContent = computed(() => chatStream.value.join(''))
 const panel = useTemplateRef<HTMLDivElement>('panel')
+const panelWrapper = useTemplateRef<typeof PanelWrapper>('panel-wrapper')
 const chatBox = useTemplateRef<typeof ChatBox>('chatBox')
 
 const conversation = ref<Message[]>([{
@@ -435,6 +437,11 @@ async function chat(message: Message, endpoint: string = 'generate'): Promise<Me
     return newChat
 }
 
+function cardChat({ prompt, context, type }: { prompt: string, context: string, type: CardType}) {
+    chatBox.value?.chat(`Referring to the ${type}: \n> ${context}\n\n${prompt}`)
+    panelWrapper.value?.openPanel()
+}
+
 watch([chatUuid], startScrolling)
 
 // summary view tabs
@@ -569,14 +576,21 @@ function viewTag(tag: CritiqueTagFull) {
             <ContentWrapper ref="frame">
                 <template #header>
                     <DocumentNav v-model:view-mode="viewMode"
+                                 @toggle-critiques="showCritiques = !showCritiques"
                                  @save="save"
                                  @discard="discard"
                                  :tab-handler="tabHandler as TabHandler"
                                  v-model:doc-active-tool="documentActiveTool"></DocumentNav>
                 </template>
                 <CritiqueViewer :html="critiqueStorage"
+                                :show-critiques="showCritiques"
                                 :disable-selection="!!chatUuid"
-                                v-if="viewMode === 'document'"
+                                :file="critique!"
+                                :rename="(cu, title) => critiqueHandler?.updateCard(cu, { title })"
+                                @chat="cardChat"
+                                @detail="(card) => { viewMode = 'summary'; viewCard(card) }"
+                                @delete="(cu) => critiqueHandler && critiqueHandler.deleteCard(cu)"
+                                v-if="viewMode === 'document' && critique"
                                 ref="analysis"></CritiqueViewer>
 <!--                TODO: save edit changes-->
                 <CritiqueEditor :html="critiqueStorage" v-else-if="viewMode === 'edit'" ref="editor"></CritiqueEditor>
@@ -602,7 +616,9 @@ function viewTag(tag: CritiqueTagFull) {
             </ContentWrapper>
             <PanelWrapper :quick-actions="quickActions"
                           :disabled="viewMode !== 'document'"
-                          :post-drag="textareaReflow" v-slot="slotProps">
+                          :post-drag="textareaReflow"
+                          ref="panel-wrapper"
+                          v-slot="slotProps">
                 <div class="panel-message-wrapper" ref="panel">
                     <MessageEntry v-for="message in reactiveConversation" :key="message.uuid" :message="message"></MessageEntry>
                 </div>

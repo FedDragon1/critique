@@ -29,6 +29,7 @@ const frame = useTemplateRef<HTMLDivElement>("frame");
 
 .content {
     min-width: 600px;
+    display: flex;
 }
 
 .content-wrapper {

@@ -16,20 +16,28 @@ defineProps<{
                  @click="togglePanel">
             <el-icon-right></el-icon-right>
         </el-icon>
-        <div class="panel-quick-actions"
-             :class="{ 'no-select': draggingPanel, 'disabled': disabled }"
-             :key="actionName"
-             @click="() => !disabled && action.handler()"
-             v-for="(action, actionName) in quickActions">
-            <el-icon>
-                <component :is="action.icon"></component>
-            </el-icon>
-            <span class="panel-quick-action-name nowrap">{{ action.caption }}</span>
+        <div class="panel-action-group">
+            <div class="panel-quick-actions"
+                 :class="{ 'no-select': draggingPanel, 'disabled': disabled }"
+                 :key="actionName"
+                 @click="() => !disabled && action.handler()"
+                 v-for="(action, actionName) in quickActions">
+                <el-icon>
+                    <component :is="action.icon"></component>
+                </el-icon>
+                <span class="panel-quick-action-name nowrap">{{ action.caption }}</span>
+            </div>
         </div>
     </nav>
 </template>
 
 <style scoped>
+.panel-action-group {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+}
+
 .panel-quick-actions.disabled {
     color: var(--el-disabled-text-color);
     border: var(--el-disabled-border-color) 1px solid;

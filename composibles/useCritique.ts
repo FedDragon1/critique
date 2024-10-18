@@ -9,9 +9,7 @@ import type {
 import type {Ref} from "vue";
 import {isEqual} from 'lodash'
 
-// TODO: add test
-
-function objectFilter<T extends HaveUuid>(obj: MapOf<T>, predicate: (e: T) => boolean) {
+export function objectFilter<T extends HaveUuid>(obj: MapOf<T>, predicate: (e: T) => boolean) {
     const ret: MapOf<T> = {}
     Object.values(obj).forEach(value => {
         if (predicate(value)) {
@@ -153,7 +151,7 @@ export class CritiqueHandler {
             tags: card.tags
         };
         this.file.value.cards[updatedCard.uuid] = newCard
-        
+
         this.traverseCards(
             (card) => card.uuid === updatedCard.uuid,
             (card, tag) => tag.cards[card.uuid] = newCard
@@ -246,7 +244,7 @@ export class CritiqueHandler {
         return $fetch<BaseResponse<CritiqueCard>>("/api/file/card", {
             method: "PUT",
             body
-        }).then(this.guard(this.mergeCard))
+        }).then(this.guard(this.mergeCard.bind(this)))
     }
 
     deleteCard(uuid: string) {

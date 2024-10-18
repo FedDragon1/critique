@@ -7,9 +7,8 @@ import OpenAI from "openai";
 const systemPrompt = `The user will prompt with a piece of critical analysis form a document.
 The critical analysis can either be an analysis paragraph, a summary, or a critical question.
 Your objective is to generate a concise and meaningful title for the critical analysis.
-You are limited to 16 tokens. Be as concise as possible.
-Avoid using quotes and punctuations as much as possible. 
-You may use colon (:), but it is also discouraged from abusing.`
+You are limited to 5 words. Be as concise as possible.
+Avoid using quotes and punctuations as much as possible.`
 
 export default defineEventHandler(async (event): Promise<BaseResponse<string>> => {
     const request = await readBody(event) as TitleRequest
