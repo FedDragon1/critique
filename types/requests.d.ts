@@ -143,7 +143,7 @@ interface ChatRequest {
 }
 
 interface SummaryRequest {
-    chunk: string
+    chunks: string[]
 }
 
 interface CritiqueRequest {
@@ -182,4 +182,8 @@ type TaggingResponse = {
 
 interface TitleRequest {
     content: string
+}
+
+interface PunctuationRequest {
+    content: string[]
 }

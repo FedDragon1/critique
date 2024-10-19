@@ -34,7 +34,8 @@ export class CritiqueHandler {
     // INTERNAL SERVICES
 
     /**
-     * Guard to ensure a response is success with data
+     * Guard to ensure a response is success with data.
+     * Updates the lastModified field on the file
      * 
      * @param callback gets called when the response is success
      */
@@ -45,6 +46,19 @@ export class CritiqueHandler {
                 console.error(resp)
                 return
             }
+
+            $fetch<BaseResponse<Critique>>("/api/file", {
+                method: "PUT",
+                body: {
+                    uuid: this.file.value.uuid,
+                    modifiedAt: (new Date()).toISOString()
+                }
+            }).then((resp) => {
+                if (!resp.success) {
+                    console.error(resp.errorMessage)
+                }
+            })
+
             return callback(resp.data!)
         }
     }

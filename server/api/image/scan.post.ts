@@ -29,7 +29,19 @@ export default defineEventHandler(async (event) => {
     await opencvReady()
 
     // preprocess
-    const { image, width, height } = await bufferToMat(file["data"])
+
+    let image;
+    let width;
+    let height;
+    try {
+        ({ image, width, height } = await bufferToMat(file["data"]))
+    } catch (e) {
+        return {
+            success: false,
+            errorMessage: (e as unknown as Error).message
+        }
+    }
+
     const dst = new cv.Mat()
 
     return withMatAsync([image, dst], async () => {

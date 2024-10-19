@@ -17,9 +17,12 @@ function ellipses(content: string | undefined, limit: number) {
     return content.length > limit ? `${content.slice(0, limit)}...` : content
 }
 
+const byteSize = (str: string) => new Blob([str]).size;
+
 export function useFile() {
     return {
         makeFileSize,
-        ellipses
+        ellipses,
+        byteSize
     }
 }

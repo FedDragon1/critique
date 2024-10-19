@@ -8,6 +8,7 @@ import ContextMenu from "~/components/editor/ContextMenu.vue";
 import ReviewContextMenu from "~/components/editor/ReviewContextMenu.vue";
 import type {BaseResponse, NewFileRequest, SummaryRequest} from "~/types/requests";
 import {useEnglish} from "~/composibles/useEnglish";
+import {useFile} from "~/composibles/useFile";
 
 definePageMeta({
     middleware: 'auth'
@@ -17,6 +18,7 @@ const fileStore = useFileStore()
 const router = useRouter()
 const route = useRoute()
 const { chunkBySentences, htmlToCritiqueChunks } = useEnglish()
+const { byteSize } = useFile()
 
 const timeout = ref(false)
 const returning = ref(false)
@@ -72,26 +74,22 @@ async function makeSummary(content: string) {
         chunks.push(chunkTemp.join(" "))
     }
 
-    const promises = chunks.map(chunk => {
-        const request: SummaryRequest = {
-            chunk
-        }
-        return $fetch<BaseResponse<string>>("/api/critique/summary", {
-            method: "POST",
-            body: request
-        })
-    })
+    const request: SummaryRequest = {
+        chunks
+    }
 
-    const summaryChunks = await Promise.all(promises)
-    message.close()
-    summaryChunks.forEach(chunk => {
-        if (!chunk.success) {
-            ElMessage.error(chunk.errorMessage)
-            throw Error(chunk.errorMessage)
-        }
+    const summaryChunks = await $fetch<BaseResponse<string>>("/api/critique/summary", {
+        method: "POST",
+        body: request
     })
-    const ret = summaryChunks.map(chunk => chunk.data!).join("\n");
-    return ret
+    message.close()
+
+    if (!summaryChunks.success) {
+        ElMessage.error(summaryChunks.errorMessage)
+        throw Error(summaryChunks.errorMessage)
+    }
+
+    return summaryChunks.data!
 }
 
 function htmlToText(html: string) {
@@ -121,10 +119,13 @@ function uploadCritique() {
             duration: 0
         })
 
+        const initialSize = byteSize(summary) + byteSize(contentMarkup)
+
         // TODO preview for the file
         const request: NewFileRequest = {
             fileName: fileName.value,
             dataMarkUp: contentMarkup,
+            size: initialSize,
             summary
         }
         $fetch<BaseResponse<Critique>>("/api/file", {
@@ -132,6 +133,10 @@ function uploadCritique() {
             body: request
         }).then(resp => {
             if (!resp.success) {
+                if (resp.errorMessage === "duplicate key value violates unique constraint \"file_file_name_key\"") {
+                    ElMessage.error(`Duplicate File Name: "${fileName.value}" already exists`)
+                    return
+                }
                 ElMessage.error(resp.errorMessage)
                 return;
             }

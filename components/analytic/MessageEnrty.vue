@@ -1,32 +1,11 @@
 <script setup lang="ts">
-import {marked} from "marked"
-import DOMPurify from 'dompurify'
+import useMarkdown from "~/composibles/useMarkdown";
 
 const props = defineProps<{
     message: Message
 }>();
 
-const unifyHTML = (s: string) => {
-    const txt = document.createElement("textarea")
-    txt.innerHTML = s
-    return txt.value
-}
-
-const messageHtml = computed(() => {
-    const content = unifyHTML(marked.parse(props.message.content, {
-        breaks: true,
-    }) as string)
-
-    const purified = unifyHTML(DOMPurify.sanitize(content, {
-        ALLOWED_TAGS: ['p', 'b', 'strong', 'em', 'i', 'u', 's', 'del', 'blockquote', 'h1', 'h2', 'h3', 'br']
-    }))
-
-    if (content.length - purified.length) {
-        ElMessage.warning("Do not use HTML tags in the chat")
-        return
-    }
-    return purified
-})
+const messageHtml = computed(() => useMarkdown(props.message.content))
 </script>
 
 <template>

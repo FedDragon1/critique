@@ -15,7 +15,7 @@ const router = useRouter()
 const favoriteOnly = ref(false);
 const orderBy = ref<keyof CritiqueFull>("lastModified")
 
-const orderedFiles = computed(() => props.files
+const orderedFilesRaw = computed(() => props.files
     .toSorted((f1, f2) =>
           +(f1[orderBy.value] > f2[orderBy.value])
         + +(f1[orderBy.value] >= f2[orderBy.value])
@@ -30,6 +30,8 @@ const orderedFiles = computed(() => props.files
     })
     .filter(file => !favoriteOnly.value || file.isFavorite)
 )
+
+const orderedFiles = computed(() => orderBy.value === "lastModified" ? orderedFilesRaw.value.toReversed() : orderedFilesRaw.value)
 </script>
 
 <template>

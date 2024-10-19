@@ -4,6 +4,10 @@ import ImageSingle from "~/components/uploading/ImageSingle.vue";
 import UploadButton from "~/components/uploading/UploadButton.vue";
 import {ImgProxy} from "~/composibles/useCanvas";
 import type {FourPoints} from "~/types/cvtypes";
+import {useFileStore} from "~/stores/fileStore";
+import useMarkdown from "~/composibles/useMarkdown";
+import usePdf from "~/composibles/usePdf";
+import {formatting} from "~/composibles/useUploader";
 
 defineProps<{
     disabled?: boolean
@@ -39,16 +43,109 @@ function useUploadRef(value: any) {
 const attrs = useAttrs();
 const images = useUploadRef([])
 const contours = useTemplateRef("contours")
+const status = ref("")
 const tempImage = ref<string>()
 const switching = ref()
 const currentSlide = ref(0)
+const fileStore = useFileStore()
+const router = useRouter()
+const { readPdf, revisePdf, mergePages } = usePdf()
+
+const wordMime = [
+    "application/msword",                                                           // .doc .dot
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",      // .docx
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.template",      // .dotx
+    "application/vnd.ms-word.document.macroEnabled.12",                             // .docm
+    "application/vnd.ms-word.template.macroEnabled.12"                              // .dotm
+]
+
+const handleWord = (file: File) => {
+
+}
+
+const handlePdf = (file: File) => {
+    const reader = new FileReader()
+    reader.readAsArrayBuffer(file)
+
+    status.value = "Uploading File"
+    const closer = ElMessage.info({
+        message: () => h('span', { style: 'color: var(--el-color-info); font-size: 14px' }, status.value),
+        plain: true,
+        duration: 0
+    })
+
+    reader.onload = () => {
+        if (!(reader.result instanceof ArrayBuffer)) {
+            ElMessage.error("Error while reading the file!")
+            throw Error(`Type mismatch while reading text file, expected string, received ${typeof reader.result}`)
+        }
+
+        const data = new Uint8Array(reader.result)
+        readPdf(data)
+            .then((d) => revisePdf(d, status))
+            .then((d) => mergePages(d, status))
+            .then((d) => formatting(d, status))
+            .then((s) => {
+                fileStore.setOcrResult(s)
+                router.push("/analytic/review")
+            })
+            .catch((e) => ElMessage.error(e.message))
+            .finally(closer.close)
+    }
+}
+
+const handleText = (file: File) => {
+    const reader = new FileReader()
+    reader.readAsText(file)
+
+    reader.onload = () => {
+        if (typeof reader.result !== "string") {
+            ElMessage.error("Error while reading the file!")
+            throw Error(`Type mismatch while reading text file, expected string, received ${typeof reader.result}`)
+        }
+        const messageHtml = useMarkdown(reader.result)
+        fileStore.setOcrResult(messageHtml ?? reader.result)
+        router.push("/analytic/review")
+    }
+}
+
+const storeFile = (file: File) => {
+    if (file.type.split("/")[0] === "image") {
+        storeImage(file)
+        return
+    }
+
+    if (tempImage.value) {
+        ElMessage.error(`Only images are permitted when images are uploaded. Got type ${file.type}`)
+        return
+    }
+
+    if (wordMime.includes(file.type)) {
+        handleWord(file)
+        return
+    }
+
+    if (file.type === "application/pdf") {
+        handlePdf(file)
+        return
+    }
+
+    if (file.type.split("/")[0] === "text") {
+        handleText(file)
+        return
+    }
+
+    console.log(file)
+}
 
 const storeImage = (file: File) => {
     if (tempImage.value) {
         ElMessage.error("Please wait for the current image to be uploaded")
+        return
     }
     const reader = new FileReader()
     reader.readAsDataURL(file)
+
     reader.onload = () => {
         tempImage.value = (reader.result as string).split(',')[1]
     }
@@ -56,7 +153,10 @@ const storeImage = (file: File) => {
 
 const submitted = (resp: any) => {
     if (!tempImage.value) {
-        throw TypeError("No file is found")
+        if (resp.success) {
+            throw TypeError("No file is found")
+        }
+        return  // not image
     }
     images.value = [...images.value, new ImgProxy(tempImage.value!, resp.data.png, images.value.length)]
     tempImage.value = undefined
@@ -137,7 +237,7 @@ defineExpose({
                 </template>
                 <KeepAlive>
                     <UploadImage @success="submitted"
-                                 @upload="storeImage"
+                                 @upload="storeFile"
                                  :disabled="disabled"
                                  v-if="currentSlide === images.length"></UploadImage>
                 </KeepAlive>
@@ -153,7 +253,7 @@ defineExpose({
                             action="/api/image/scan"
                             list-type="picture-card"
                             :on-success="submitted"
-                            :before-upload="storeImage"
+                            :before-upload="storeFile"
                             :on-preview="handlePreview"
                             :on-remove="handleRemove">
                             <el-icon>
@@ -167,7 +267,7 @@ defineExpose({
                                 <el-icon-Delete/>
                             </el-icon>
                         </el-button>
-                        <UploadButton @success="switchImage" @upload="(f) => {switching = currentSlide; storeImage(f)}">
+                        <UploadButton @success="switchImage" @upload="(f) => {switching = currentSlide; storeFile(f)}">
                             <el-icon>
                                 <el-icon-Switch/>
                             </el-icon>

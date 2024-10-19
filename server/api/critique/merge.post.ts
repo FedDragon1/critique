@@ -1,6 +1,6 @@
 // POST /api/critique/merge
 
-import {BaseResponse} from "~/types/requests";
+import {BaseResponse, type MergeRequest} from "~/types/requests";
 import {createCompletion, getMessages} from "~/server/utils/aiutils";
 import OpenAI from "openai";
 
@@ -15,23 +15,34 @@ function userPrompt(tail: string, head: string) {
     return `${tail}\n$$$$$$$$\n${head}`
 }
 
-export default defineEventHandler(async (event): Promise<BaseResponse<"true" | "false">> => {
-    const request = await readBody(event)
+export default defineEventHandler(async (event): Promise<BaseResponse<{ [key: string]: Boolean }>> => {
+    const request = await readBody(event) as MergeRequest[]
 
-    const response = await createCompletion(
-        getMessages(systemPrompt, userPrompt(request.tail, request.head))
-    ) as OpenAI.Chat.Completions.ChatCompletion
+    const promises = request.map((req, i) => [i, req] as const)
+        .filter(([_, req]) => req !== null)
+        .map(async ([i, req]) => {
+            const response = await createCompletion(
+                getMessages(systemPrompt, userPrompt(req.tail, req.head))
+            ) as OpenAI.Chat.Completions.ChatCompletion
 
-    const content = response.choices[0].message.content
-    if (content === null || (content !== "true" && content !== "false")) {
+            const content = response.choices[0].message.content
+            if (content === null || (content !== "true" && content !== "false")) {
+                throw Error("Merging Failed")
+            }
+
+            return [i, content === "true"] as const
+        })
+
+    try {
+        const content = Object.fromEntries(await Promise.all(promises))
+        return {
+            success: true,
+            data: content
+        }
+    } catch (e) {
         return {
             success: false,
-            errorMessage: "Merging Failed"
+            errorMessage: (e as unknown as Error).message
         }
-    }
-
-    return {
-        success: true,
-        data: content
     }
 })

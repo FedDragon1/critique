@@ -386,6 +386,7 @@ const quickActions: QuickActions = {
 }
 
 function uploadFile() {
+    ElMessage.info("Loading Upload Page")
     router.push("/analytic/upload")
 }
 

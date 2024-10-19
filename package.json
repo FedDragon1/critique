@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@bundled-es-modules/pdfjs-dist": "^3.6.172-alpha.1",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@nuxtjs/supabase": "^1.2.2",
@@ -40,8 +41,10 @@
     "nuxt": "^3.13.1",
     "nuxt-tiptap-editor": "^2.0.0",
     "openai": "^4.62.1",
+    "pdfjs-dist": "^4.7.76",
     "pinia": "^2.2.2",
     "postgres": "^3.4.4",
+    "requirejs": "^2.3.7",
     "sharp": "^0.33.4",
     "tesseract.js": "^5.1.0",
     "unplugin-element-plus": "^0.8.0",

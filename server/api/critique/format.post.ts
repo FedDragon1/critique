@@ -13,6 +13,7 @@ Use plain text, no markdown at all time (very important).
 Not all segments start with a title, they may be excerpts in a larger piece of text. Make sure the rest of paragraph makes sense when creating titles. 
 Use title only when it is obvious. A title should be five words at max in length. Use as few titles as possible
 Return only the tags, no <html> tag and <body> tag. 
+No markdown, generate <h1>Title!</h1> instead of \`\`\`html <h1>Title!</h1> \`\`\`.
 Do not modify the user's content. Generate as much text as you need to completely format the text.`
 
 export default defineEventHandler(async (event): Promise<BaseResponse<string[]>> => {

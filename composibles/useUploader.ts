@@ -4,7 +4,51 @@ import type {Workers} from "~/composibles/useTesseract";
 import type {FourPoints} from "~/types/cvtypes";
 import {useFileStore} from "#imports";
 
-class Uploader {
+/**
+ * Formats the raw paragraphs into HTML.
+ * Separate requests into small chunks of text
+ *
+ * @param paragraphs each element is a paragraph
+ * @param uploadingStatus
+ * @returns a string of html representing critique
+ */
+export async function formatting(paragraphs: string[], uploadingStatus: Ref<string>): Promise<string> {
+    uploadingStatus.value = "Formatting File..."
+
+    // if the paragraph itself is bigger than 2000 characters, it is considered as plain text
+    const tokenMax = 2000
+    const chunkedParagraphs: string[] = []
+    const extraLong: { [index: number]: string } = {}
+    paragraphs.forEach((para, i) => {
+        if (para.length > tokenMax) {
+            extraLong[i] = para
+            return
+        }
+        chunkedParagraphs.push(para)
+    })
+
+    const body: FormatRequest = {
+        segments: chunkedParagraphs
+    }
+
+    const formatted = await $fetch<BaseResponse<string[]>>("/api/critique/format", {
+        method: "POST",
+        body: body
+    })
+    if (!formatted.success) {
+        throw new Error(formatted.errorMessage)
+    }
+
+    const ret = []
+    let arrP = 0;
+    for (let i = 0; i < chunkedParagraphs.length + Object.keys(extraLong).length; i++) {
+        ret[i] = extraLong[i] ? extraLong[i] : formatted.data![arrP++]
+    }
+
+    return ret.join("\n")
+}
+
+class ImageUploader {
     uploadingStatus
     tesseract
     fileStore
@@ -23,49 +67,6 @@ class Uploader {
     storeCritique(critique: string) {
         this.uploadingStatus.value = "Storing File..."
         this.fileStore.setOcrResult(critique)
-    }
-
-    /**
-     * Formats the raw paragraphs into HTML.
-     * Separate requests into small chunks of text
-     *
-     * @param paragraphs each element is a paragraph
-     * @returns a string of html representing critique
-     */
-    async formatting(paragraphs: string[]): Promise<string> {
-        this.uploadingStatus.value = "Formatting File..."
-
-        // if the paragraph itself is bigger than 2000 characters, it is considered as plain text
-        const tokenMax = 2000
-        const chunkedParagraphs: string[] = []
-        const extraLong: { [index: number]: string } = {}
-        paragraphs.forEach((para, i) => {
-            if (para.length > tokenMax) {
-                extraLong[i] = para
-                return
-            }
-            chunkedParagraphs.push(para)
-        })
-
-        const body: FormatRequest = {
-            segments: chunkedParagraphs
-        }
-
-        const formatted = await $fetch<BaseResponse<string[]>>("/api/critique/format", {
-            method: "POST",
-            body: body
-        })
-        if (!formatted.success) {
-            throw new Error(formatted.errorMessage)
-        }
-
-        const ret = []
-        let arrP = 0;
-        for (let i = 0; i < chunkedParagraphs.length + Object.keys(extraLong).length; i++) {
-            ret[i] = extraLong[i] ? extraLong[i] : formatted.data![arrP++]
-        }
-
-        return ret.join("\n")
     }
 
     /**
@@ -97,13 +98,16 @@ class Uploader {
             return Promise.resolve(pages[0])
         }
 
+        const merging: MergeRequest[] = []
+
         // if not last paragraph, append it in
         // otherwise grab the last and first and resolve it into a promise
-        const paragraphPromises: (string | Promise<string[]>)[] = []
+        const paragraphPromises: (string | (() => Promise<string[]>))[] = []
         for (let pageN = 0; pageN < pages.length; pageN++) {
             const paras = pages[pageN]
 
             // first page
+            // noinspection DuplicatedCode
             if (pageN === 0) {
                 paragraphPromises.push(paras[0])
             }
@@ -119,39 +123,42 @@ class Uploader {
             const nextHead = pages[pageN + 1][0]
 
             // too long
+            // noinspection DuplicatedCode
             if (thisTail.length + nextHead.length > maxToken) {
                 paragraphPromises.push(thisTail, nextHead)
                 continue;
             }
 
             // check merge
-            const requestBody: MergeRequest = {
+            merging[pageN] = {
                 tail: thisTail,
                 head: nextHead
             }
-            const mergePromise: Promise<string[]> = new Promise((resolve) => {
-                $fetch<BaseResponse<"true" | "false">>("/api/critique/merge", {
-                    method: "POST",
-                    body: requestBody
-                }).then((resp) => {
-                    // treat errors as false
+            const mergePromise: () => Promise<string[]> = () => new Promise((resolve) => {
+                merged.then((resp) => {
                     if (!resp.success) {
-                        console.error(resp.errorMessage)
                         resolve([thisTail, nextHead])
+                        return
                     }
-                    if (resp.data === "true") {
+
+                    const merge = resp.data![pageN]
+                    if (merge) {
                         resolve([`${thisTail} ${nextHead}`])
-                    } else if (resp.data === "false") {
-                        resolve([thisTail, nextHead])
                     } else {
-                        console.error(`Unknown merge action: ${resp.data}`);
                         resolve([thisTail, nextHead])
                     }
                 })
             })
             paragraphPromises.push(mergePromise)
         }
-        const paragraphRaw = await Promise.all(paragraphPromises)
+        const merged = $fetch<BaseResponse<{ [key: string]: Boolean }>>("/api/critique/merge", {
+            method: "POST",
+            body: merging
+        })
+        const hookedParagraphPromises = paragraphPromises.map(
+            (s) => typeof s === 'string' ? s : s()
+        )
+        const paragraphRaw = await Promise.all(hookedParagraphPromises)
         return paragraphRaw.flat()
     }
 
@@ -230,11 +237,11 @@ class Uploader {
 
         return Promise.all(promises)
             .then(this.mergeTail.bind(this))
-            .then(this.formatting.bind(this))
+            .then((p) => formatting(p, this.uploadingStatus))
             .then(this.storeCritique.bind(this))
     }
 }
 
 export function useUploader(uploadingStatus: Ref<string>, tesseract: Workers) {
-    return new Uploader(uploadingStatus, tesseract)
+    return new ImageUploader(uploadingStatus, tesseract)
 }

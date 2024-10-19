@@ -19,6 +19,14 @@ export default defineNuxtConfig({
         }
     },
 
+    nitro: {
+        vercel: {
+            functions: {
+                maxDuration: 20
+            }
+        }
+    },
+
     pinia: {
         storesDirs: ["./stores/**"]
     },
