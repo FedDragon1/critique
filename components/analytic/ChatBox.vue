@@ -59,11 +59,13 @@ function sendMessageRaw(endpoint?: string, forcePrompt?: string): Promise<Messag
         return Promise.reject("Empty prompt");
     }
 
+    const content = !prompt.value && forcePrompt ? forcePrompt : prompt.value
+
     // let the promise resolve itself, initiate here
     const promise = props.chat({
         uuid: uuid(),
         role: "user",
-        content: forcePrompt ?? prompt.value
+        content
     }, endpoint).then(postChat)
 
     prompt.value = ""
