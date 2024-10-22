@@ -26,7 +26,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<EmailExist
         success: true,
         data: {
             exist: data.length > 0,
-            verified: data[0].validated
+            verified: data[0]?.validated ?? false
         }
     }
 })
