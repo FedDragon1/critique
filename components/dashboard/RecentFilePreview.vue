@@ -25,7 +25,7 @@ const attrs = useAttrs();
 
 <template>
     <div class="preview-wrapper" v-bind="attrs">
-        <div class="preview-operation">
+        <div class="preview-operation" @click.stop>
             <el-dropdown>
                 <el-icon>
                     <el-icon-more-filled></el-icon-more-filled>

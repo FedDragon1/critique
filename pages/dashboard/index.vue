@@ -6,6 +6,7 @@ import FileList from "~/components/dashboard/FileList.vue";
 import {Search} from "@element-plus/icons-vue";
 import {useUserStore} from "~/stores/userStore";
 import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
+import {throttle} from "lodash-es";
 
 definePageMeta({
     middleware: 'auth'
@@ -34,7 +35,7 @@ const {makeDate} = useTime();
 
 const recentFiles = (await useFetch<BaseResponse<CritiqueFull[]>>("/api/file/recent")).data.value
 
-function favorite(uuid: string) {
+function favoriteRaw(uuid: string) {
     if (!recentFiles?.data) {
         ElMessage.error("No files")
         return;
@@ -64,7 +65,7 @@ function favorite(uuid: string) {
     })
 }
 
-function unfavorite(uuid: string) {
+function unfavoriteRaw(uuid: string) {
     const request: UpdateFileRequest = {
         uuid,
         favorite: false
@@ -89,7 +90,7 @@ function unfavorite(uuid: string) {
     })
 }
 
-function deleteFile() {
+function deleteFileRaw() {
     if (!recentFiles?.data) {
         ElMessage.error("No files")
         return;
@@ -123,7 +124,7 @@ function resetRenaming() {
     renamingTo.value = ""
 }
 
-function renameFile() {
+function renameFileRaw() {
     if (!recentFiles?.data) {
         ElMessage.error("No files")
         return;
@@ -146,7 +147,8 @@ function renameFile() {
 
     const request: UpdateFileRequest = {
         uuid: renamingFileUuid.value,
-        fileName: renamingTo.value
+        fileName: renamingTo.value,
+        modifiedAt: new Date().toISOString()
     }
     $fetch<BaseResponse<Critique>>("/api/file", {
         method: "PUT",
@@ -165,6 +167,11 @@ function renameFile() {
         resetRenaming()
     })
 }
+
+const deleteFile = throttle(deleteFileRaw, 2000)
+const renameFile = throttle(renameFileRaw, 2000)
+const unfavorite = throttle(unfavoriteRaw, 2000)
+const favorite = throttle(favoriteRaw, 2000)
 
 const userActions: UserActions[] = [
     {
@@ -202,7 +209,7 @@ const userActions: UserActions[] = [
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="deletingFileUuid = ''">Cancel</el-button>
-                <el-button type="primary" @click="deleteFile()">
+                <el-button type="primary" @click="deleteFile">
                     Confirm
                 </el-button>
             </div>

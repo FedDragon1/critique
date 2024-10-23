@@ -68,6 +68,7 @@ const continueReview = throttle(continueReviewRaw, 2000)
         <div class="page-wrapper">
             <div class="frame">
                 <ImageUploader @image-change="(i) => imageLength = i"
+                               @uploading="uploading = true"
                                :disabled="uploading"
                                ref="imageUploader"
                                class="upload-wrapper"/>

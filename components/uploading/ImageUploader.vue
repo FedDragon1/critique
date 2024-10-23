@@ -12,7 +12,7 @@ import {formatting} from "~/composibles/useUploader";
 defineProps<{
     disabled?: boolean
 }>()
-const emit = defineEmits(["imageChange", "cleanedUp"])
+const emit = defineEmits(["imageChange", "cleanedUp", "uploading"])
 
 function useUploadRef(value: any) {
     return customRef((track: () => void, trigger: () => void) => {
@@ -60,10 +60,11 @@ const wordMime = [
 ]
 
 const handleWord = (file: File) => {
-
+    emit("uploading")
 }
 
 const handlePdf = (file: File) => {
+    emit("uploading")
     const reader = new FileReader()
     reader.readAsArrayBuffer(file)
 
@@ -95,6 +96,7 @@ const handlePdf = (file: File) => {
 }
 
 const handleText = (file: File) => {
+    emit("uploading")
     const reader = new FileReader()
     reader.readAsText(file)
 

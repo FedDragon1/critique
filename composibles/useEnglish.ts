@@ -69,10 +69,10 @@ function mergeShortSentences(matches: string[]) {
 }
 
 function chunkBySentences(paragraph: string) {
-    const matcher = /\(?[^.?!\n]+[.!?]+\)?|(?<= ).+(?=\n)|(?<= ).+$|(?<=\n).+$|(?<=\n).+(?=\n)/g
+    const matcher = /\(?[^.?!\n]+[.!?]+\)?|(?<= ).+(?=\n)|(?<= ).+$|(?<=\n).+$|(?<=\n).+(?=\n)|^.+$|^.+(?=\n)/g
     const matches = paragraph.match(matcher)
     if (!matches) {
-        return []
+        return [paragraph]
     }
 
     return mergeShortSentences(matches)

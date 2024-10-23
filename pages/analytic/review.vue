@@ -26,6 +26,7 @@ const frame = useTemplateRef<HTMLDivElement>("frame")
 const editor = useTemplateRef<typeof CritiqueEditor>("editor")
 
 const uploading = ref(false)
+const disableUpload = ref(false)
 const fileName = ref("")
 const fileNameError = ref("")
 
@@ -48,6 +49,11 @@ function validateFileName() {
 }
 
 async function makeSummary(content: string) {
+    // don't need a summary
+    if (content.length < 500) {
+        return content
+    }
+
     const message = ElMessage.info({
         message: "Summarizing file",
         duration: 0
@@ -106,6 +112,8 @@ function uploadCritique() {
         return;
     }
 
+    disableUpload.value = true
+
     // assume the user has corrected all low
     ignoreAll()
 
@@ -142,7 +150,10 @@ function uploadCritique() {
             }
             ElMessage.success("File created")
             router.push(`/analytic/${resp.data?.uuid}`)
-        }).finally(() => message.close())
+        }).finally(() => {
+            message.close()
+            disableUpload.value = false
+        })
     })
 }
 
@@ -188,7 +199,7 @@ onMounted(() => setTimeout(() => timeout.value = true, 5000))
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="uploading = false">Cancel</el-button>
-                <el-button type="primary" @click="uploadCritique">
+                <el-button type="primary" @click="uploadCritique" :disabled="disableUpload">
                     Confirm
                 </el-button>
             </div>
