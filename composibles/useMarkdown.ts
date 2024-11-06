@@ -13,7 +13,7 @@ export default function useMarkdown(rawContent: string) {
     }) as string)
 
     const purified = unifyHTML(DOMPurify.sanitize(content, {
-        ALLOWED_TAGS: ['p', 'b', 'strong', 'em', 'i', 'u', 's', 'del', 'blockquote', 'h1', 'h2', 'h3', 'br']
+        ALLOWED_TAGS: ['p', 'b', 'strong', 'em', 'i', 'u', 's', 'del', 'blockquote', 'h1', 'h2', 'h3', 'br', 'li', 'ul', 'ol']
     }))
 
     if (content.length - purified.length) {
