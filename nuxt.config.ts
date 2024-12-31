@@ -4,13 +4,14 @@ export default defineNuxtConfig({
     devtools: {enabled: true},
     ssr: false,
     modules: [
-        "@nuxtjs/supabase",
-        "@element-plus/nuxt",
-        '@nuxtjs/color-mode',
-        '@vesp/nuxt-fontawesome',
-        '@vueuse/nuxt',
-        "@pinia/nuxt",
-        "nuxt-tiptap-editor",
+      "@nuxtjs/supabase",
+      "@element-plus/nuxt",
+      '@nuxtjs/color-mode',
+      '@vesp/nuxt-fontawesome',
+      '@vueuse/nuxt',
+      "@pinia/nuxt",
+      "nuxt-tiptap-editor",
+      "@nuxtjs/tailwindcss",
     ],
 
     vue: {

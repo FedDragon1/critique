@@ -7,6 +7,7 @@ import {Search} from "@element-plus/icons-vue";
 import {useUserStore} from "~/stores/userStore";
 import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
 import {throttle} from "lodash-es";
+import DashboardNav from "~/components/dashboard/DashboardNav.vue";
 
 definePageMeta({
     middleware: 'auth'
@@ -172,20 +173,6 @@ const deleteFile = throttle(deleteFileRaw, 2000)
 const renameFile = throttle(renameFileRaw, 2000)
 const unfavorite = throttle(unfavoriteRaw, 2000)
 const favorite = throttle(favoriteRaw, 2000)
-
-const userActions: UserActions[] = [
-    {
-        display: "Settings",
-        icon: faGear,
-        callback: () => router.push("/setting")
-    },
-    {
-        display: "Logout",
-        icon: faArrowRightFromBracket,
-        callback: () => router.push("/logout")
-    }
-]
-
 </script>
 
 <template>
@@ -244,29 +231,10 @@ const userActions: UserActions[] = [
         </template>
     </el-dialog>
 
-    <DashboardFrame activate="/dashboard" style="gap: 40px; display: flex; flex-direction: column">
-        <nav class="dashboard-nav">
-            <el-input v-model="searchText" autocomplete="off" clearable placeholder="Search critiques"
-                      :suffix-icon="Search" class="search-bar"/>
-            <div class="avatar">
-                <el-dropdown class="avatar-image">
-                    <div class="avatar-image"
-                         :style="{'background-image': `url('${userAvatar}')`}"/>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item v-for="action in userActions"
-                                              :key="action.display"
-                                              @click="action.callback">
-                                <div class="space-between">
-                                    <font-awesome :icon="action.icon"/>
-                                    <span>{{ action.display }}</span>
-                                </div>
-                            </el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            </div>
-        </nav>
+    <DashboardFrame activate="/dashboard" class="gap-10 flex flex-col p-12">
+        <template #nav>
+            <DashboardNav v-model:text="searchText" :user-avatar="userAvatar" />
+        </template>
 
         <NuxtLink class="new-file" to="/analytic">
             <img class="new-file-icon"
@@ -322,13 +290,6 @@ const userActions: UserActions[] = [
 </template>
 
 <style scoped>
-.space-between {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
-}
-
 .recent-file-display {
     display: flex;
     gap: 20px;
@@ -367,38 +328,5 @@ const userActions: UserActions[] = [
     display: flex;
     flex-direction: column;
     gap: 4px;
-}
-
-.dashboard-nav {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.search-bar {
-    width: 300px;
-    height: 40px;
-}
-
-.avatar-image {
-    width: 100%;
-    height: 100%;
-    background-size: contain;
-}
-
-.avatar-image:focus-visible {
-    outline: none;
-}
-
-.avatar {
-    height: 40px;
-    width: 40px;
-    border-radius: var(--el-border-radius-circle);
-    overflow: hidden;
-    border: var(--el-border);
-    box-sizing: border-box;
 }
 </style>

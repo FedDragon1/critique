@@ -8,8 +8,7 @@ const attrs = useAttrs();
 </script>
 
 <template>
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1533.26 390.92" v-bind="attrs" :width="width" :height="height">
-    <title>critique</title>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260.92 390.92" v-bind="attrs" :width="width" :height="height">
     <g id="icon">
       <path class="cls-1"
             d="M6452.21,7061.77l98.27,98.06,98.05-98.58s-35.7-34.94-96-35S6452.21,7061.77,6452.21,7061.77Z"

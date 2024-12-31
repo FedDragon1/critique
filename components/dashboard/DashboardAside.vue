@@ -1,145 +1,121 @@
 <script setup lang="ts">
 import BrandIconLight from "~/components/svg/BrandIconLight.vue";
 import DashboardIcon from "~/components/svg/DashboardIcon.vue";
-import AnalyticsIcon from "~/components/svg/AnalyticsIcon.vue";
+import NewScan from "~/components/svg/NewScan.vue";
 import SettingsIcon from "~/components/svg/SettingsIcon.vue";
+import DocumentIcon from "~/components/svg/DocumentIcon.vue";
 import BrandIcon from "~/components/svg/BrandIcon.vue";
-import {useUiStore} from "~/stores/uiOptionStore";
+import MinimizeIcon from "~/components/svg/MinimizeIcon.vue";
+import { useUiStore } from "~/stores/uiOptionStore";
 
 const routes = [
-  {
-    to: "/dashboard",
-    component: DashboardIcon,
-    caption: "Dashboard"
-  },
-  {
-    to: "/analytic",
-    component: AnalyticsIcon,
-    caption: "Analytics"
-  },
-  {
-    to: "/setting",
-    component: SettingsIcon,
-    caption: "Settings"
-  },
+    {
+        to: "/analytic",
+        component: NewScan,
+        caption: "New Scan"
+    },
+    {
+        to: "/dashboard",
+        component: DashboardIcon,
+        caption: "Dashboard"
+    },
+    {
+        to: "/document",
+        component: DocumentIcon,
+        caption: "Documents"
+    },
+    {
+        to: "/setting",
+        component: SettingsIcon,
+        caption: "Settings"
+    },
 ]
 
 const props = defineProps<{
-  activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/setting",
-  postToggle?: () => void
+    activate: "/dashboard" | "/analytic" | "/dashboard/profile" | "/setting",
+    postToggle?: () => void
 }>();
 
 const uiStore = useUiStore()
 
 function toggle() {
-  uiStore.toggleNav();
-  props.postToggle && props.postToggle()
+    uiStore.toggleNav();
+    props.postToggle && props.postToggle()
 }
+
+const mockProjects = [
+    {
+        color: "#79c354",
+        name: "Medieval Critical Read",
+        uuid: "asdklfja"
+    },
+    {
+        color: "#fda400",
+        name: "Great Depression Critical Read",
+        uuid: "aasdf"
+    },
+    {
+        color: "#e2cafb",
+        name: "Fascism Critical Read",
+        uuid: "dfgfgdfg"
+    },
+    {
+        color: "#75a4e8",
+        name: "Shakespeare Analysis",
+        uuid: "o;sdfiugpo"
+    },
+]
 </script>
 
 <template>
-  <aside class="dashboard-aside" :class="{'dashboard-aside-minimized': uiStore.minimized}">
-    <div class="aside-top">
-      <BrandIcon :height="40" v-if="uiStore.minimized" style="padding-top: 20px;"
-                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAANGSURBVHgBnZZNSFRRFMfPuW+cmaJFGfQhQUHQhzVj6hh9WDmYw/gF2rIgsl20ahMkoQuZsVW0CVqU5EYiglYzQuKoiKSSaQoRWlhgUQtDSLLJ9+7p3MnRGX2Md+a/mPvufeee35xzz3nvIWSh5d7IeVPKagThQ6LDBLRHrSPgHAHOIslBi8zo1mDjqN1+1IHEeyKXJdEtNvbp2CPCe7Aw5ArWdmnDliKR/ZgHnQB0AXIQATyDvOU7W/yNn9VcZDLGbXlOTpUHchSn+pRbsosVZYS5LwRmhGX4Of55yBYEMOtyiAqsrP2SspauoUBgFzitl1JC07lo77Rai3d3e8kwu9m8ADSkQE4D/akgpQ2RYZ5s5d8ziNjfV1N1Qq25qqsneahgL18hR9DKvTW9bggekKY5u7pA8JOr8HQywkWO0GFYMb7cmS1oY2SWdXfd7nwhsG+wpvKQmm7jCF2Ifr6czxaUBqPWVsFRNNrYFAiDgXWBooTTqtopiNNp1cjZgNJgoxPDZ3nIt7UiKDBAxpJAd339DEnDzzU9zw2sBUqDmdI8msmQHecbKKMjDf9T6g4GPwpOqVPogdJgRGLfZsbEEZomV2ldxRE1d3FKdUFpMHbl1tyz10lGF2k+V21hAvCPzgZVDLhE9ZjIbI4wQjm3mbECkZT+M7FYorlDxceutvm8h0FTqzCLHBOgATobjSXOKFTiuUbCeIoEA+2+omLICrYYf8seF2ytCKZlHMuToHCp9wa/tDow8eqC3dyfvTrAVZi/v98kko/AJiIgGSjv6fmWiKiMIwJ4COkFssMiGQ2Xeo5owZQcv+EBD0upoPWpA4kdYFOJ/ETZIwH6wsWFhaADOxWL/eCU3VfX3FPTqaC2Ek+TSh1kKPkEUDiGQqXekk1hSovLop0PPQJ/cS0in+cmPy2egEZvscF2TnNvqKzwhM29zAr5jl8HEo91bNMd03ce/M1jUx/W1jIoXFZ0iSS9gCxBSXGEC9JBF1tGpsbUPOM3iHTACG/phFxF+NyK//qUnGr943CJ54oEvM1N5dWx5+oa4HNvbR6fGkhdzio9904eKzJNo0EIKifCfbz5IKdqWZ0PSZgEIYYthFctb96N2+3/B38BUYfm1GsgAAAAAElFTkSuQmCC"></BrandIcon>
-      <BrandIconLight v-else :height="40" style="padding-top: 20px;"></BrandIconLight>
-      <div class="functions">
-        <template v-for="route in routes" :key="route.to">
-          <NuxtLink class="function-tab" :to="route.to" :class="{active: activate === route.to}">
-            <component :is="route.component"
-                       width="20"
-                       height="20"
-                       :fill="activate === route.to ? '#ffffff' : '#809FB8'"></component>
-            <span v-if="!uiStore.minimized">{{ route.caption }}</span>
-          </NuxtLink>
-        </template>
-        <div class="function-tab" @click="toggle">
-          <el-icon size="1.4rem"
-                   style="translate: -2px 0">
-            <el-icon-fold></el-icon-fold>
-          </el-icon>
-          <span v-if="!uiStore.minimized">Minimize Sidebar</span>
+    <aside class="w-[250px] border-r flex flex-col box-border flex-shrink-0 overflow-hidden transition-all bg-[#F6F6F6]"
+           :class="{'dashboard-aside-minimized': uiStore.minimized}">
+        <div class="h-nav border-b flex justify-around items-center flex-shrink-0">
+            <BrandIcon :height="40" v-if="uiStore.minimized" @click="toggle" style="padding-top: 16px; flex-shrink: 0"></BrandIcon>
+            <template v-else>
+                <NuxtLink to="/dashboard">
+                    <BrandIconLight :height="36" style="padding-top: 16px; flex-shrink: 0"></BrandIconLight>
+                </NuxtLink>
+                <MinimizeIcon width="24" height="24" fill="#909399" @click="toggle" style="translate: -2px 4px; flex-shrink: 0" />
+            </template>
         </div>
-      </div>
-    </div>
-    <div class="aside-footer" v-if="!uiStore.minimized">
-      <span>© 2024 Critique</span>
-      <span class="small">Enhancing reading comprehension<br>and critical analysis with AI.</span>
-    </div>
-  </aside>
+        <div class="p-2.5">
+            <div class="flex flex-col gap-2.5 my-4">
+                <template v-for="route in routes" :key="route.to">
+                    <NuxtLink class="function-tab flex w-full gap-2.5 h-12 text-zinc-500 items-center rounded cursor-pointer pl-4 box-border"
+                              :to="route.to" :class="{'bg-primary-translucent': activate === route.to}">
+                        <component :is="route.component"
+                                   width="20"
+                                   height="20"
+                                   class="aspect-square h-5 inline-block align-baseline"
+                                   :fill="activate === route.to ? '#000000' : '#909399'"></component>
+                        <span v-if="!uiStore.minimized" :class="{'text-foreground': activate === route.to}">{{ route.caption }}</span>
+                    </NuxtLink>
+                </template>
+            </div>
+            <hr class="border-0 border-b">
+            <div class="px-2.5 text-zinc-500">
+                <div class="flex justify-between items-center">
+                    <span class="uppercase font-bold text-sm">recent projects</span>
+                    <NewScan width="24" fill="#909399" height="24" />
+                </div>
+                <div v-for="item in mockProjects" :key="item.uuid"
+                     class="w-full flex items-center gap-4 h-8 my-4">
+                    <div class="h-2 w-2 rounded-full flex-shrink-0" :style="{ background: item.color }"></div>
+                    <span class="text-ellipsis whitespace-nowrap overflow-hidden flex-grow" :title="item.name">{{item.name}}</span>
+                </div>
+            </div>
+        </div>
+    </aside>
 </template>
 
 <style scoped>
-.dashboard-aside {
-  width: var(--aside-width);
-  border-right: 1px solid var(--el-border-color);
-  padding: var(--dashboard-main-padding);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: width 0.3s ease-out;
-}
 
-.dashboard-aside.dashboard-aside-minimized {
-  width: var(--aside-width-minimized);
+.dashboard-aside-minimized {
+    width: var(--aside-width-minimized);
 }
 
 .dashboard-aside-minimized .function-tab {
-  padding-right: 10px;
-}
-
-.aside-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: var(--dashboard-main-margin);
-  white-space: nowrap;
-}
-
-.small {
-  font-size: 0.8rem;
-  color: var(--el-text-color-link);
-}
-
-.function-tab {
-  display: flex;
-  width: 100%;
-  gap: 10px;
-  height: 60px;
-  text-decoration: none;
-  color: var(--el-text-color-link);
-  align-items: center;
-  padding-left: 20px;
-  translate: -20px 0;
-  border-radius: 0 20px 20px 0;
-  cursor: pointer;
-}
-
-.function-tab > img {
-  aspect-ratio: 1 / 1;
-  height: 20px;
-  display: inline-block;
-  vertical-align: baseline;
-}
-
-.functions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.aside-top {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-  align-content: flex-start;
-}
-
-.active {
-  background-color: var(--el-color-danger);
-  color: var(--el-color-white)
+    padding-right: 10px;
 }
 </style>

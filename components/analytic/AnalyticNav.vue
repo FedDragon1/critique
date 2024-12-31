@@ -42,7 +42,7 @@ defineProps<{
 <style scoped>
 nav {
     width: 100%;
-    height: 60px;
+    height: var(--nav-height);
     display: flex;
     justify-content: space-around;
     border-bottom: 1px solid var(--el-border-color);
