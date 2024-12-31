@@ -102,7 +102,7 @@ const mockProjects = [
                 <div v-for="item in mockProjects" :key="item.uuid"
                      class="w-full flex items-center gap-4 h-8 my-4">
                     <div class="h-2 w-2 rounded-full flex-shrink-0" :style="{ background: item.color }"></div>
-                    <span class="text-ellipsis whitespace-nowrap overflow-hidden flex-grow" :title="item.name">{{item.name}}</span>
+                    <span class="text-ellipsis whitespace-nowrap overflow-hidden flex-grow text-sm" :title="item.name">{{item.name}}</span>
                 </div>
             </div>
         </div>

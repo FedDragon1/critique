@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Search } from "@element-plus/icons-vue";
 import { faArrowRightFromBracket, faGear } from "@fortawesome/free-solid-svg-icons";
 
 defineProps<{
@@ -25,8 +24,14 @@ const userActions: UserActions[] = [
 
 <template>
     <nav class="pl-10 pr-5 flex items-center justify-between gap-2.5 mb-5 h-nav border-b">
-        <el-input v-model="model" autocomplete="off" clearable placeholder="Search critiques"
-                  :prefix-icon="Search" class="h-10" style="width: 350px; border: none"/>
+        <div class="flex items-center gap-2 text-sm w-[350px] h-10 px-4 bg-white rounded-lg shadow-sm">
+            <el-icon>
+                <el-icon-search class="text-zinc-500"/>
+            </el-icon>
+            <input v-model="model" autocomplete="off" placeholder="Search for anything..."
+                   class="h-full outline-none"/>
+        </div>
+
         <div class="h-10 w-10 rounded-full overflow-hidden border box-border">
             <el-dropdown class="w-full h-full">
                 <div class="w-full h-full bg-contain outline-none"
