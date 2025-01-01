@@ -31,7 +31,7 @@ defineExpose({
             <DashboardAside :activate="activate" :post-toggle="postToggle"></DashboardAside>
             <div class="w-full h-full overflow-y-auto" >
                 <slot name="nav"/>
-                <div class="w-full h-full" v-bind="attrs" ref="main">
+                <div class="w-full" v-bind="attrs" ref="main">
                     <slot></slot>
                 </div>
             </div>

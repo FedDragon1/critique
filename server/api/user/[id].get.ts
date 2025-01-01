@@ -33,11 +33,18 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueUs
         }
     }
 
-    const ret = data[0] as unknown as CritiqueUser
+    const ret = data[0]
+    const transformed: CritiqueUser = {
+        avatar: ret.avatar,
+        bytesUsed: ret.bytes_used,
+        createdAt: ret.created_at,
+        displayName: ret.display_name,
+        uuid: ret.uuid
+    }
 
     return {
         success: true,
-        data: ret
+        data: transformed
     }
 })
 
