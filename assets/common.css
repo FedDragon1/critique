@@ -6,12 +6,9 @@
 
 :root {
     --aside-width: 250px;
-    --aside-width-minimized: 70px;
     --nav-height: 90px;
     --poppins: "Inter";
     --dashboard-background-color: #ffffff;
-    --dashboard-main-margin: 5px;
-    --dashboard-main-padding: 10px;
     --editor-selection-color: #fff0ed;
     --critique-hover-color: #fae4e7;
     --critique-selected-color: #ffd9de;

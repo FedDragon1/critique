@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import {faArrowRightFromBracket, faGear} from '@fortawesome/free-solid-svg-icons'
 import RecentFilePreview from "~/components/dashboard/RecentFilePreview.vue";
 import {useTime} from "~/composibles/useTime";
 import FileList from "~/components/dashboard/FileList.vue";
-import {Search} from "@element-plus/icons-vue";
-import {useUserStore} from "~/stores/userStore";
 import type {BaseResponse, DeleteFileRequest, UpdateFileRequest} from "~/types/requests";
 import {throttle} from "lodash-es";
 import DashboardNav from "~/components/dashboard/DashboardNav.vue";

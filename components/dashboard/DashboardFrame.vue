@@ -8,7 +8,7 @@ defineOptions({
 const attrs = useAttrs();
 const props = defineProps<{
     padding?: string,
-    activate: "/dashboard" | "/analytic" | "/setting",
+    activate: "/dashboard" | "/analytic" | "/setting" | "/document",
     postToggle?: () => void
 }>();
 
