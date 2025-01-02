@@ -78,7 +78,7 @@ const mockProjects = [
             <MinimizeIcon width="24" height="24" fill="#909399" @click="toggle" v-if="!uiStore.minimized" class="-translate-x-0.5 translate-y-1 flex-shrink-0" />
         </div>
         <div class="p-2.5 transition-all duration-300 flex flex-col justify-center" :class="[uiStore.minimized ? ' flex-grow' : 'flex-grow-0' ]">
-            <div class="flex flex-col gap-1 my-2 items-center">
+            <div class="flex flex-col gap-1 mt-2 items-center">
                 <MinimizeIcon width="24" height="24" fill="#909399" @click="toggle" class="rotate-180 mb-2" v-if="uiStore.minimized"/>
                 <template v-for="route in routes" :key="route.to">
                     <NuxtLink class="function-tab flex w-full gap-2.5 h-12 text-zinc-500 items-center rounded cursor-pointer box-border whitespace-nowrap"
@@ -88,7 +88,7 @@ const mockProjects = [
                                    height="20"
                                    class="aspect-square h-5 inline-block align-baseline flex-shrink-0"
                                    :fill="activate === route.to ? '#000000' : '#909399'"></component>
-                        <span v-if="!uiStore.minimized" :class="{'text-foreground': activate === route.to}">{{ route.caption }}</span>
+                        <span v-if="!uiStore.minimized" :class="{'text-foreground font-medium': activate === route.to}">{{ route.caption }}</span>
                     </NuxtLink>
                 </template>
             </div>

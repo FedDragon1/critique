@@ -10,6 +10,7 @@ import BugIcon from "~/components/svg/BugIcon.vue";
 import HeadIcon from "~/components/svg/HeadIcon.vue";
 import BellIcon from "~/components/svg/BellIcon.vue";
 import MedalIcon from "~/components/svg/MedalIcon.vue";
+import { Chart, registerables } from "chart.js";
 
 definePageMeta({
     middleware: 'auth'
@@ -220,6 +221,164 @@ const notificationColor: { [key in string]: string } = {
 function capitalizeFirst(s: string) {
     return s.slice(0, 1).toUpperCase() + s.slice(1)
 }
+
+// test
+
+function randomArray(length: number) {
+    const arr = []
+    for (let i = 0; i < length; i++) {
+        arr.push(Math.floor(Math.random() * 5))
+    }
+    return arr
+}
+
+Chart.register(...registerables);
+
+const labels = {
+    week: ["S", "M", "T", "W", "T", "F", "S"],
+    month: Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`),
+    year: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
+
+let chartInstance: Chart
+const chartRef = ref<HTMLCanvasElement>()
+const selectedRange = ref<keyof typeof labels>("week")
+
+const data = {
+    week: randomArray(7),
+    month: randomArray(30),
+    year: randomArray(12),
+};
+
+const scale = 0.85
+
+const createChart = () => {
+    const canvas = chartRef.value
+    if (!canvas) {
+        setTimeout(createChart, 1000);
+        return
+    }
+
+    const { width, height } = canvas.getBoundingClientRect()
+    canvas.width = width
+    canvas.height = height
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        setTimeout(createChart, 1000)
+        return
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels[selectedRange.value],
+            datasets: [
+                {
+                    label: "Activity",
+                    data: data[selectedRange.value],
+                    borderColor: "#000000",
+                    pointBorderColor: "#D47A74",
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    pointHoverBorderWidth: 3,
+                    pointBackgroundColor: "#FFFFFF",
+                    tension: 0.6, // Smooth curve
+                    clip: false,
+                },
+                {
+                    label: "shadow",
+                    data: data[selectedRange.value].map(i => i * scale),
+                    borderColor: "#F5F5F7",
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    tension: 0.6, // Smooth curve
+                    clip: false,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: (context) => {
+                            if (context.raw === 1) {
+                                return "1 Scan"
+                            }
+                            return `${context.raw as number} Scans`
+                        },
+                        title: () => ""
+                    },
+                    filter: (item) => {
+                        return item.dataset.label !== "shadow";
+                    },
+                    yAlign: "bottom",
+                    displayColors: false,
+                    mode: "nearest",
+                    intersect: true,
+                    caretPadding: 10,
+                    padding: 10,
+                    backgroundColor: "#000000"
+                },
+                legend: {
+                    display: false
+                },
+            },
+            interaction: {
+                mode: "nearest",
+                intersect: false
+            },
+            scales: {
+                x: {
+                    grid: {
+                        drawOnChartArea: true,
+                        drawTicks: true,
+                        color: "#F5F5F7",
+                    },
+                    border: {
+                        display: false
+                    },
+                    ticks: {
+                        padding: 10,
+                        color: "#000000"
+                    },
+                },
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        stepSize: 1,
+                        padding: 20,
+                        color: "#000000",
+                        callback(value) {
+                            return Math.round(Number(value))
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                        drawTicks: false,
+                    },
+                    border: {
+                        display: false
+                    },
+                    suggestedMax: Math.max(...data[selectedRange.value]) + 1
+                },
+            }
+        },
+    });
+};
+
+const updateChart = () => {
+    chartInstance.data.labels = labels[selectedRange.value];
+    chartInstance.data.datasets[0].data = data[selectedRange.value];
+    chartInstance.data.datasets[1].data = data[selectedRange.value].map(i => i * scale);
+    chartInstance.update();
+};
+
+onMounted(() => {
+    createChart();
+});
 </script>
 
 <template>
@@ -285,7 +444,7 @@ function capitalizeFirst(s: string) {
 
         <div class="w-full flex gap-12 h-[320px]">
             <div class="flex flex-col h-full justify-between">
-                <div>
+                <div class="p-4">
                     <h1 class="font-medium text-2xl mt-8 mb-2">Hi, {{ userName }}</h1>
                     <h3 class="text-[#54577A] text-lg">Let us simplify your reading journey.</h3>
                 </div>
@@ -300,8 +459,16 @@ function capitalizeFirst(s: string) {
                     </div>
                 </NuxtLink>
             </div>
-            <div class="flex-grow min-w-[500px] bg-white shadow h-full">
-                Activity
+            <div class="flex-grow min-w-[500px] bg-white shadow-sm hover:shadow h-full p-6 flex flex-col gap-2 rounded transition-all">
+                <div class="flex w-full justify-around">
+                    <h1 class="text-xl w-full mb-4">Activity</h1>
+                    <select v-model="selectedRange" @change="updateChart">
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                    </select>
+                </div>
+                <canvas ref="chartRef" class="flex-grow flex-1 min-h-0 w-full"></canvas>
             </div>
             <div class="w-[400px] min-w-[200px] bg-white shadow-sm rounded p-6 flex flex-col gap-2 items-center transition-all hover:shadow">
                 <h1 class="text-xl w-full mb-4">Notifications</h1>
@@ -379,5 +546,9 @@ function capitalizeFirst(s: string) {
 .subheading {
     margin-top: 0;
     margin-left: var(--el-border-radius-round);
+}
+
+#chartjs-tooltip {
+    margin-bottom: 20px;
 }
 </style>
