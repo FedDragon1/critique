@@ -9,6 +9,7 @@ export default {
         "primary-translucent": "var(--color-primary-translucent)",
         "foreground": "var(--foreground)",
         "background": "var(--background)",
+        "emphasis": "var(--emphasis)"
       },
       height: {
         "nav": "var(--nav-height)"

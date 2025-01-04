@@ -319,8 +319,18 @@ const createChart = () => {
                     mode: "nearest",
                     intersect: true,
                     caretPadding: 10,
-                    padding: 10,
-                    backgroundColor: "#000000"
+                    padding: {
+                        top: 15,
+                        bottom: 15,
+                        left: 20,
+                        right: 20
+                    },
+                    backgroundColor: "#000000",
+                    bodyFont: {
+                        weight: 500,
+                        family: "Inter",
+                        size: 14
+                    }
                 },
                 legend: {
                     display: false
@@ -342,7 +352,11 @@ const createChart = () => {
                     },
                     ticks: {
                         padding: 10,
-                        color: "#000000"
+                        color: "#000000",
+                        font: {
+                            weight: 500,
+                            family: "Inter"
+                        }
                     },
                 },
                 y: {
@@ -353,6 +367,10 @@ const createChart = () => {
                         color: "#000000",
                         callback(value) {
                             return Math.round(Number(value))
+                        },
+                        font: {
+                            weight: 500,
+                            family: "Inter"
                         }
                     },
                     grid: {
@@ -460,8 +478,8 @@ onMounted(() => {
                 </NuxtLink>
             </div>
             <div class="flex-grow min-w-[500px] bg-white shadow-sm hover:shadow h-full p-6 flex flex-col gap-2 rounded transition-all">
-                <div class="flex w-full justify-around">
-                    <h1 class="text-xl w-full mb-4">Activity</h1>
+                <div class="flex w-full justify-around items-center mb-4">
+                    <h1 class="text-xl w-full">Activity</h1>
                     <select v-model="selectedRange" @change="updateChart">
                         <option value="week">This Week</option>
                         <option value="month">This Month</option>
@@ -478,8 +496,8 @@ onMounted(() => {
                         <div class="w-10 h-10 flex justify-center items-center rounded-xl flex-shrink-0"
                              :style="{ background: notificationColor[notif.type] }">
                             <component :is="notificationIcon[notif.type]"
-                                       width="30px"
-                                       height="30px"
+                                       width="24px"
+                                       height="24px"
                                        fill="#000000" />
                         </div>
                         <div class="flex-1 min-w-0">
