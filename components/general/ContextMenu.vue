@@ -49,6 +49,10 @@ function hideMenu() {
     }
     menu.value.style.display = "none"
 }
+
+onMounted(() => {
+    hideMenu()
+})
 </script>
 
 <template>
