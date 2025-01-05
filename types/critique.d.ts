@@ -210,6 +210,7 @@ type CritiqueEvents = {
     "critique-hover": CritiqueUnderline,
     "critique-remove-hover": CritiqueUnderline,
     "critique-toggle": void,
+    "context-menu-off": string | undefined
 }
 
 interface CardOffset {
@@ -228,4 +229,18 @@ interface TaggingTag {
     uuid: string,
     type: CardType,
     name: string
+}
+
+interface DocumentOptions {
+    view: "icon" | "list"
+    sortBy: "date" | "name" | "size"
+    order: "ascending" | "descending"
+}
+
+interface ContextMenuEntry {
+    icon: any,
+    text: string,
+    callback?: () => void,
+    hotkey?: string,
+    divided?: boolean
 }

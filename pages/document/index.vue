@@ -133,19 +133,6 @@ const fileMock = [
     },
 ]
 
-interface DocumentOptions {
-    view: "icon" | "list"
-    sortBy: "date" | "name" | "size"
-    order: "ascending" | "descending"
-}
-
-interface ContextMenuEntry {
-    icon: typeof NewFolderIcon,
-    text: string,
-    hotkey?: string,
-    divided?: boolean
-}
-
 const options = reactive<DocumentOptions>({
     view: "icon",
     sortBy: "date",
@@ -198,7 +185,7 @@ const contextMenu: ContextMenuEntry[] = [
                 <MenuFrame>
                     <MenuEntry v-for="entry in contextMenu" :key="entry.text" :divided="entry.divided">
                         <template #icon>
-                            <component :is="entry.icon" width="20" height="20" fill="#222222" />
+                            <component :is="entry.icon" width="16" height="16" fill="#222222" />
                         </template>
                         <span>{{entry.text}}</span>
                         <template #hotkey>

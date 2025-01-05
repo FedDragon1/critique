@@ -2,10 +2,12 @@
 </script>
 
 <template>
-    <el-dropdown>
+    <el-dropdown placement="bottom-start" @contextmenu.stop.prevent>
         <slot />
         <template #dropdown>
-            <slot name="dropdown" />
+            <div @contextmenu.stop.prevent>
+                <slot name="dropdown" />
+            </div>
         </template>
     </el-dropdown>
 </template>
@@ -22,16 +24,22 @@ li.el-dropdown-menu__item {
     color: var(--emphasis) !important;
     margin: 0 2px;
     border-radius: 2px;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
 }
 
 .el-dropdown svg {
     outline: none !important;
 }
 
+.el-dropdown-menu {
+    padding: 6px 0 !important;
+}
+
 .el-dropdown-menu .el-icon,
 .el-dropdown-menu .el-icon svg {
-    width: 1.25em !important;
-    height: 1.25em !important;
+    width: 1.2em !important;
+    height: 1.2em !important;
 }
 
 .el-dropdown-menu__item:not(.is-disabled):hover,

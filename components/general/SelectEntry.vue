@@ -12,7 +12,9 @@ const attrs = useAttrs()
 </script>
 
 <template>
-    <el-dropdown-item :icon="model![entry] === value ? Check : EmptyIcon" @click.prevent="model![entry] = value" v-bind="attrs">
+    <el-dropdown-item :icon="model![entry] === value ? Check : EmptyIcon"
+                      class="!text-sm"
+                      @click.prevent="model![entry] = value" v-bind="attrs">
         <slot />
     </el-dropdown-item>
 </template>

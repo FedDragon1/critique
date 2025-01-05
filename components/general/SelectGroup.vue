@@ -6,7 +6,7 @@ defineProps<{
 
 <template>
     <div>
-        <span class="ml-4 text-xs py-2 block text-zinc-500">View</span>
+        <span class="ml-4 text-[0.6rem] py-2 block text-zinc-500">{{ name }}</span>
         <slot />
     </div>
 </template>
