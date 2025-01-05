@@ -31,27 +31,33 @@ function syncContextMenu(e: MouseEvent) {
     menu.value.style.transitionDuration = "0ms"
     menu.value.style.display = ""
     menu.value.style.opacity = "0"
+
+    menu.value!.style.transform = ""
+    const { width: menuWidth, height: menuHeight } = menu.value!.getBoundingClientRect()
+
+    let origin = "top"
+    let newY = e.clientY
+    if (e.clientY + menuHeight > window.innerHeight) {
+        newY -= menuHeight
+        origin = "bottom"
+    }
+
+    let newX = e.clientX
+    if (e.clientX + menuWidth > window.innerWidth) {
+        newX -= menuWidth
+    }
+
+    // initialize for animation
     menu.value.style.transform = "scaleY(0)"
 
     requestAnimationFrame(() => {
-        const { width: menuWidth, height: menuHeight } = menu.value!.getBoundingClientRect()
-
-        let newY = e.clientY
-        if (e.clientY + menuHeight > window.innerHeight) {
-            newY -= menuHeight
-        }
-
-        let newX = e.clientX
-        if (e.clientX + menuWidth > window.innerWidth) {
-            newX -= menuWidth
-        }
+        menu.value!.style.transitionDuration = `${transitionTime}ms`
+        menu.value!.style.transform = ""
+        menu.value!.style.opacity = ""
+        menu.value!.style.transformOrigin = origin
 
         top.value = newY
         left.value = newX
-
-        menu.value!.style.transitionDuration = `${transitionTime}ms`
-        menu.value!.style.opacity = ""
-        menu.value!.style.transform = ""
 
         // turn off other context menus
         eventBus.emit("context-menu-off", menuUuid)
@@ -99,7 +105,7 @@ onBeforeUnmount(() => {
              @contextmenu.prevent="syncContextMenu"
              ref="menu"
              :style="{ top: `${top}px`, left: `${left}px` }"
-             class="fixed z-[2000] transition origin-top">
+             class="fixed z-[2000] transition">
             <slot name="menu" />
         </div>
     </Teleport>
