@@ -12,12 +12,12 @@ function makeDate(modifiedDate: number | string) {
     const modDate = new Date(modifiedDate)
 
     if (now.getFullYear() !== modDate.getFullYear()) {
-        return `on ${months[modDate.getMonth()]} ${modDate.getDate()}, ${modDate.getFullYear()}`
+        return `${months[modDate.getMonth()]} ${modDate.getDate()}, ${modDate.getFullYear()}`
     }
 
     const diff = now.getTime() - modDate.getTime();
     if (diff < modifiedTime.recent) {
-        return `just now`
+        return `Just now`
     }
     if (diff < modifiedTime.minutes) {
         return `${Math.floor(diff / 1000 / 60)} minutes ago`
@@ -30,7 +30,7 @@ function makeDate(modifiedDate: number | string) {
         const days = Math.floor(diff / 1000 / 60 / 60 / 24);
         return `${days} day${days === 1 ? '' : 's'} ago`
     } else {  // months ago
-        return `on ${months[modDate.getMonth()]} ${modDate.getDate()}`
+        return `${months[modDate.getMonth()]} ${modDate.getDate()}`
     }
 }
 

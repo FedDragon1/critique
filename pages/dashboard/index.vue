@@ -565,8 +565,4 @@ onMounted(() => {
     margin-top: 0;
     margin-left: var(--el-border-radius-round);
 }
-
-#chartjs-tooltip {
-    margin-bottom: 20px;
-}
 </style>
