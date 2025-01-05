@@ -23,7 +23,7 @@ const userActions: UserActions[] = [
 </script>
 
 <template>
-    <nav class="pl-10 pr-5 flex items-center justify-between gap-2.5 mb-5 h-nav border-b sticky bg-background top-0 z-40">
+    <nav class="flex-shrink-0 pl-10 pr-5 flex items-center justify-between gap-2.5 mb-5 h-nav border-b sticky bg-background top-0 z-40">
         <div class="flex items-center gap-2 text-sm w-[350px] h-10 px-4 bg-white rounded-lg shadow-sm">
             <el-icon>
                 <el-icon-search class="text-zinc-500"/>

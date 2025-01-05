@@ -78,14 +78,19 @@ function hideMenu() {
     menu.value.style.opacity = "0"
     menu.value.style.transform = "scaleY(0)"
     setTimeout(() => {
-        menu.value!.style.display = "none"
+        if (menu.value){
+            menu.value.style.display = "none"
+        }
     }, transitionTime)
 }
 
 const eventBus = useEventBus()
 
 onMounted(() => {
-    hideMenu()
+    // don't show animation
+    if (menu.value){
+        menu.value.style.display = "none"
+    }
     eventBus.on("context-menu-off", hideIfNotSelf)
     document.addEventListener("click", hideMenu)
 })

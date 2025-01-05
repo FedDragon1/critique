@@ -244,3 +244,11 @@ interface ContextMenuEntry {
     hotkey?: string,
     divided?: boolean
 }
+
+interface FileListEntry {
+    uuid: string
+    type: "file" | "folder"
+    name: string,
+    lastModified: string,
+    size: string,
+}
