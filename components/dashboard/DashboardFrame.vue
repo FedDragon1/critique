@@ -10,7 +10,6 @@ const props = defineProps<{
     padding?: string,
     activate: "/dashboard" | "/analytic" | "/setting" | "/document",
     postToggle?: () => void,
-    overflow?: 'auto' | 'hidden'
 }>();
 
 const main = useTemplateRef<HTMLDivElement>("main");
@@ -30,8 +29,7 @@ defineExpose({
     <div class="h-screen w-screen overflow-hidden bg-background">
         <section class="w-full h-full box-border flex flex-1 min-w-0">
             <DashboardAside :activate="activate" :post-toggle="postToggle"></DashboardAside>
-            <div class="w-full h-full overflow-y-auto flex flex-col"
-                 :class="[ !overflow || overflow === 'auto' ? 'overflow-y-auto' : 'overflow-y-hidden' ]" >
+            <div class="w-full h-full overflow-y-auto flex flex-col">
                 <slot name="nav"/>
                 <div class="w-full" v-bind="attrs" ref="main">
                     <slot></slot>

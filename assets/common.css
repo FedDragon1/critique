@@ -118,3 +118,23 @@ critique-paragraph {
     padding: 2px 20px 2px 20px;
     border-left: 5px solid var(--el-color-primary);
 }
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-button {
+    height: 0;
+    width: 0
+}
+
+::-webkit-scrollbar-thumb {
+    background: #a9a9a9;
+    border-radius: 3px;
+    transition: background-color 2s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #8b8b8b;
+    border-radius: 3px;
+}

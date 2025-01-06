@@ -1,25 +1,19 @@
 <script setup lang="ts">
 import DashboardNav from "~/components/dashboard/DashboardNav.vue";
-import TweakingIcon from "~/components/svg/TweakingIcon.vue";
-
 import { v4 as uuid } from 'uuid'
 import Folder from "~/components/document/Folder.vue";
 import File from "~/components/document/File.vue";
 import UploadIcon from "~/components/svg/UploadIcon.vue";
-import DropDown from "~/components/general/DropDown.vue";
-import SelectGroup from "~/components/general/SelectGroup.vue";
-import SelectEntry from "~/components/general/SelectEntry.vue";
 import ContextMenu from "~/components/general/ContextMenu.vue";
 import MenuFrame from "~/components/general/MenuFrame.vue";
 import MenuEntry from "~/components/general/MenuEntry.vue";
 import { useTime } from "~/composibles/useTime";
 import { useFile } from "~/composibles/useFile";
-import CritiqueIcon from "~/components/svg/CritiqueIcon.vue";
-import FolderIcon from "~/components/svg/FolderIcon.vue";
-import TableRow from "~/components/general/TableRow.vue";
-import Table from "~/components/general/Table.vue";
-import ContextEnvironment from "~/components/document/ContextEnvironment.vue";
 import useContextMenu from "~/composibles/useContextMenu";
+
+definePageMeta({
+    middleware: 'auth'
+})
 
 const client = useSupabaseClient()
 const userStore = useUserStore();
@@ -27,35 +21,11 @@ const userAvatar = await userStore.getUserAvatar(client)
 
 const { makeDate } = useTime()
 const { makeFileSize } = useFile()
-const { generalMenuOptions, folderMenuOptions, fileMenuOptions } = useContextMenu()
+const { generalMenuOptions } = useContextMenu()
+
+// DATA
 
 const searchText = ref("");
-
-// FOLDER
-
-const showFolder = ref(true)
-const folder = useTemplateRef<HTMLDivElement>("folder")
-
-function syncFolderHeight() {
-    if (folder.value) {
-        const oldHeight = folder.value.style.height
-        folder.value.style.height = "auto"
-        const { height } = folder.value.getBoundingClientRect()
-        folder.value.style.height = oldHeight
-        requestAnimationFrame(() => {
-            folder.value!.style.height = `${height + 5}px`
-        })
-    }
-}
-
-function toggleFolders() {
-    showFolder.value = !showFolder.value
-    if (showFolder.value) {
-        syncFolderHeight()
-    } else if (folder.value) {
-        folder.value.style.height = "0"
-    }
-}
 
 const folderMock = ref([
     {
@@ -66,7 +36,7 @@ const folderMock = ref([
     },
     {
         uuid: uuid(),
-        name: "Very long folder 2 name this is",
+        name: "Very long folder 2 name this is Very long folder 2 name this is Very long folder 2 name this is Very long folder 2 name this is",
         lastModified: "2011-10-05T14:48:00.000Z",
         size: 129472784
     },
@@ -146,6 +116,28 @@ const fileMock = ref([
         preview: "https://picsum.photos/248/178?7",
         size: 18273
     },
+    {
+        uuid: uuid(),
+        name: "Medieval Critical Reading",
+        lastModified: new Date().toISOString(),
+        preview: "https://picsum.photos/248/178?7",
+        size: 18273
+    },
+    {
+        uuid: uuid(),
+        name: "Medieval Critical Reading",
+        lastModified: new Date().toISOString(),
+        preview: "https://picsum.photos/248/178?7",
+        size: 18273
+    },
+    {
+        uuid: uuid(),
+        name: "Medieval Critical Reading",
+        lastModified: new Date().toISOString(),
+        preview: "https://picsum.photos/248/178?7",
+        size: 18273
+    },
+
 ])
 
 const aggregatedFiles = computed(() =>
@@ -167,11 +159,36 @@ const aggregatedFiles = computed(() =>
     ] as FileListEntry[]
 )
 
-const options = reactive<DocumentOptions>({
-    view: "icon",
-    sortBy: "date",
-    order: "ascending"
-})
+// FOLDER
+
+const showFolder = ref(true)
+const folder = useTemplateRef<HTMLDivElement>("folder")
+
+function syncFolderHeight() {
+    if (!folder.value) {
+        return
+    }
+
+    const oldHeight = folder.value.style.height
+    folder.value.style.height = "auto"
+    const { height } = folder.value.getBoundingClientRect()
+    folder.value.style.height = oldHeight
+    requestAnimationFrame(() => {
+        if (folder.value) {
+            folder.value.style.height = `${height + 5}px`
+        }
+    })
+}
+
+function toggleFolders() {
+    showFolder.value = !showFolder.value
+
+    if (showFolder.value) {
+        syncFolderHeight()
+    } else if (folder.value) {
+        folder.value.style.height = "0"
+    }
+}
 
 // TABLE
 
@@ -197,19 +214,59 @@ function alignRaf() {
     requestAnimationFrame(alignRaf)
 }
 
+// SETTING SYNC
+
+const route = useRoute()
+const router = useRouter()
+
+const options = reactive<DocumentOptions>({
+    view: "icon",
+    sortBy: "date",
+    order: "ascending"
+})
+
+function syncOptions() {
+    if (route.query.view && ["icon", "list"].includes(route.query.view as string)) {
+        options.view = route.query.view as "icon" | "list"
+    }
+
+    if (route.query.sortBy && ["date", "name", "size"].includes(route.query.sortBy as string)) {
+        options.sortBy = route.query.sortBy as "date" | "name" | "size"
+    }
+
+    if (route.query.order && ["ascending", "descending"].includes(route.query.order as string)) {
+        options.order = route.query.order as "ascending" | "descending"
+    }
+
+    pushOptions()
+}
+
+function pushOptions() {
+    router.push({
+        path: route.path,
+        query: options
+    })
+}
+
+// HOOKS
+
 onMounted(() => {
+    syncOptions()
     syncFolderHeight()
     alignRaf()
 })
+
+watch(options, pushOptions)
+watch(folder, syncFolderHeight)
 </script>
 
 <template>
-    <DashboardFrame activate="/document" :overflow="options.view === 'list' ? 'hidden' : 'auto'" class="flex-grow min-h-0">
+    <DashboardFrame activate="/document" class="flex-grow min-h-0">
         <template #nav>
             <DashboardNav v-model:text="searchText" :user-avatar="userAvatar"/>
         </template>
 
-        <ContextMenu class="gap-6 flex flex-col px-8 mb-8 h-full">
+        <ContextMenu class="flex flex-col px-8 mb-8 h-full overflow-y-auto">
             <template #menu>
                 <MenuFrame>
                     <MenuEntry v-for="entry in generalMenuOptions" :key="entry.text" :divided="entry.divided">
@@ -224,19 +281,19 @@ onMounted(() => {
                 </MenuFrame>
             </template>
 
-            <div class="flex justify-between items-center">
-                <span class="font-medium text-xl">Document</span>
+            <div class="flex justify-between items-center my-6">
+                <span class="font-medium text-xl pt-1 tracking-[-3%]">Document</span>
                 <NuxtLink class="rounded bg-[#C54C4429] flex items-center px-4 py-3 gap-3 cursor-pointer border border-transparent
                             hover:bg-transparent hover:border-primary hover:text-primary transition"
                           to="/analytic">
                     <UploadIcon class="w-5" />
-                    <span class="font-semibold text-sm">Upload Document</span>
+                    <span class="font-semibold text-md tracking-[-3%]">Upload Document</span>
                 </NuxtLink>
             </div>
             <hr class="m-0"/>
 
             <template v-if="options.view === 'icon'">
-                <div class="w-full mb-4 overflow-hidden flex-shrink-0" v-if="folderMock.length">
+                <div class="w-full mt-8 overflow-hidden flex-shrink-0" v-if="folderMock.length">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex gap-4 items-center">
                             <span class="text-2xl">My folders</span>
@@ -244,33 +301,14 @@ onMounted(() => {
                                 <el-icon-caret-bottom/>
                             </el-icon>
                         </div>
-                        <div>
-                            <DropDown>
-                                <TweakingIcon width="24" stroke="#292D32" height="24"/>
-                                <template #dropdown>
-                                    <SelectGroup name="View" class="mt-2">
-                                        <SelectEntry v-model="options" entry="view" value="icon">Large icon view</SelectEntry>
-                                        <SelectEntry v-model="options" entry="view" value="list">Detail lists</SelectEntry>
-                                    </SelectGroup>
-                                    <SelectGroup name="Sort by">
-                                        <SelectEntry v-model="options" entry="sortBy" value="date">Date modified</SelectEntry>
-                                        <SelectEntry v-model="options" entry="sortBy" value="name">Name</SelectEntry>
-                                        <SelectEntry v-model="options" entry="sortBy" value="size">File size</SelectEntry>
-                                    </SelectGroup>
-                                    <div class="mb-2">
-                                        <SelectEntry v-model="options" entry="order" value="ascending" divided>Ascending</SelectEntry>
-                                        <SelectEntry v-model="options" entry="order" value="descending">Descending</SelectEntry>
-                                    </div>
-                                </template>
-                            </DropDown>
-                        </div>
+                        <DocumentViewOptions v-model="options" />
                     </div>
                     <div class="grid grid-cols-5 transition-all duration-500 gap-4 items-start" ref="folder">
                         <Folder v-for="folder in folderMock" :key="folder.uuid"
                                 :name="folder.name" :last-modified="folder.lastModified"/>
                     </div>
                 </div>
-                <div class="w-full flex flex-col gap-4 flex-shrink-0">
+                <div class="w-full my-8 flex flex-col gap-4 flex-shrink-0">
                     <span class="text-2xl">My files</span>
                     <div class="grid grid-cols-5 gap-4">
                         <File v-for="file in fileMock" :key="file.uuid"
@@ -278,46 +316,7 @@ onMounted(() => {
                     </div>
                 </div>
             </template>
-            <template v-else>
-                <Table class="w-full flex-grow min-h-0 mb-6 relative">
-                    <TableRow class="pl-6">
-                        <h3 class="flex-1 flex-grow-[2] text-lg">Name</h3>
-                        <h3 class="flex-1 max-w-[20%] absolute text-lg" id="align-col1">Last modified</h3>
-                        <h3 class="flex-1 max-w-[20%] absolute text-lg" id="align-col2">File size</h3>
-                        <DropDown class="w-8">
-                            <TweakingIcon width="24" stroke="#292D32" height="24"/>
-                            <template #dropdown>
-                                <SelectGroup name="View" class="mt-2">
-                                    <SelectEntry v-model="options" entry="view" value="icon">Large icon view</SelectEntry>
-                                    <SelectEntry v-model="options" entry="view" value="list">Detail lists</SelectEntry>
-                                </SelectGroup>
-                                <SelectGroup name="Sort by">
-                                    <SelectEntry v-model="options" entry="sortBy" value="date">Date modified</SelectEntry>
-                                    <SelectEntry v-model="options" entry="sortBy" value="name">Name</SelectEntry>
-                                    <SelectEntry v-model="options" entry="sortBy" value="size">File size</SelectEntry>
-                                </SelectGroup>
-                                <div class="mb-2">
-                                    <SelectEntry v-model="options" entry="order" value="ascending" divided>Ascending</SelectEntry>
-                                    <SelectEntry v-model="options" entry="order" value="descending">Descending</SelectEntry>
-                                </div>
-                            </template>
-                        </DropDown>
-                    </TableRow>
-                    <div class="rounded bg-white flex-grow overflow-y-auto">
-                        <ContextEnvironment v-for="row in aggregatedFiles" :key="row.uuid"
-                                            :menu-options="row.type === 'file' ? fileMenuOptions : folderMenuOptions"
-                                            class="rounded hover:bg-[#F1F1F1] transition pl-8 pr-4 group flex w-full whitespace-nowrap items-center gap-4 py-4">
-                            <div class="flex gap-4 flex-1 flex-grow-[2]">
-                                <CritiqueIcon class="w-6" v-if="row.type === 'file'" />
-                                <FolderIcon class="w-6" v-else />
-                                <span>{{row.name}}</span>
-                            </div>
-                            <span class="flex-1 max-w-[30%] text-[#686F7B] col1">{{row.lastModified}}</span>
-                            <span class="flex-1 max-w-[10%] text-[#686F7B] col2">{{row.size}}</span>
-                        </ContextEnvironment>
-                    </div>
-                </Table>
-            </template>
+            <DocumentTable v-model="options" :aggregated-files="aggregatedFiles" v-else></DocumentTable>
         </ContextMenu>
     </DashboardFrame>
 </template>

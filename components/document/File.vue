@@ -16,7 +16,7 @@ const { fileMenuOptions } = useContextMenu()
 <template>
     <ContextEnvironment :menu-options="fileMenuOptions">
         <template #default="scope">
-            <div class="flex flex-col items-center justify-between bg-white gap-4 h-[280px] max-w-[350px] p-6 shadow-sm hover:shadow
+            <div class="flex flex-col items-center justify-between bg-white gap-[12px] h-[280px] max-w-[350px] px-6 pt-6 pb-4 shadow-sm hover:shadow
                 transition-all group rounded cursor-pointer">
                 <div class="flex-grow w-full rounded border border-[#ECECEC] overflow-hidden">
                     <img :src="preview" alt="Critique Preview" class="w-full h-full object-cover" />

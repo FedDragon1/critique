@@ -10,6 +10,7 @@ const menuUuid = uuid()
 
 const top = ref(0)
 const left = ref(0)
+const open = ref(false)
 
 const menu = useTemplateRef<HTMLDivElement>("menu")
 const container = useTemplateRef<HTMLDivElement>("container")
@@ -28,11 +29,13 @@ function syncContextMenu(e: MouseEvent) {
         return
     }
 
-    menu.value.style.transitionDuration = "0ms"
+    if (!open.value) {
+        menu.value.style.transitionDuration = "0ms"
+    }
     menu.value.style.display = ""
     menu.value.style.opacity = "0"
-
     menu.value!.style.transform = ""
+
     const { width: menuWidth, height: menuHeight } = menu.value!.getBoundingClientRect()
 
     let origin = "top"
@@ -48,9 +51,9 @@ function syncContextMenu(e: MouseEvent) {
     }
 
     // initialize for animation
-    menu.value.style.transform = "scaleY(0)"
+    menu.value.style.transform = "translateY(-10px)"
 
-    requestAnimationFrame(() => {
+    const cb = () => {
         menu.value!.style.transitionDuration = `${transitionTime}ms`
         menu.value!.style.transform = ""
         menu.value!.style.opacity = ""
@@ -61,7 +64,15 @@ function syncContextMenu(e: MouseEvent) {
 
         // turn off other context menus
         eventBus.emit("context-menu-off", menuUuid)
-    })
+
+        open.value = true
+    }
+
+    if (open.value) {
+        setTimeout(cb, transitionTime)
+    } else {
+        requestAnimationFrame(cb)
+    }
 }
 
 function hideIfNotSelf(id?: string) {
@@ -76,10 +87,11 @@ function hideMenu() {
         return
     }
     menu.value.style.opacity = "0"
-    menu.value.style.transform = "scaleY(0)"
+    menu.value.style.transform = "translateY(-10px)"
     setTimeout(() => {
         if (menu.value){
             menu.value.style.display = "none"
+            open.value = false
         }
     }, transitionTime)
 }
@@ -109,7 +121,7 @@ onBeforeUnmount(() => {
         <div @click.stop
              @contextmenu.prevent="syncContextMenu"
              ref="menu"
-             :style="{ top: `${top}px`, left: `${left}px` }"
+             :style="{ top: `${top}px`, left: `${left}px`, transitionDuration: `${transitionTime}ms` }"
              class="fixed z-[2000] transition">
             <slot name="menu" />
         </div>

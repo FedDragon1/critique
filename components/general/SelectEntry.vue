@@ -4,7 +4,7 @@ import EmptyIcon from "~/components/general/EmptyIcon.vue";
 
 defineProps<{
     entry: string,
-    value: string
+    value: string,
 }>()
 
 const model = defineModel<Record<string, string>>()
@@ -13,7 +13,7 @@ const attrs = useAttrs()
 
 <template>
     <el-dropdown-item :icon="model![entry] === value ? Check : EmptyIcon"
-                      class="!text-sm"
+                      class="!text-sm !pr-8 !gap-1"
                       @click.prevent="model![entry] = value" v-bind="attrs">
         <slot />
     </el-dropdown-item>
