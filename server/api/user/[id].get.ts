@@ -16,7 +16,7 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueUs
 
     const { data, error } = await supabase
         .from("user")
-        .select("uuid, display_name, created_at, avatar, bytes_used")
+        .select("uuid, display_name, created_at, avatar, bytes_used, email")
         .eq("uuid", userId);
 
     if (error) {
@@ -39,7 +39,8 @@ export default defineEventHandler(async (event): Promise<BaseResponse<CritiqueUs
         bytesUsed: ret.bytes_used,
         createdAt: ret.created_at,
         displayName: ret.display_name,
-        uuid: ret.uuid
+        uuid: ret.uuid,
+        email: ret.email
     }
 
     return {

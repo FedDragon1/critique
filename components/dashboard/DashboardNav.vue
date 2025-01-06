@@ -1,22 +1,36 @@
 <script setup lang="ts">
-import { faArrowRightFromBracket, faGear } from "@fortawesome/free-solid-svg-icons";
-
-defineProps<{
-    userAvatar?: string
-}>()
+import UserIcon from "~/components/svg/UserIcon.vue";
+import BillingIcon from "~/components/svg/BillingIcon.vue";
+import SettingsIcon from "~/components/svg/SettingsIcon.vue";
+import LogoutIcon from "~/components/svg/LogoutIcon.vue";
 
 const model = defineModel<string>("text")
 const router = useRouter()
 
-const userActions: UserActions[] = [
+const client = useSupabaseClient()
+const userStore = useUserStore();
+const userAvatar = await userStore.getUserAvatar(client)
+const userInfo = await userStore.getUserInfo
+
+const userActions: ContextMenuEntry[] = [
     {
-        display: "Settings",
-        icon: faGear,
+        text: "Manage Account",
+        icon: UserIcon,
+        divided: true,
+    },
+    {
+        text: "Billing Icon",
+        icon: BillingIcon,
+    },
+    {
+        text: "Settings",
+        icon: SettingsIcon,
         callback: () => router.push("/setting")
     },
     {
-        display: "Logout",
-        icon: faArrowRightFromBracket,
+        text: "Logout",
+        icon: LogoutIcon,
+        divided: true,
         callback: () => router.push("/logout")
     }
 ]
@@ -33,20 +47,30 @@ const userActions: UserActions[] = [
         </div>
 
         <div class="h-10 w-10 rounded-full overflow-hidden border box-border">
-            <el-dropdown class="w-full h-full">
-                <div class="w-full h-full bg-contain outline-none"
-                     :style="{'background-image': `url('${userAvatar}')`}"/>
+            <el-dropdown class="w-full h-full" placement="bottom-end">
+                <div class="w-full h-full outline-none">
+                    <img :src="userAvatar" alt="User Avatar" class="w-full h-full bg-contain outline-none" />
+                </div>
                 <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item v-for="action in userActions"
-                                          :key="action.display"
-                                          @click="action.callback">
-                            <div class="flex gap-2.5 items-center justify-center">
-                                <font-awesome :icon="action.icon"/>
-                                <span>{{ action.display }}</span>
+                    <div class="w-[280px] pb-1 px-2">
+                        <div class="flex flex-col justify-center items-center mt-8 px-4">
+                            <img :src="userAvatar" alt="User Avatar" class="w-16 h-16 bg-contain" />
+                            <span class="mt-3 mb-1 text-[1rem]">{{ userInfo.displayName }}</span>
+                            <span class="text-[#747474] text-sm font-light mb-4">{{ userInfo.email }}</span>
+                        </div>
+                        <div v-for="action in userActions"
+                             :class="{ 'border-t': action.divided }"
+                             :key="action.text"
+                             class="text-sm cursor-pointer"
+                             @click="action.callback">
+                            <div class="hover:bg-[#F2F2F2] rounded my-1 w-full flex items-center gap-4 py-3 px-4 transition">
+                                <component :is="action.icon" class="w-4 h-4" />
+                                <div class="flex gap-2.5 items-center justify-center text-[#3f3f3f]">
+                                    <span>{{ action.text }}</span>
+                                </div>
                             </div>
-                        </el-dropdown-item>
-                    </el-dropdown-menu>
+                        </div>
+                    </div>
                 </template>
             </el-dropdown>
         </div>

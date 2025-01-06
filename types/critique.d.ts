@@ -42,7 +42,8 @@ interface CritiqueUser {
     displayName: string,
     createdAt: number,
     avatar: string,
-    bytesUsed: number
+    bytesUsed: number,
+    email: string
 }
 
 // file
@@ -251,4 +252,19 @@ interface FileListEntry {
     name: string,
     lastModified: string,
     size: string,
+}
+
+interface FileType {
+    uuid: string,
+    name: string,
+    lastModified: string,
+    preview: string,
+    size: number
+}
+
+interface FolderType {
+    uuid: string,
+    name: string,
+    lastModified: string,
+    size: number
 }

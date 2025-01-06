@@ -15,9 +15,6 @@ definePageMeta({
     middleware: 'auth'
 })
 
-const client = useSupabaseClient()
-const userStore = useUserStore();
-const userAvatar = await userStore.getUserAvatar(client)
 
 const { makeDate } = useTime()
 const { makeFileSize } = useFile()
@@ -27,7 +24,7 @@ const { generalMenuOptions } = useContextMenu()
 
 const searchText = ref("");
 
-const folderMock = ref([
+const folderMock = ref<FolderType[]>([
     {
         uuid: uuid(),
         name: "Folder Name",
@@ -66,7 +63,7 @@ const folderMock = ref([
     },
 ])
 
-const fileMock = ref([
+const fileMock = ref<FileType[]>([
     {
         uuid: uuid(),
         name: "Medieval Critical Reading",
@@ -120,24 +117,23 @@ const fileMock = ref([
         uuid: uuid(),
         name: "Medieval Critical Reading",
         lastModified: new Date().toISOString(),
-        preview: "https://picsum.photos/248/178?7",
+        preview: "https://picsum.photos/248/178?8",
         size: 18273
     },
     {
         uuid: uuid(),
         name: "Medieval Critical Reading",
         lastModified: new Date().toISOString(),
-        preview: "https://picsum.photos/248/178?7",
+        preview: "https://picsum.photos/248/178?9",
         size: 18273
     },
     {
         uuid: uuid(),
         name: "Medieval Critical Reading",
         lastModified: new Date().toISOString(),
-        preview: "https://picsum.photos/248/178?7",
+        preview: "https://picsum.photos/248/178?10",
         size: 18273
     },
-
 ])
 
 const aggregatedFiles = computed(() =>
@@ -226,7 +222,8 @@ const options = reactive<DocumentOptions>({
 })
 
 function syncOptions() {
-    if (route.query.view && ["icon", "list"].includes(route.query.view as string)) {
+    // does not allow list view when no file and folder exist
+    if (route.query.view && ["icon", "list"].includes(route.query.view as string) && aggregatedFiles.value.length) {
         options.view = route.query.view as "icon" | "list"
     }
 
@@ -263,7 +260,7 @@ watch(folder, syncFolderHeight)
 <template>
     <DashboardFrame activate="/document" class="flex-grow min-h-0">
         <template #nav>
-            <DashboardNav v-model:text="searchText" :user-avatar="userAvatar"/>
+            <DashboardNav v-model:text="searchText"/>
         </template>
 
         <ContextMenu class="flex flex-col px-8 mb-8 h-full overflow-y-auto">
@@ -308,11 +305,18 @@ watch(folder, syncFolderHeight)
                                 :name="folder.name" :last-modified="folder.lastModified"/>
                     </div>
                 </div>
-                <div class="w-full my-8 flex flex-col gap-4 flex-shrink-0">
+                <div class="w-full my-8 flex flex-col gap-4 flex-shrink-0" v-if="fileMock.length">
                     <span class="text-2xl">My files</span>
                     <div class="grid grid-cols-5 gap-4">
                         <File v-for="file in fileMock" :key="file.uuid"
                               :name="file.name" :last-modified="file.lastModified" :preview="file.preview" />
+                    </div>
+                </div>
+                <div v-else class="w-full h-full flex justify-center items-center">
+                    <div class="flex flex-col justify-center items-center max-w-[400px] mb-36">
+                        <img src="/no_document.png" alt="No documents found" class="w-[320px] mr-6" />
+                        <h2 class="text-2xl -mt-12 mb-4">No documents found</h2>
+                        <span class="text-center text-[#5d5d5d] tracking-[-3%]">You haven’t created or uploaded any documents. Start by adding your first one now.</span>
                     </div>
                 </div>
             </template>
