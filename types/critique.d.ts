@@ -31,12 +31,6 @@ interface ShortCut {
     }
 }
 
-interface UserActions {
-    display: string,
-    icon: any   // font-awesome
-    callback: () => any
-}
-
 interface CritiqueUser {
     uuid: string,
     displayName: string,
@@ -268,3 +262,22 @@ interface FolderType {
     lastModified: string,
     size: number
 }
+
+interface SettingSection {
+    heading: string,
+    value?: string,
+    actionComponent?: any,
+    actionSlot?: string,
+    actionClick?: (...any: any[]) => void,
+    borderTop?: boolean,
+    borderBottom?: boolean,
+}
+
+interface SettingEntry {
+    heading: string,
+    id: string,
+    icon: any,
+    sections: SettingSection[]
+}
+
+type SettingId = "processing-status" | "user-action" | "system-update" | "announcement" | "milestone"

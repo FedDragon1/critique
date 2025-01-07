@@ -15,7 +15,6 @@ definePageMeta({
     middleware: 'auth'
 })
 
-
 const { makeDate } = useTime()
 const { makeFileSize } = useFile()
 const { generalMenuOptions } = useContextMenu()
@@ -258,12 +257,14 @@ watch(folder, syncFolderHeight)
 </script>
 
 <template>
+    <SeoHead title="Documents"/>
+
     <DashboardFrame activate="/document" class="flex-grow min-h-0">
         <template #nav>
-            <DashboardNav v-model:text="searchText"/>
+            <DashboardNav search v-model:text="searchText"/>
         </template>
 
-        <ContextMenu class="flex flex-col px-8 mb-8 h-full overflow-y-auto">
+        <ContextMenu class="flex flex-col px-8 mb-8">
             <template #menu>
                 <MenuFrame>
                     <MenuEntry v-for="entry in generalMenuOptions" :key="entry.text" :divided="entry.divided">
@@ -300,14 +301,14 @@ watch(folder, syncFolderHeight)
                         </div>
                         <DocumentViewOptions v-model="options" />
                     </div>
-                    <div class="grid grid-cols-5 transition-all duration-500 gap-4 items-start" ref="folder">
+                    <div class="grid 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 transition-all duration-500 gap-4 items-start" ref="folder">
                         <Folder v-for="folder in folderMock" :key="folder.uuid"
                                 :name="folder.name" :last-modified="folder.lastModified"/>
                     </div>
                 </div>
                 <div class="w-full my-8 flex flex-col gap-4 flex-shrink-0" v-if="fileMock.length">
                     <span class="text-2xl">My files</span>
-                    <div class="grid grid-cols-5 gap-4">
+                    <div class="grid 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4">
                         <File v-for="file in fileMock" :key="file.uuid"
                               :name="file.name" :last-modified="file.lastModified" :preview="file.preview" />
                     </div>

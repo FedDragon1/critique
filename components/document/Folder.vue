@@ -22,7 +22,7 @@ const { folderMenuOptions } = useContextMenu()
                     <FolderIcon class="flex-shrink-0" />
                     <div class="flex flex-col min-w-0 flex-grow">
                         <h6 class="whitespace-nowrap text-ellipsis overflow-hidden min-w-0" :title="name">{{name}}</h6>
-                        <span class="text-sm text-zinc-500">{{makeDate(lastModified)}}</span>
+                        <span class="text-sm text-zinc-500 whitespace-nowrap text-ellipsis overflow-hidden min-w-0">{{makeDate(lastModified)}}</span>
                     </div>
                 </div>
                 <component :is="scope.dropdown" />

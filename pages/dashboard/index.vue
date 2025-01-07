@@ -457,7 +457,7 @@ onMounted(() => {
 
     <DashboardFrame activate="/dashboard" class="gap-10 flex flex-col p-12">
         <template #nav>
-            <DashboardNav v-model:text="searchText" :user-avatar="userAvatar"/>
+            <DashboardNav search v-model:text="searchText" :user-avatar="userAvatar"/>
         </template>
 
         <div class="w-full flex gap-12 h-[320px]">

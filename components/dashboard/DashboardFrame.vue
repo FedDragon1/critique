@@ -29,9 +29,9 @@ defineExpose({
     <div class="h-screen w-screen overflow-hidden bg-background">
         <section class="w-full h-full box-border flex flex-1 min-w-0">
             <DashboardAside :activate="activate" :post-toggle="postToggle"></DashboardAside>
-            <div class="w-full h-full overflow-y-auto flex flex-col">
+            <div class="w-full h-full flex flex-col">
                 <slot name="nav"/>
-                <div class="w-full" v-bind="attrs" ref="main">
+                <div class="w-full overflow-y-auto h-full" v-bind="attrs" ref="main">
                     <slot></slot>
                 </div>
             </div>
