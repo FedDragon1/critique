@@ -44,12 +44,13 @@ defineProps<{
             <div class="flex flex-col gap-1 mt-2 items-center">
                 <template v-for="route in routes" :key="route.to">
                     <NuxtLink
-                        class="justify-center flex-col gap-1 h-14 my-1 function-tab flex w-full text-zinc-500 items-center rounded cursor-pointer box-border whitespace-nowrap"
+                        class="justify-center flex-col gap-1 h-[62px] my-1 pt-1 function-tab flex w-full text-zinc-500
+                               items-center rounded-lg cursor-pointer box-border whitespace-nowrap"
                         :to="route.to" :class="{ 'bg-primary-translucent': activate === route.to }">
                         <component :is="route.component"
-                                   width="20"
-                                   height="20"
-                                   class="aspect-square h-5 inline-block align-baseline flex-shrink-0"
+                                   width="26"
+                                   height="26"
+                                   class="aspect-square inline-block align-baseline flex-shrink-0 "
                                    :fill="activate === route.to ? '#0D062D' : '#909399'"></component>
                         <span class="text-[0.7rem]" :class="{ 'text-emphasis': activate === route.to }">
                             {{ route.caption }}
